@@ -1,0 +1,8 @@
+venv*
+virtualenv*
+.vscode
+**/__pycache__
+*.log
+**.pyc
+*.egg-info
+.eggs
