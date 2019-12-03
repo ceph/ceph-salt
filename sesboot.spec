@@ -54,7 +54,7 @@ Requires:       salt-master >= 2019.2.0
 sesboot is a CLI tool for deploying SES clusters.
 
 %prep
-%autosetup -n sesdev-%{version} -p1
+%autosetup -n %{name}-%{version} -p1
 
 %build
 %py3_build
