@@ -42,10 +42,11 @@ BuildRequires:  python3-setuptools
 
 %if 0%{?suse_version}
 Requires:       python3-click >= 6.7
-Requires:       python3-configshell-fb >= 1.1.25
+Requires:       python3-configshell-fb >= 1.1
 Requires:       python3-pycryptodomex >= 3.4.6
 Requires:       python3-PyYAML >= 3.13
 Requires:       python3-setuptools
+Requires:       python3-salt >= 2019.2.0
 %endif
 
 Requires:       salt-master >= 2019.2.0
