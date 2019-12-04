@@ -24,9 +24,9 @@ Name:           sesboot
 Version:        0.0.1
 Release:        1%{?dist}
 Summary:        CLI tool to deploy SES clusters
-License:        MIT
+License:        GPL-3.0
 %if 0%{?suse_version}
-Group:          Development/Languages/Python
+Group:          System/Management
 %endif
 URL:            https://github.com/rjfd/sesboot
 Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
@@ -49,6 +49,7 @@ Requires:       python3-setuptools
 Requires:       python3-salt >= 2019.2.0
 %endif
 
+Requires:       ses-formula
 Requires:       salt-master >= 2019.2.0
 
 %description
