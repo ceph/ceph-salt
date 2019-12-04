@@ -54,7 +54,7 @@ class SesNodeManager(object):
             cls._ses_nodes = dict([(minion, SesNode(minion)) for minion in minions])
 
     @classmethod
-    def _save_in_pillar(cls):
+    def save_in_pillar(cls):
         minions = []
         for node in cls._ses_nodes.values():
             if node.roles:
@@ -78,7 +78,7 @@ class SesNodeManager(object):
         node = SesNode(minion_id)
         node.save()
         cls._ses_nodes[minion_id] = node
-        cls._save_in_pillar()
+        cls.save_in_pillar()
 
     @classmethod
     def remove_node(cls, minion_id):
@@ -87,7 +87,7 @@ class SesNodeManager(object):
             raise SesNodeHasRolesException(minion_id, cls._ses_nodes[minion_id].roles)
         del cls._ses_nodes[minion_id]
         GrainsManager.del_grain(minion_id, SES_GRAIN_KEY)
-        cls._save_in_pillar()
+        cls.save_in_pillar()
 
     @classmethod
     def list_all_minions(cls):

@@ -111,6 +111,8 @@ class RoleHandler(OptionHandler):
             SesNodeManager.ses_nodes()[minion].add_role(self.role)
             SesNodeManager.ses_nodes()[minion].save()
 
+        SesNodeManager.save_in_pillar()
+
         self._value = set(minions)
 
     def children_handler(self, child_name):
