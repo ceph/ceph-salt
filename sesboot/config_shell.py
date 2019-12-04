@@ -170,7 +170,7 @@ class SesSshKeyManager:
         if not key.has_private():
             raise Exception('invalid private key')
 
-        pub_key = key.publickey().export_key('OpenSSH').decode('utf-8')
+        pub_key = key.publickey().exportKey('OpenSSH').decode('utf-8')
         stored_pub_key = PillarManager.get('ses:ssh:public_key')
         if not stored_pub_key or pub_key != stored_pub_key:
             raise Exception('key pair does not match')
