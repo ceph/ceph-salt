@@ -1,39 +1,39 @@
+# pylint: disable=arguments-differ
 import logging
-import os
 import fnmatch
 import base64
 import hashlib
 
-from pyparsing import (alphanums, Empty, Group, OneOrMore, Optional,
-                       ParseResults, Regex, Suppress, Word)
+from pyparsing import alphanums, OneOrMore, Optional, Regex, Suppress, Word
 
 import configshell_fb as configshell
 from configshell_fb.shell import locatedExpr
 from Cryptodome.PublicKey import RSA
 
-from .model import SesNodeManager, SesNode
-from .salt_utils import SaltClient, PillarManager
+from .model import SesNodeManager
+from .salt_utils import PillarManager
 
 
 logger = logging.getLogger(__name__)
 
 
-class OptionHandler(object):
+class OptionHandler:
     def value(self):
-        raise NotImplementedError()
+        return None, None
 
     def save(self, value):
-        raise NotImplementedError()
+        pass
 
     def reset(self):
-        raise NotImplementedError()
+        pass
 
     def read_only(self):
-        raise NotImplementedError()
+        return False
 
     def possible_values(self):
-        raise []
+        return []
 
+    # pylint: disable=unused-argument
     def children_handler(self, child_name):
         return None
 
@@ -66,7 +66,7 @@ class RolesGroupHandler(OptionHandler):
             if node.roles:
                 minions.add(node.minion_id)
         count = len(minions)
-        return 'Minions w/ roles: {}'.format(count), True if count == idx + 1 else False
+        return 'Minions w/ roles: {}'.format(count), count == idx + 1
 
 
 class RoleElementHandler(OptionHandler):
@@ -86,8 +86,8 @@ class RoleHandler(OptionHandler):
         self._value = set()
 
     def _load(self):
-        self._value = set([n.minion_id for n in SesNodeManager.ses_nodes().values()
-                           if self.role in n.roles])
+        self._value = {n.minion_id for n in SesNodeManager.ses_nodes().values()
+                       if self.role in n.roles}
 
     def possible_values(self):
         self._load()
@@ -97,9 +97,9 @@ class RoleHandler(OptionHandler):
         self._load()
         return self._value, True
 
-    def save(self, minions):
+    def save(self, value):
         self._load()
-        _minions = set(minions)
+        _minions = set(value)
         to_remove = self._value - _minions
         to_add = _minions - self._value
 
@@ -113,7 +113,7 @@ class RoleHandler(OptionHandler):
 
         SesNodeManager.save_in_pillar()
 
-        self._value = set(minions)
+        self._value = set(value)
 
     def children_handler(self, child_name):
         return RoleElementHandler(SesNodeManager.ses_nodes()[child_name], self.role)
@@ -135,7 +135,7 @@ class SesNodesHandler(OptionHandler):
         self._ses_nodes = set()
 
     def value(self):
-        self._ses_nodes = set([n.minion_id for n in SesNodeManager.ses_nodes().values()])
+        self._ses_nodes = {n.minion_id for n in SesNodeManager.ses_nodes().values()}
         return self._ses_nodes, True
 
     def save(self, value):
@@ -159,7 +159,7 @@ class SesNodesHandler(OptionHandler):
         return SesNodeHandler(SesNodeManager.ses_nodes()[child_name])
 
 
-class SesSshKeyManager(object):
+class SesSshKeyManager:
     @classmethod
     def check_keys(cls, stored_priv_key, stored_pub_key):
         try:
@@ -220,12 +220,12 @@ class SSHGroupHandler(OptionHandler):
         stored_pub_key = PillarManager.get('ses:ssh:public_key')
         if not stored_priv_key and not stored_pub_key:
             return "no key pair set", False
-        elif not stored_priv_key or not stored_pub_key:
+        if not stored_priv_key or not stored_pub_key:
             return "invalid key pair", False
         try:
             SesSshKeyManager.check_keys(stored_priv_key, stored_pub_key)
             return "Key Pair set", True
-        except Exception as ex:
+        except Exception:  # pylint: disable=broad-except
             return "invalid key pair", False
 
 
@@ -240,12 +240,12 @@ class SshPrivateKeyHandler(PillarHandler):
         return ':'.join(a + b for a, b in zip(fp_plain[::2], fp_plain[1::2]))
 
     def value(self):
-        stored_priv_key, status = super(SshPrivateKeyHandler, self).value()
+        stored_priv_key, _ = super(SshPrivateKeyHandler, self).value()
         stored_pub_key = PillarManager.get('ses:ssh:public_key')
         try:
             SesSshKeyManager.check_private_key(stored_priv_key, stored_pub_key)
             return self._key_fingerprint(stored_pub_key), None
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=broad-except
             return str(ex), False
 
 
@@ -260,12 +260,12 @@ class SshPublicKeyHandler(PillarHandler):
         return ':'.join(a + b for a, b in zip(fp_plain[::2], fp_plain[1::2]))
 
     def value(self):
-        stored_pub_key, status = super(SshPublicKeyHandler, self).value()
+        stored_pub_key, _ = super(SshPublicKeyHandler, self).value()
         stored_priv_key = PillarManager.get('ses:ssh:private_key')
         try:
             SesSshKeyManager.check_public_key(stored_priv_key, stored_pub_key)
             return self._key_fingerprint(stored_pub_key), None
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=broad-except
             return str(ex), False
 
 
@@ -440,7 +440,7 @@ class GroupNode(configshell.ConfigNode):
     def list_commands(self):
         cmds = ['cd', 'ls', 'help', 'exit', 'reset', 'set']
         if self.handler:
-            cmds.extend([cmd for cmd in self.handler.commands_map().keys()])
+            cmds.extend(list(self.handler.commands_map().keys()))
         return tuple(cmds)
 
     def summary(self):
@@ -468,6 +468,9 @@ class OptionNode(configshell.ConfigNode):
         self.option_dict = option_dict
         self.help_intro = option_dict.get('help', '')
         self.value = None
+
+    def _list_commands(self):
+        return []
 
     def list_commands(self):
         cmds = ['cd', 'ls', 'help', 'exit', 'reset']
@@ -514,9 +517,6 @@ class OptionNode(configshell.ConfigNode):
 
 
 class ValueOptionNode(OptionNode):
-    def __init__(self, option_name, option_dict, parent):
-        super(ValueOptionNode, self).__init__(option_name, option_dict, parent)
-
     def _list_commands(self):
         return ['set']
 
@@ -540,9 +540,6 @@ class ValueOptionNode(OptionNode):
 
 
 class FlagOptionNode(OptionNode):
-    def __init__(self, option_name, option_dict, parent):
-        super(FlagOptionNode, self).__init__(option_name, option_dict, parent)
-
     def _list_commands(self):
         return ['enable', 'disable']
 
@@ -584,7 +581,7 @@ class ListOptionNode(OptionNode):
         return ['add', 'remove']
 
     def summary(self):
-        value_list, val_type = self._find_value()
+        value_list, _ = self._find_value()
         return str(len(value_list)) if value_list else 'empty', None
 
     def ui_command_add(self, value):
@@ -643,6 +640,7 @@ class MinionsOptionNode(OptionNode):
             self.option_dict['handler'].save(self.value)
             self.remove_child(self.get_child(match))
 
+    # pylint: disable=unused-argument
     def ui_complete_add(self, parameters, text, current_param):
         matching = []
         for minion in self.option_dict['handler'].possible_values():
@@ -690,6 +688,7 @@ def generate_config_shell_tree(shell):
 
 
 class SesBootConfigShell(configshell.ConfigShell):
+    # pylint: disable=anomalous-backslash-in-string
     def __init__(self):
         super(SesBootConfigShell, self).__init__('~/.sesboot_config_shell')
         # Grammar of the command line
@@ -715,7 +714,7 @@ def run_config_shell():
         try:
             shell.run_interactive()
             break
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=broad-except
             logger.exception(ex)
             print("An error occurred: {}".format(ex))
 
@@ -727,6 +726,6 @@ def run_config_cmdline(cmdline):
         logger.info("running command: %s", cmdline)
         shell.run_cmdline(cmdline)
         print("OK")
-    except Exception as ex:
+    except Exception as ex:  # pylint: disable=broad-except
         logger.exception(ex)
         print("An error occurred: {}".format(ex))

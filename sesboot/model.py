@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 SES_GRAIN_KEY = 'ses'
 
 
-class SesNode(object):
+class SesNode:
     def __init__(self, minion_id):
         self.minion_id = minion_id
         self.roles = None
@@ -32,7 +32,7 @@ class SesNode(object):
         self.roles.add(role)
 
     def _role_list(self):
-        return [r for r in self.roles]
+        return list(self.roles)
 
     def _grains_value(self):
         return {
@@ -44,14 +44,14 @@ class SesNode(object):
         GrainsManager.set_grain(self.minion_id, SES_GRAIN_KEY, self._grains_value())
 
 
-class SesNodeManager(object):
+class SesNodeManager:
     _ses_nodes = {}
 
     @classmethod
     def _load(cls):
         if not cls._ses_nodes:
             minions = GrainsManager.filter_by(SES_GRAIN_KEY)
-            cls._ses_nodes = dict([(minion, SesNode(minion)) for minion in minions])
+            cls._ses_nodes = {minion: SesNode(minion) for minion in minions}
 
     @classmethod
     def save_in_pillar(cls):

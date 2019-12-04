@@ -9,7 +9,7 @@ import salt.minion
 logger = logging.getLogger(__name__)
 
 
-class SaltClient(object):
+class SaltClient:
     _OPTS_ = None
     _CALLER_ = None
     _LOCAL_ = None
@@ -23,6 +23,7 @@ class SaltClient(object):
         if cls._OPTS_ is None:
             logger.info("Initializing SaltClient with master config")
             cls._OPTS_ = salt.config.master_config('/etc/salt/master')
+            # pylint: disable=unsupported-assignment-operation
             cls._OPTS_['file_client'] = 'local'
             logger.debug("SaltClient __opts__ = %s", cls._OPTS_)
 
@@ -59,14 +60,14 @@ class SaltClient(object):
         return cls.master().opts['pillar_roots']['base'][0]
 
 
-class GrainsManager(object):
+class GrainsManager:
     logger = logging.getLogger(__name__ + '.grains')
 
     @classmethod
     def _format_target(cls, target):
         tgt_type = 'glob'
         if isinstance(target, set):
-            target = [t for t in target]
+            target = list(target)
         if isinstance(target, list):
             tgt_type = 'list'
         return target, tgt_type
@@ -89,7 +90,7 @@ class GrainsManager(object):
     def filter_by(cls, key, val=None):
         result = SaltClient.local().cmd('{}:{}'.format(key, val if val else '*'), 'test.ping',
                                         tgt_type='grain')
-        return [minion_id for minion_id in result]
+        return list(result)
 
     @classmethod
     def get_grain(cls, target, key):
@@ -100,7 +101,7 @@ class GrainsManager(object):
         return result
 
 
-class PillarManager(object):
+class PillarManager:
     PILLAR_FILE = "ses.sls"
     pillar_data = {}
     logger = logging.getLogger(__name__ + '.pillar')
@@ -108,14 +109,14 @@ class PillarManager(object):
     @staticmethod
     def _get_dict_value(dict_, key_path):
         path = key_path.split(":")
-        d = dict_
+        _dict = dict_
         while True:
             if len(path) == 1:
-                if path[0] in d:
-                    return d[path[0]]
+                if path[0] in _dict:
+                    return _dict[path[0]]
                 return None
-            if path[0] in d:
-                d = d[path[0]]
+            if path[0] in _dict:
+                _dict = _dict[path[0]]
                 path = path[1:]
             else:
                 return None
@@ -123,14 +124,14 @@ class PillarManager(object):
     @staticmethod
     def _set_dict_value(dict_, key_path, value):
         path = key_path.split(":")
-        d = dict_
+        _dict = dict_
         while True:
             if len(path) == 1:
-                d[path[0]] = value
+                _dict[path[0]] = value
                 return
-            if path[0] not in d:
-                d[path[0]] = {}
-            d = d[path[0]]
+            if path[0] not in _dict:
+                _dict[path[0]] = {}
+            _dict = _dict[path[0]]
             path = path[1:]
 
     @classmethod
@@ -138,14 +139,14 @@ class PillarManager(object):
         if not key_path:
             return
         path = key_path.split(":")
-        d = dict_
-        for p in path[:-1]:
-            d = d[p]
-        cls.logger.info("Dict current pos: %s, last_key: %s", d, path[-1])
-        if isinstance(d[path[-1]], dict):
-            if d[path[-1]]:
+        _dict = dict_
+        for pkey in path[:-1]:
+            _dict = _dict[pkey]
+        cls.logger.info("Dict current pos: %s, last_key: %s", _dict, path[-1])
+        if isinstance(_dict[path[-1]], dict):
+            if _dict[path[-1]]:
                 return
-        del d[path[-1]]
+        del _dict[path[-1]]
         cls._del_dict_key(dict_, ":".join(path[:-1]))
 
     @classmethod
@@ -155,8 +156,8 @@ class PillarManager(object):
         cls.logger.info("Reading pillar items from file: %s", full_path)
         if not os.path.exists(full_path):
             return {}
-        with open(full_path, 'r') as f:
-            data = yaml.load(f)
+        with open(full_path, 'r') as file:
+            data = yaml.load(file)
             if data is None:
                 data = {}
         return data
@@ -165,13 +166,13 @@ class PillarManager(object):
     def _save_yaml(data, custom_file):
         pillar_base_path = SaltClient.pillar_fs_path()
         full_path = "{}/{}".format(pillar_base_path, custom_file)
-        with open(full_path, 'w') as f:
+        with open(full_path, 'w') as file:
             content = yaml.dump(data, default_flow_style=False)
             if content == '{}\n':
-                f.write("")
+                file.write("")
             else:
-                f.write(content)
-            f.write("\n")
+                file.write(content)
+            file.write("\n")
 
     @classmethod
     def _load(cls):

@@ -46,7 +46,7 @@ def _setup_logging(log_level, log_file):
 
 def sesboot_main():
     try:
-        # pylint: disable=unexpected-keyword-arg
+        # pylint: disable=unexpected-keyword-arg,no-value-for-parameter
         cli(prog_name='sesboot')
     except SesBootException as ex:
         logger.exception(ex)
