@@ -392,6 +392,21 @@ SESBOOT_OPTIONS = {
             }
         }
     },
+    'Storage': {
+        'help': '''
+                Storage Configuration Options
+                =====================================
+                Options for configuring storage disks used by OSDs
+                ''',
+        'options': {
+            'Drive_Groups': {
+                'type': 'list',
+                'default': [],
+                'help': 'List of drive groups specifications to be used in OSD deployment',
+                'handler': PillarHandler('ses:storage:drive_groups')
+            }
+        }
+    },
     'SSH': {
         'help': '''
                 SSH Keys configuration
@@ -726,7 +741,7 @@ class SesBootConfigShell(configshell.ConfigShell):
         super(SesBootConfigShell, self).__init__('~/.sesboot_config_shell')
         # Grammar of the command line
         command = locatedExpr(Word(alphanums + '_'))('command')
-        var = Word(alphanums + ';,=_\+/.<>()~@:-%[]*')  # adding '*'
+        var = Word(alphanums + ';,=_\+/.<>()~@:-%[]*{}" ')  # adding '*'
         value = var
         keyword = Word(alphanums + '_\-')
         kparam = locatedExpr(keyword + Suppress('=') + Optional(value, default=''))('kparams*')
