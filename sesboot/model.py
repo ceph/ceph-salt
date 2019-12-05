@@ -14,6 +14,7 @@ class SesNode:
     def __init__(self, minion_id):
         self.minion_id = minion_id
         self.roles = None
+        self.public_ip = None
         self._load()
 
     def _load(self):
@@ -27,6 +28,9 @@ class SesNode:
             self.roles = set()
         else:
             self.roles = set(result[self.minion_id]['roles'])
+
+        result = GrainsManager.get_grain(self.minion_id, 'fqdn_ip4')
+        self.public_ip = result[self.minion_id][0]
 
     def add_role(self, role):
         self.roles.add(role)
@@ -59,7 +63,12 @@ class SesNodeManager:
         for node in cls._ses_nodes.values():
             if node.roles:
                 minions.append(node.minion_id)
-        PillarManager.set('ses:minions', minions)
+        PillarManager.set('ses:minions:all', minions)
+        PillarManager.set('ses:minions:mon',
+                          {n.minion_id: n.public_ip for n in cls._ses_nodes.values()
+                           if 'mon' in n.roles})
+        PillarManager.set('ses:minions:mgr',
+                          [n.minion_id for n in cls._ses_nodes.values() if 'mgr' in n.roles])
 
         # choose the the main Mon
         minions = [n.minion_id for n in cls._ses_nodes.values() if 'mon' in n.roles]
