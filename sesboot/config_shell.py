@@ -359,6 +359,39 @@ SESBOOT_OPTIONS = {
             },
         }
     },
+    'Deployment': {
+        'help': '''
+                Deployment Options Configuration
+                =========================================
+                Options to control the deployment of Ceph and other services
+                ''',
+        'options': {
+            'Bootstrap': {
+                'type': 'flag',
+                'help': 'Run ceph-daemon --bootstrap on one of the Mon machines',
+                'handler': PillarHandler('ses:deploy:bootstrap'),
+                'default': True
+            },
+            'Mon': {
+                'type': 'flag',
+                'help': 'Deploy all Ceph Monitors',
+                'handler': PillarHandler('ses:deploy:mon'),
+                'default': False
+            },
+            'Mgr': {
+                'type': 'flag',
+                'help': 'Deploy all Ceph Managers',
+                'handler': PillarHandler('ses:deploy:mgr'),
+                'default': False
+            },
+            'OSD': {
+                'type': 'flag',
+                'help': 'Deploy all Ceph OSDs',
+                'handler': PillarHandler('ses:deploy:osd'),
+                'default': False
+            }
+        }
+    },
     'SSH': {
         'help': '''
                 SSH Keys configuration
