@@ -389,6 +389,17 @@ SESBOOT_OPTIONS = {
                 'help': 'Deploy all Ceph OSDs',
                 'handler': PillarHandler('ses:deploy:osd'),
                 'default': False
+            },
+            'Dashboard': {
+                'type': 'group',
+                'help': 'Dashboard settings',
+                'options': {
+                    'password': {
+                        'default': None,
+                        'default_text': 'randomly generated',
+                        'handler': PillarHandler('ses:dashboard:password')
+                    }
+                }
             }
         }
     },
