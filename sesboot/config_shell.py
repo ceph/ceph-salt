@@ -398,6 +398,10 @@ SESBOOT_OPTIONS = {
                         'default': None,
                         'default_text': 'randomly generated',
                         'handler': PillarHandler('ses:dashboard:password')
+                    },
+                    'username': {
+                        'default': 'admin',
+                        'handler': PillarHandler('ses:dashboard:username')
                     }
                 }
             }
