@@ -13,6 +13,7 @@ SES_GRAIN_KEY = 'ses'
 class SesNode:
     def __init__(self, minion_id):
         self.minion_id = minion_id
+        self.short_name = minion_id.split('.', 1)[0]
         self.roles = None
         self.public_ip = None
         self._load()
@@ -62,13 +63,13 @@ class SesNodeManager:
         minions = []
         for node in cls._ses_nodes.values():
             if node.roles:
-                minions.append(node.minion_id)
+                minions.append(node.short_name)
         PillarManager.set('ses:minions:all', minions)
         PillarManager.set('ses:minions:mon',
-                          {n.minion_id: n.public_ip for n in cls._ses_nodes.values()
+                          {n.short_name: n.public_ip for n in cls._ses_nodes.values()
                            if 'mon' in n.roles})
         PillarManager.set('ses:minions:mgr',
-                          [n.minion_id for n in cls._ses_nodes.values() if 'mgr' in n.roles])
+                          [n.short_name for n in cls._ses_nodes.values() if 'mgr' in n.roles])
 
         # choose the the main Mon
         minions = [n.minion_id for n in cls._ses_nodes.values() if 'mon' in n.roles]
