@@ -23,3 +23,9 @@ jobs:
     - name: Lint with pycodestyle
       run: |
         pycodestyle sesboot
+    - name: Lint tests with pylint
+      run: |
+        pylint tests
+    - name: Lint tests with pycodestyle
+      run: |
+        pycodestyle tests
