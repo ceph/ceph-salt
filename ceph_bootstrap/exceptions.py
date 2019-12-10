@@ -1,8 +1,8 @@
-class SesBootException(Exception):
+class CephBootstrapException(Exception):
     pass
 
 
-class SesNodeHasRolesException(SesBootException):
+class SesNodeHasRolesException(CephBootstrapException):
     def __init__(self, minion_id, roles):
         super(SesNodeHasRolesException, self).__init__(
             "Cannot remove host '{}' because it has roles defined: {}".format(minion_id, roles))

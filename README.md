@@ -1,4 +1,4 @@
-# sesboot - CLI tool to deploy SES/Ceph clusters <br/> [![Actions Status](https://github.com/rjfd/sesboot/workflows/Linting/badge.svg)](https://github.com/rjfd/sesboot/actions) [![Actions Status](https://github.com/rjfd/sesboot/workflows/Testing/badge.svg)](https://github.com/rjfd/sesboot/actions)
+# ceph-bootstrap - CLI tool to deploy SES/Ceph clusters <br/> [![Actions Status](https://github.com/SUSE/ceph-bootstrap/workflows/Linting/badge.svg)](https://github.com/SUSE/ceph-bootstrap/actions) [![Actions Status](https://github.com/SUSE/ceph-bootstrap/workflows/Testing/badge.svg)](https://github.com/SUSE/ceph-bootstrap/actions)
 
-`sesboot` is a CLI tool to deploy Ceph clusters (both the upstream and SUSE
-downstream versions).
+`ceph-bootstrap` is a CLI tool to deploy Ceph clusters (both the upstream and SUSE
+downstream versions) using Salt.

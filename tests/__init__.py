@@ -143,7 +143,7 @@ class SaltMockTestCase(TestCase):
     def setUp(self):
         super(SaltMockTestCase, self).setUp()
         self.setUpPyfakefs()
-        patcher = patch('sesboot.salt_utils.SaltClient', new_callable=SaltClientMock)
+        patcher = patch('ceph_bootstrap.salt_utils.SaltClient', new_callable=SaltClientMock)
         self.local_client = patcher.start()
         SaltClientMock.local_fs = self.fs
         self.fs.create_dir(SaltClientMock.pillar_fs_path())

@@ -1,4 +1,4 @@
-from sesboot.salt_utils import GrainsManager
+from ceph_bootstrap.salt_utils import GrainsManager
 from . import SaltMockTestCase
 
 

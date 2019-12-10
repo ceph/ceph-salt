@@ -6,7 +6,7 @@ from setuptools import setup
 
 def get_version_from_spec():
     this_dir = os.path.dirname(__file__)
-    with open(os.path.join(this_dir, 'sesboot.spec'), 'r') as file:
+    with open(os.path.join(this_dir, 'ceph-bootstrap.spec'), 'r') as file:
         while True:
             line = file.readline()
             if not line:
