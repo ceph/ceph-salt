@@ -7,7 +7,7 @@ from .salt_utils import SaltClient, GrainsManager, PillarManager
 logger = logging.getLogger(__name__)
 
 
-SES_GRAIN_KEY = 'ses'
+SES_GRAIN_KEY = 'ceph-salt'
 
 
 class SesNode:
@@ -64,18 +64,18 @@ class SesNodeManager:
         for node in cls._ses_nodes.values():
             if node.roles:
                 minions.append(node.short_name)
-        PillarManager.set('ses:minions:all', minions)
-        PillarManager.set('ses:minions:mon',
+        PillarManager.set('ceph-salt:minions:all', minions)
+        PillarManager.set('ceph-salt:minions:mon',
                           {n.short_name: n.public_ip for n in cls._ses_nodes.values()
                            if 'mon' in n.roles})
-        PillarManager.set('ses:minions:mgr',
+        PillarManager.set('ceph-salt:minions:mgr',
                           [n.short_name for n in cls._ses_nodes.values() if 'mgr' in n.roles])
 
         # choose the the main Mon
         minions = [n.minion_id for n in cls._ses_nodes.values() if 'mon' in n.roles]
         minions.sort()
         if minions:  # i.e., it has at least one
-            PillarManager.set('ses:bootstrap_mon', minions[0])
+            PillarManager.set('ceph-salt:bootstrap_mon', minions[0])
 
     @classmethod
     def ses_nodes(cls):

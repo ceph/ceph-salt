@@ -171,7 +171,7 @@ class SesSshKeyManager:
             raise Exception('invalid private key')
 
         pub_key = key.publickey().exportKey('OpenSSH').decode('utf-8')
-        stored_pub_key = PillarManager.get('ses:ssh:public_key')
+        stored_pub_key = PillarManager.get('ceph-salt:ssh:public_key')
         if not stored_pub_key or pub_key != stored_pub_key:
             raise Exception('key pair does not match')
 
@@ -212,12 +212,12 @@ class SSHGroupHandler(OptionHandler):
         key = RSA.generate(2048)
         private_key = key.exportKey('PEM')
         public_key = key.publickey().exportKey('OpenSSH')
-        PillarManager.set('ses:ssh:private_key', private_key.decode('utf-8'))
-        PillarManager.set('ses:ssh:public_key', public_key.decode('utf-8'))
+        PillarManager.set('ceph-salt:ssh:private_key', private_key.decode('utf-8'))
+        PillarManager.set('ceph-salt:ssh:public_key', public_key.decode('utf-8'))
 
     def value(self):
-        stored_priv_key = PillarManager.get('ses:ssh:private_key')
-        stored_pub_key = PillarManager.get('ses:ssh:public_key')
+        stored_priv_key = PillarManager.get('ceph-salt:ssh:private_key')
+        stored_pub_key = PillarManager.get('ceph-salt:ssh:public_key')
         if not stored_priv_key and not stored_pub_key:
             return "no key pair set", False
         if not stored_priv_key or not stored_pub_key:
@@ -231,7 +231,7 @@ class SSHGroupHandler(OptionHandler):
 
 class SshPrivateKeyHandler(PillarHandler):
     def __init__(self):
-        super(SshPrivateKeyHandler, self).__init__('ses:ssh:private_key')
+        super(SshPrivateKeyHandler, self).__init__('ceph-salt:ssh:private_key')
 
     @staticmethod
     def _key_fingerprint(key):
@@ -241,7 +241,7 @@ class SshPrivateKeyHandler(PillarHandler):
 
     def value(self):
         stored_priv_key, _ = super(SshPrivateKeyHandler, self).value()
-        stored_pub_key = PillarManager.get('ses:ssh:public_key')
+        stored_pub_key = PillarManager.get('ceph-salt:ssh:public_key')
         try:
             SesSshKeyManager.check_private_key(stored_priv_key, stored_pub_key)
             return self._key_fingerprint(stored_pub_key), None
@@ -251,7 +251,7 @@ class SshPrivateKeyHandler(PillarHandler):
 
 class SshPublicKeyHandler(PillarHandler):
     def __init__(self):
-        super(SshPublicKeyHandler, self).__init__('ses:ssh:public_key')
+        super(SshPublicKeyHandler, self).__init__('ceph-salt:ssh:public_key')
 
     @staticmethod
     def _key_fingerprint(key):
@@ -261,7 +261,7 @@ class SshPublicKeyHandler(PillarHandler):
 
     def value(self):
         stored_pub_key, _ = super(SshPublicKeyHandler, self).value()
-        stored_priv_key = PillarManager.get('ses:ssh:private_key')
+        stored_priv_key = PillarManager.get('ceph-salt:ssh:private_key')
         try:
             SesSshKeyManager.check_public_key(stored_priv_key, stored_pub_key)
             return self._key_fingerprint(stored_pub_key), None
@@ -277,17 +277,17 @@ class TimeServerGroupHandler(OptionHandler):
         }
 
     def enable(self):
-        PillarManager.set('ses:time_server:enabled', True)
+        PillarManager.set('ceph-salt:time_server:enabled', True)
 
     def disable(self):
-        PillarManager.set('ses:time_server:enabled', False)
+        PillarManager.set('ceph-salt:time_server:enabled', False)
 
     def value(self):
-        val = PillarManager.get('ses:time_server:enabled')
+        val = PillarManager.get('ceph-salt:time_server:enabled')
         if val is None:
             return "enabled", True
         if val:  # enabled
-            host = PillarManager.get('ses:time_server:server_host')
+            host = PillarManager.get('ceph-salt:time_server:server_host')
             if host is None:
                 return "enabled, no server host set", False
 
@@ -353,7 +353,7 @@ CEPH_BOOTSTRAP_OPTIONS = {
                     'ceph': {
                         'help': 'Full path of Ceph container image',
                         'default': "docker.io/ceph/daemon-base:latest",
-                        'handler': PillarHandler('ses:container:images:ceph')
+                        'handler': PillarHandler('ceph-salt:container:images:ceph')
                     },
                 }
             },
@@ -369,25 +369,25 @@ CEPH_BOOTSTRAP_OPTIONS = {
             'Bootstrap': {
                 'type': 'flag',
                 'help': 'Run ceph-daemon --bootstrap on one of the Mon machines',
-                'handler': PillarHandler('ses:deploy:bootstrap'),
+                'handler': PillarHandler('ceph-salt:deploy:bootstrap'),
                 'default': True
             },
             'Mon': {
                 'type': 'flag',
                 'help': 'Deploy all Ceph Monitors',
-                'handler': PillarHandler('ses:deploy:mon'),
+                'handler': PillarHandler('ceph-salt:deploy:mon'),
                 'default': False
             },
             'Mgr': {
                 'type': 'flag',
                 'help': 'Deploy all Ceph Managers',
-                'handler': PillarHandler('ses:deploy:mgr'),
+                'handler': PillarHandler('ceph-salt:deploy:mgr'),
                 'default': False
             },
             'OSD': {
                 'type': 'flag',
                 'help': 'Deploy all Ceph OSDs',
-                'handler': PillarHandler('ses:deploy:osd'),
+                'handler': PillarHandler('ceph-salt:deploy:osd'),
                 'default': False
             },
             'Dashboard': {
@@ -397,11 +397,11 @@ CEPH_BOOTSTRAP_OPTIONS = {
                     'password': {
                         'default': None,
                         'default_text': 'randomly generated',
-                        'handler': PillarHandler('ses:dashboard:password')
+                        'handler': PillarHandler('ceph-salt:dashboard:password')
                     },
                     'username': {
                         'default': 'admin',
-                        'handler': PillarHandler('ses:dashboard:username')
+                        'handler': PillarHandler('ceph-salt:dashboard:username')
                     }
                 }
             }
@@ -418,7 +418,7 @@ CEPH_BOOTSTRAP_OPTIONS = {
                 'type': 'list',
                 'default': [],
                 'help': 'List of drive groups specifications to be used in OSD deployment',
-                'handler': PillarHandler('ses:storage:drive_groups')
+                'handler': PillarHandler('ceph-salt:storage:drive_groups')
             }
         }
     },
@@ -454,12 +454,12 @@ CEPH_BOOTSTRAP_OPTIONS = {
                 'type': 'list',
                 'default': [],
                 'help': 'List of external NTP servers',
-                'handler': PillarHandler('ses:time_server:external_time_servers')
+                'handler': PillarHandler('ceph-salt:time_server:external_time_servers')
             },
             'Server_Hostname': {
                 'default': None,
                 'help': 'FQDN of the time server node',
-                'handler': TimeServerHandler('ses:time_server:server_host'),
+                'handler': TimeServerHandler('ceph-salt:time_server:server_host'),
                 'required': True
             },
         }
