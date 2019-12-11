@@ -8,3 +8,4 @@ virtualenv*
 .eggs
 .coverage
 .pytest_cache
+.tox
