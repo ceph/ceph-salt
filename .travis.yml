@@ -11,3 +11,6 @@ script:
     # linting tests code
     - pylint tests
     - pycodestyle tests
+
+after_success:
+    - codecov
