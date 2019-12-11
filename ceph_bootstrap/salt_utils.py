@@ -213,3 +213,7 @@ class PillarManager:
         cls._save_yaml(cls.pillar_data, cls.PILLAR_FILE)
         SaltClient.local().cmd('*', 'saltutil.pillar_refresh', tgt_type="compound")
         cls.logger.info("Deleted '%s' from pillar", key)
+
+    @classmethod
+    def reload(cls):
+        cls.pillar_data = {}

@@ -150,6 +150,10 @@ class SaltMockTestCase(TestCase):
         self.fs.create_file(os.path.join(SaltClientMock.pillar_fs_path(), 'ceph-salt.sls'))
         self.addCleanup(patcher.stop)
 
+    def tearDown(self):
+        super(SaltMockTestCase, self).tearDown()
+        self.fs.remove_object(os.path.join(SaltClientMock.pillar_fs_path(), 'ceph-salt.sls'))
+
     def assertGrains(self, target, key, value):
         local = self.local_client.local()
         self.assertIn(target, local.grains)
