@@ -1,16 +1,15 @@
 language: python
-python:
-    - "3.6"
-    - "3.7"
+matrix:
+  include:
+  - python: 3.6
+    env: TOX_ENV=py36
+  - python: 3.7
+    env: TOX_ENV=py37
+  - python: 3.7
+    env: TOX_ENV=lint
 install:
-    - pip install -r requirements.txt
+- pip install tox
 script:
-    - pytest -s --cov -vv
-    - pylint ceph_bootstrap
-    - pycodestyle ceph_bootstrap
-    # linting tests code
-    - pylint tests
-    - pycodestyle tests
-
+- tox -e $TOX_ENV
 after_success:
     - codecov
