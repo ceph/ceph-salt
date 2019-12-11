@@ -1,5 +1,5 @@
 #
-# spec file for package sesdev
+# spec file for package ceph-bootstrap
 #
 # Copyright (c) 2019 SUSE LINUX GmbH, Nuernberg, Germany.
 #
@@ -24,7 +24,7 @@ Name:           ceph-bootstrap
 Version:        0.0.1
 Release:        1%{?dist}
 Summary:        CLI tool to deploy Ceph clusters
-License:        GPL-3.0
+License:        MIT
 %if 0%{?suse_version}
 Group:          System/Management
 %endif

@@ -6,6 +6,6 @@ from . import SaltMockTestCase, SaltClientMock as SaltClient
 class PillarManagerTest(SaltMockTestCase):
 
     def test_pillar_set(self):
-        PillarManager.set('ses:test:enabled', True)
+        PillarManager.set('ceph-salt:test:enabled', True)
         file_path = os.path.join(SaltClient.pillar_fs_path(), PillarManager.PILLAR_FILE)
-        self.assertYamlEqual(file_path, {'ses': {'test': {'enabled': True}}})
+        self.assertYamlEqual(file_path, {'ceph-salt': {'test': {'enabled': True}}})

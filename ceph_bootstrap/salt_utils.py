@@ -102,7 +102,7 @@ class GrainsManager:
 
 
 class PillarManager:
-    PILLAR_FILE = "ses.sls"
+    PILLAR_FILE = "ceph-salt.sls"
     pillar_data = {}
     logger = logging.getLogger(__name__ + '.pillar')
 
@@ -184,7 +184,7 @@ class PillarManager:
     def get(cls, key):
         cls._load()
         res = cls._get_dict_value(cls.pillar_data, key)
-        if key == 'ses:ssh:private_key':
+        if key == 'ceph-salt:ssh:private_key':
             # don't log key value
             cls.logger.info("Got '%s' from pillar", key)
         else:
@@ -198,7 +198,7 @@ class PillarManager:
         cls._set_dict_value(cls.pillar_data, key, value)
         cls._save_yaml(cls.pillar_data, cls.PILLAR_FILE)
         SaltClient.local().cmd('*', 'saltutil.pillar_refresh', tgt_type="compound")
-        if key == 'ses:ssh:private_key':
+        if key == 'ceph-salt:ssh:private_key':
             cls.logger.info("Set '%s' to pillar", key)
         else:
             cls.logger.info("Set '%s' to pillar: '%s'", key, value)
