@@ -147,7 +147,7 @@ class SaltMockTestCase(TestCase):
         self.local_client = patcher.start()
         SaltClientMock.local_fs = self.fs
         self.fs.create_dir(SaltClientMock.pillar_fs_path())
-        self.fs.create_file(os.path.join(SaltClientMock.pillar_fs_path(), 'ses.sls'))
+        self.fs.create_file(os.path.join(SaltClientMock.pillar_fs_path(), 'ceph-salt.sls'))
         self.addCleanup(patcher.stop)
 
     def assertGrains(self, target, key, value):

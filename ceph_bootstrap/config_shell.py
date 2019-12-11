@@ -10,7 +10,7 @@ import configshell_fb as configshell
 from configshell_fb.shell import locatedExpr
 from Cryptodome.PublicKey import RSA
 
-from .model import SesNodeManager
+from .core import CephNodeManager
 from .salt_utils import PillarManager
 
 
@@ -62,7 +62,7 @@ class RolesGroupHandler(OptionHandler):
     def value(self):
         minions = set()
         idx = 0
-        for idx, node in enumerate(SesNodeManager.ses_nodes().values()):
+        for idx, node in enumerate(CephNodeManager.ceph_salt_nodes().values()):
             if node.roles:
                 minions.add(node.minion_id)
         count = len(minions)
@@ -70,14 +70,14 @@ class RolesGroupHandler(OptionHandler):
 
 
 class RoleElementHandler(OptionHandler):
-    def __init__(self, ses_node, role):
-        self.ses_node = ses_node
+    def __init__(self, ceph_salt_node, role):
+        self.ceph_salt_node = ceph_salt_node
         self.role = role
 
     def value(self):
-        if not self.ses_node.roles - {self.role}:
+        if not self.ceph_salt_node.roles - {self.role}:
             return 'no other roles', None
-        return "other roles: {}".format(", ".join(self.ses_node.roles - {self.role})), None
+        return "other roles: {}".format(", ".join(self.ceph_salt_node.roles - {self.role})), None
 
 
 class RoleHandler(OptionHandler):
@@ -86,12 +86,12 @@ class RoleHandler(OptionHandler):
         self._value = set()
 
     def _load(self):
-        self._value = {n.minion_id for n in SesNodeManager.ses_nodes().values()
+        self._value = {n.minion_id for n in CephNodeManager.ceph_salt_nodes().values()
                        if self.role in n.roles}
 
     def possible_values(self):
         self._load()
-        return [n.minion_id for n in SesNodeManager.ses_nodes().values()]
+        return [n.minion_id for n in CephNodeManager.ceph_salt_nodes().values()]
 
     def value(self):
         self._load()
@@ -104,62 +104,62 @@ class RoleHandler(OptionHandler):
         to_add = _minions - self._value
 
         for minion in to_remove:
-            SesNodeManager.ses_nodes()[minion].roles.remove(self.role)
-            SesNodeManager.ses_nodes()[minion].save()
+            CephNodeManager.ceph_salt_nodes()[minion].roles.remove(self.role)
+            CephNodeManager.ceph_salt_nodes()[minion].save()
 
         for minion in to_add:
-            SesNodeManager.ses_nodes()[minion].add_role(self.role)
-            SesNodeManager.ses_nodes()[minion].save()
+            CephNodeManager.ceph_salt_nodes()[minion].add_role(self.role)
+            CephNodeManager.ceph_salt_nodes()[minion].save()
 
-        SesNodeManager.save_in_pillar()
+        CephNodeManager.save_in_pillar()
 
         self._value = set(value)
 
     def children_handler(self, child_name):
-        return RoleElementHandler(SesNodeManager.ses_nodes()[child_name], self.role)
+        return RoleElementHandler(CephNodeManager.ceph_salt_nodes()[child_name], self.role)
 
 
-class SesNodeHandler(OptionHandler):
-    def __init__(self, ses_node):
-        self.ses_node = ses_node
+class CephSaltNodeHandler(OptionHandler):
+    def __init__(self, ceph_salt_node):
+        self.ceph_salt_node = ceph_salt_node
 
     def value(self):
-        if not self.ses_node.roles:
+        if not self.ceph_salt_node.roles:
             return 'no roles', False
-        return ", ".join(self.ses_node.roles), None
+        return ", ".join(self.ceph_salt_node.roles), None
 
 
-class SesNodesHandler(OptionHandler):
+class CephSaltNodesHandler(OptionHandler):
     def __init__(self):
         self._minions = set()
-        self._ses_nodes = set()
+        self._ceph_salt_nodes = set()
 
     def value(self):
-        self._ses_nodes = {n.minion_id for n in SesNodeManager.ses_nodes().values()}
-        return self._ses_nodes, True
+        self._ceph_salt_nodes = {n.minion_id for n in CephNodeManager.ceph_salt_nodes().values()}
+        return self._ceph_salt_nodes, True
 
     def save(self, value):
         _value = set(value)
-        to_remove = self._ses_nodes - _value
-        to_add = _value - self._ses_nodes
+        to_remove = self._ceph_salt_nodes - _value
+        to_add = _value - self._ceph_salt_nodes
 
         for minion in to_remove:
-            SesNodeManager.remove_node(minion)
+            CephNodeManager.remove_node(minion)
         for minion in to_add:
-            SesNodeManager.add_node(minion)
+            CephNodeManager.add_node(minion)
 
-        self._ses_nodes = set(value)
+        self._ceph_salt_nodes = set(value)
 
     def possible_values(self):
         if not self._minions:
-            self._minions = set(SesNodeManager.list_all_minions())
-        return self._minions - self._ses_nodes
+            self._minions = set(CephNodeManager.list_all_minions())
+        return self._minions - self._ceph_salt_nodes
 
     def children_handler(self, child_name):
-        return SesNodeHandler(SesNodeManager.ses_nodes()[child_name])
+        return CephSaltNodeHandler(CephNodeManager.ceph_salt_nodes()[child_name])
 
 
-class SesSshKeyManager:
+class SshKeyManager:
     @classmethod
     def check_keys(cls, stored_priv_key, stored_pub_key):
         try:
@@ -223,7 +223,7 @@ class SSHGroupHandler(OptionHandler):
         if not stored_priv_key or not stored_pub_key:
             return "invalid key pair", False
         try:
-            SesSshKeyManager.check_keys(stored_priv_key, stored_pub_key)
+            SshKeyManager.check_keys(stored_priv_key, stored_pub_key)
             return "Key Pair set", True
         except Exception:  # pylint: disable=broad-except
             return "invalid key pair", False
@@ -243,7 +243,7 @@ class SshPrivateKeyHandler(PillarHandler):
         stored_priv_key, _ = super(SshPrivateKeyHandler, self).value()
         stored_pub_key = PillarManager.get('ceph-salt:ssh:public_key')
         try:
-            SesSshKeyManager.check_private_key(stored_priv_key, stored_pub_key)
+            SshKeyManager.check_private_key(stored_priv_key, stored_pub_key)
             return self._key_fingerprint(stored_pub_key), None
         except Exception as ex:  # pylint: disable=broad-except
             return str(ex), False
@@ -263,7 +263,7 @@ class SshPublicKeyHandler(PillarHandler):
         stored_pub_key, _ = super(SshPublicKeyHandler, self).value()
         stored_priv_key = PillarManager.get('ceph-salt:ssh:private_key')
         try:
-            SesSshKeyManager.check_public_key(stored_priv_key, stored_pub_key)
+            SshKeyManager.check_public_key(stored_priv_key, stored_pub_key)
             return self._key_fingerprint(stored_pub_key), None
         except Exception as ex:  # pylint: disable=broad-except
             return str(ex), False
@@ -296,7 +296,7 @@ class TimeServerGroupHandler(OptionHandler):
 
 class TimeServerHandler(PillarHandler):
     def possible_values(self):
-        return [n.minion_id for n in SesNodeManager.ses_nodes().values()]
+        return [n.minion_id for n in CephNodeManager.ceph_salt_nodes().values()]
 
 
 CEPH_BOOTSTRAP_OPTIONS = {
@@ -304,15 +304,15 @@ CEPH_BOOTSTRAP_OPTIONS = {
         'help': '''
                 Cluster Options Configuration
                 ====================================
-                Options to specify the structure of the SES cluster, like
+                Options to specify the structure of the Ceph cluster, like
                 membership, roles, etc...
                 ''',
         'options': {
             'Minions': {
-                'help': 'The list of salt minions that are used to deploy SES',
+                'help': 'The list of salt minions that are used to deploy Ceph',
                 'default': [],
                 'type': 'minions',
-                'handler': SesNodesHandler()
+                'handler': CephSaltNodesHandler()
             },
             'Roles': {
                 'type': 'group',
