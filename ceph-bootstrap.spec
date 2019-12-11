@@ -20,15 +20,15 @@
 %{python_enable_dependency_generator}
 %endif
 
-Name:           sesboot
+Name:           ceph-bootstrap
 Version:        0.0.1
 Release:        1%{?dist}
-Summary:        CLI tool to deploy SES clusters
+Summary:        CLI tool to deploy Ceph clusters
 License:        GPL-3.0
 %if 0%{?suse_version}
 Group:          System/Management
 %endif
-URL:            https://github.com/rjfd/sesboot
+URL:            https://github.com/SUSE/ceph-bootstrap
 Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 BuildArch:      noarch
 
@@ -49,11 +49,12 @@ Requires:       python3-setuptools
 Requires:       python3-salt >= 2019.2.0
 %endif
 
-Requires:       ses-formula
+Requires:       ceph-salt-formula
 Requires:       salt-master >= 2019.2.0
 
 %description
-sesboot is a CLI tool for deploying SES clusters.
+ceph-bootstrap is a CLI tool for deploying Ceph clusters starting from version
+Octopus.
 
 %prep
 %autosetup -n %{name}-%{version} -p1
@@ -68,8 +69,8 @@ sesboot is a CLI tool for deploying SES clusters.
 %files
 %license LICENSE
 %doc CHANGELOG.md README.md
-%{python3_sitelib}/sesboot*/
-%{_bindir}/sesboot
+%{python3_sitelib}/ceph_bootstrap*/
+%{_bindir}/ceph-bootstrap
 
 %changelog
 

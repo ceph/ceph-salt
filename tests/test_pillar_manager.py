@@ -1,5 +1,5 @@
 import os
-from sesboot.salt_utils import PillarManager
+from ceph_bootstrap.salt_utils import PillarManager
 from . import SaltMockTestCase, SaltClientMock as SaltClient
 
 

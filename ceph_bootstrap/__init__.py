@@ -6,7 +6,7 @@ import click
 import pkg_resources
 
 from .config_shell import run_config_cmdline, run_config_shell
-from .exceptions import SesBootException
+from .exceptions import CephBootstrapException
 
 logger = logging.getLogger(__name__)
 
@@ -44,11 +44,11 @@ def _setup_logging(log_level, log_file):
     })
 
 
-def sesboot_main():
+def ceph_bootstrap_main():
     try:
         # pylint: disable=unexpected-keyword-arg,no-value-for-parameter
-        cli(prog_name='sesboot')
-    except SesBootException as ex:
+        cli(prog_name='ceph-bootstrap')
+    except CephBootstrapException as ex:
         logger.exception(ex)
         click.echo(str(ex))
 
@@ -57,10 +57,10 @@ def sesboot_main():
 @click.option('-l', '--log-level', default='info',
               type=click.Choice(["info", "error", "debug", "silent"]),
               help="set log level (default: info)")
-@click.option('--log-file', default='/var/log/sesboot.log',
+@click.option('--log-file', default='/var/log/ceph-bootstrap.log',
               type=click.Path(dir_okay=False),
               help="the file path for the log to be stored")
-@click.version_option(pkg_resources.get_distribution('sesboot'), message="%(version)s")
+@click.version_option(pkg_resources.get_distribution('ceph-bootstrap'), message="%(version)s")
 def cli(log_level, log_file):
     _setup_logging(log_level, log_file)
 
@@ -69,7 +69,7 @@ def cli(log_level, log_file):
 @click.argument('config_args', nargs=-1, type=click.UNPROCESSED, required=False)
 def config_shell(config_args):
     """
-    Starts sesboot configuration shell
+    Starts ceph-bootstrap configuration shell
     """
     if config_args:
         run_config_cmdline(" ".join(config_args))
@@ -78,4 +78,4 @@ def config_shell(config_args):
 
 
 if __name__ == '__main__':
-    sesboot_main()
+    ceph_bootstrap_main()

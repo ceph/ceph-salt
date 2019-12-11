@@ -299,7 +299,7 @@ class TimeServerHandler(PillarHandler):
         return [n.minion_id for n in SesNodeManager.ses_nodes().values()]
 
 
-SESBOOT_OPTIONS = {
+CEPH_BOOTSTRAP_OPTIONS = {
     'Cluster': {
         'help': '''
                 Cluster Options Configuration
@@ -467,11 +467,11 @@ SESBOOT_OPTIONS = {
 }
 
 
-class SesBootRoot(configshell.ConfigNode):
+class CephBootstrapRoot(configshell.ConfigNode):
     help_intro = '''
-                 sesboot Configuration
+                 ceph-bootstrap Configuration
                  =====================
-                 This is a shell where you can manipulate sesboot's configuration.
+                 This is a shell where you can manipulate ceph-bootstrap's configuration.
                  Each configuration option is present under a configuration group.
                  You can navigate through the groups and options using the B{ls} and
                  B{cd} commands as in a typical shell.
@@ -745,15 +745,16 @@ def _generate_group_node(group_name, group_dict, parent):
 
 
 def generate_config_shell_tree(shell):
-    root_node = SesBootRoot(shell)
-    for group_name, group_dict in SESBOOT_OPTIONS.items():
+    root_node = CephBootstrapRoot(shell)
+    for group_name, group_dict in CEPH_BOOTSTRAP_OPTIONS.items():
         _generate_group_node(group_name, group_dict, root_node)
 
 
-class SesBootConfigShell(configshell.ConfigShell):
+class CephBootstrapConfigShell(configshell.ConfigShell):
     # pylint: disable=anomalous-backslash-in-string
     def __init__(self):
-        super(SesBootConfigShell, self).__init__('~/.sesboot_config_shell')
+        super(CephBootstrapConfigShell, self).__init__(
+            '~/.ceph_bootstrap_config_shell')
         # Grammar of the command line
         command = locatedExpr(Word(alphanums + '_'))('command')
         var = Word(alphanums + ';,=_\+/.<>()~@:-%[]*{}" ')  # adding '*'
@@ -771,7 +772,7 @@ class SesBootConfigShell(configshell.ConfigShell):
 
 
 def run_config_shell():
-    shell = SesBootConfigShell()
+    shell = CephBootstrapConfigShell()
     generate_config_shell_tree(shell)
     while True:
         try:
@@ -783,7 +784,7 @@ def run_config_shell():
 
 
 def run_config_cmdline(cmdline):
-    shell = SesBootConfigShell()
+    shell = CephBootstrapConfigShell()
     generate_config_shell_tree(shell)
     try:
         logger.info("running command: %s", cmdline)
