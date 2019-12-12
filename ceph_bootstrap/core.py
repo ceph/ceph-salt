@@ -1,4 +1,8 @@
 import logging
+import base64
+import hashlib
+
+from Cryptodome.PublicKey import RSA
 
 from .exceptions import CephNodeHasRolesException
 from .salt_utils import SaltClient, GrainsManager, PillarManager
@@ -102,3 +106,58 @@ class CephNodeManager:
     @classmethod
     def list_all_minions(cls):
         return SaltClient.caller().cmd('minion.list')['minions']
+
+
+class SshKeyManager:
+    @staticmethod
+    def key_fingerprint(key):
+        key = base64.b64decode(key.split()[1].encode('ascii'))
+        fp_plain = hashlib.md5(key).hexdigest()
+        return ':'.join(a + b for a, b in zip(fp_plain[::2], fp_plain[1::2]))
+
+    @staticmethod
+    def generate_key_pair(bits=2048):
+        key = RSA.generate(bits)
+        private_key = key.exportKey('PEM')
+        public_key = key.publickey().exportKey('OpenSSH')
+        return private_key.decode('utf-8'), public_key.decode('utf-8')
+
+    @classmethod
+    def check_keys(cls, stored_priv_key, stored_pub_key):
+        try:
+            key = RSA.import_key(stored_priv_key)
+        except (ValueError, IndexError, TypeError):
+            raise Exception('invalid private key')
+
+        if not key.has_private():
+            raise Exception('invalid private key')
+
+        pub_key = key.publickey().exportKey('OpenSSH').decode('utf-8')
+        if not stored_pub_key or pub_key != stored_pub_key:
+            raise Exception('key pair does not match')
+
+    @classmethod
+    def check_public_key(cls, stored_priv_key, stored_pub_key):
+        if not stored_pub_key:
+            raise Exception('no public key set')
+        if not stored_priv_key:
+            raise Exception('private key does not match')
+        try:
+            cls.check_keys(stored_priv_key, stored_pub_key)
+        except Exception as ex:
+            if str(ex) == 'key pair does not match':
+                ex = Exception('private key does not match')
+            raise ex
+
+    @classmethod
+    def check_private_key(cls, stored_priv_key, stored_pub_key):
+        if not stored_priv_key:
+            raise Exception('no private key set')
+        if not stored_pub_key:
+            raise Exception('public key does not match')
+        try:
+            cls.check_keys(stored_priv_key, stored_pub_key)
+        except Exception as ex:
+            if str(ex) == 'key pair does not match':
+                ex = Exception('public key does not match')
+            raise ex
