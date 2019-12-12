@@ -1,16 +1,14 @@
 # pylint: disable=arguments-differ
 import logging
 import fnmatch
-import base64
-import hashlib
+
 
 from pyparsing import alphanums, OneOrMore, Optional, Regex, Suppress, Word
 
 import configshell_fb as configshell
 from configshell_fb.shell import locatedExpr
-from Cryptodome.PublicKey import RSA
 
-from .core import CephNodeManager
+from .core import CephNodeManager, SshKeyManager
 from .salt_utils import PillarManager
 
 
@@ -159,49 +157,6 @@ class CephSaltNodesHandler(OptionHandler):
         return CephSaltNodeHandler(CephNodeManager.ceph_salt_nodes()[child_name])
 
 
-class SshKeyManager:
-    @classmethod
-    def check_keys(cls, stored_priv_key, stored_pub_key):
-        try:
-            key = RSA.import_key(stored_priv_key)
-        except (ValueError, IndexError, TypeError):
-            raise Exception('invalid private key')
-
-        if not key.has_private():
-            raise Exception('invalid private key')
-
-        pub_key = key.publickey().exportKey('OpenSSH').decode('utf-8')
-        stored_pub_key = PillarManager.get('ceph-salt:ssh:public_key')
-        if not stored_pub_key or pub_key != stored_pub_key:
-            raise Exception('key pair does not match')
-
-    @classmethod
-    def check_public_key(cls, stored_priv_key, stored_pub_key):
-        if not stored_pub_key:
-            raise Exception('no public key set')
-        if not stored_priv_key:
-            raise Exception('private key does not match')
-        try:
-            cls.check_keys(stored_priv_key, stored_pub_key)
-        except Exception as ex:
-            if str(ex) == 'key pair does not match':
-                ex = Exception('private key does not match')
-            raise ex
-
-    @classmethod
-    def check_private_key(cls, stored_priv_key, stored_pub_key):
-        if not stored_priv_key:
-            raise Exception('no private key set')
-        if not stored_pub_key:
-            raise Exception('public key does not match')
-        try:
-            cls.check_keys(stored_priv_key, stored_pub_key)
-        except Exception as ex:
-            if str(ex) == 'key pair does not match':
-                ex = Exception('public key does not match')
-            raise ex
-
-
 class SSHGroupHandler(OptionHandler):
     def commands_map(self):
         return {
@@ -209,11 +164,9 @@ class SSHGroupHandler(OptionHandler):
         }
 
     def generate_key_pair(self):
-        key = RSA.generate(2048)
-        private_key = key.exportKey('PEM')
-        public_key = key.publickey().exportKey('OpenSSH')
-        PillarManager.set('ceph-salt:ssh:private_key', private_key.decode('utf-8'))
-        PillarManager.set('ceph-salt:ssh:public_key', public_key.decode('utf-8'))
+        private_key, public_key = SshKeyManager.generate_key_pair()
+        PillarManager.set('ceph-salt:ssh:private_key', private_key)
+        PillarManager.set('ceph-salt:ssh:public_key', public_key)
 
     def value(self):
         stored_priv_key = PillarManager.get('ceph-salt:ssh:private_key')
@@ -233,18 +186,12 @@ class SshPrivateKeyHandler(PillarHandler):
     def __init__(self):
         super(SshPrivateKeyHandler, self).__init__('ceph-salt:ssh:private_key')
 
-    @staticmethod
-    def _key_fingerprint(key):
-        key = base64.b64decode(key.split()[1].encode('ascii'))
-        fp_plain = hashlib.md5(key).hexdigest()
-        return ':'.join(a + b for a, b in zip(fp_plain[::2], fp_plain[1::2]))
-
     def value(self):
         stored_priv_key, _ = super(SshPrivateKeyHandler, self).value()
         stored_pub_key = PillarManager.get('ceph-salt:ssh:public_key')
         try:
             SshKeyManager.check_private_key(stored_priv_key, stored_pub_key)
-            return self._key_fingerprint(stored_pub_key), None
+            return SshKeyManager.key_fingerprint(stored_pub_key), None
         except Exception as ex:  # pylint: disable=broad-except
             return str(ex), False
 
@@ -253,18 +200,12 @@ class SshPublicKeyHandler(PillarHandler):
     def __init__(self):
         super(SshPublicKeyHandler, self).__init__('ceph-salt:ssh:public_key')
 
-    @staticmethod
-    def _key_fingerprint(key):
-        key = base64.b64decode(key.split()[1].encode('ascii'))
-        fp_plain = hashlib.md5(key).hexdigest()
-        return ':'.join(a + b for a, b in zip(fp_plain[::2], fp_plain[1::2]))
-
     def value(self):
         stored_pub_key, _ = super(SshPublicKeyHandler, self).value()
         stored_priv_key = PillarManager.get('ceph-salt:ssh:private_key')
         try:
             SshKeyManager.check_public_key(stored_priv_key, stored_pub_key)
-            return self._key_fingerprint(stored_pub_key), None
+            return SshKeyManager.key_fingerprint(stored_pub_key), None
         except Exception as ex:  # pylint: disable=broad-except
             return str(ex), False
 
