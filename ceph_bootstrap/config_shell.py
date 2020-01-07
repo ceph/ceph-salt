@@ -10,6 +10,7 @@ from configshell_fb.shell import locatedExpr
 
 from .core import CephNodeManager, SshKeyManager
 from .salt_utils import PillarManager
+from .terminal_utils import PrettyPrinter as PP
 
 
 logger = logging.getLogger(__name__)
@@ -167,6 +168,7 @@ class SSHGroupHandler(OptionHandler):
         private_key, public_key = SshKeyManager.generate_key_pair()
         PillarManager.set('ceph-salt:ssh:private_key', private_key)
         PillarManager.set('ceph-salt:ssh:public_key', public_key)
+        PP.pl_green('Key pair generated.')
 
     def value(self):
         stored_priv_key = PillarManager.get('ceph-salt:ssh:private_key')
@@ -219,9 +221,11 @@ class TimeServerGroupHandler(OptionHandler):
 
     def enable(self):
         PillarManager.set('ceph-salt:time_server:enabled', True)
+        PP.pl_green('Enabled.')
 
     def disable(self):
         PillarManager.set('ceph-salt:time_server:enabled', False)
+        PP.pl_green('Disabled.')
 
     def value(self):
         val = PillarManager.get('ceph-salt:time_server:enabled')
@@ -513,6 +517,7 @@ class OptionNode(configshell.ConfigNode):
             self.option_dict['handler'].reset()
         else:
             self.value = None
+        PP.pl_green('Value reset.')
 
     def _read_only(self):
         if 'handler' in self.option_dict:
@@ -534,6 +539,7 @@ class ValueOptionNode(OptionNode):
             self.option_dict['handler'].save(value)
         else:
             self.value = value
+        PP.pl_green('Value set.')
 
     def ui_complete_set(self, parameters, text, current_param):
         matching = []
@@ -560,12 +566,14 @@ class FlagOptionNode(OptionNode):
         Enables the option
         '''
         self._set_option_value(True)
+        PP.pl_green('Enabled.')
 
     def ui_command_disable(self):
         '''
         Disables the option
         '''
         self._set_option_value(False)
+        PP.pl_green('Disabled.')
 
 
 class ListElementNode(configshell.ConfigNode):
@@ -593,12 +601,18 @@ class ListOptionNode(OptionNode):
             self.value.append(value)
             self.option_dict['handler'].save(self.value)
             ListElementNode(value, self)
+            PP.pl_green('Value added.')
+        else:
+            PP.pl_red('Value already exists.')
 
     def ui_command_remove(self, value):
         if value in self.value:
             self.value.remove(value)
             self.option_dict['handler'].save(self.value)
             self.remove_child(self.get_child(value))
+            PP.pl_green('Value removed.')
+        else:
+            PP.pl_red('Value not found.')
 
 
 class MinionOptionNode(configshell.ConfigNode):
@@ -631,11 +645,19 @@ class MinionsOptionNode(OptionNode):
 
     def ui_command_add(self, minion_id):
         matching = fnmatch.filter(self.option_dict['handler'].possible_values(), minion_id)
+        counter = 0
         for match in matching:
             if match not in self.value:
                 self.value.append(match)
                 self.option_dict['handler'].save(self.value)
                 MinionOptionNode(match, self.option_dict['handler'].children_handler(match), self)
+                counter += 1
+        if counter == 1:
+            PP.pl_green('1 minion added.')
+        elif counter > 1:
+            PP.pl_green('{} minions added.'.format(counter))
+        else:
+            PP.pl_red('No minions matched "{}".'.format(minion_id))
 
     def ui_command_rm(self, minion_id):
         matching = fnmatch.filter(self.value, minion_id)
@@ -643,6 +665,13 @@ class MinionsOptionNode(OptionNode):
             self.value.remove(match)
             self.option_dict['handler'].save(self.value)
             self.remove_child(self.get_child(match))
+        counter = len(matching)
+        if counter == 1:
+            PP.pl_green('1 minion removed.')
+        elif counter > 1:
+            PP.pl_green('{} minions removed.'.format(counter))
+        else:
+            PP.pl_red('No minions matched "{}".'.format(minion_id))
 
     # pylint: disable=unused-argument
     def ui_complete_add(self, parameters, text, current_param):
@@ -721,7 +750,7 @@ def run_config_shell():
             break
         except Exception as ex:  # pylint: disable=broad-except
             logger.exception(ex)
-            print("An error occurred: {}".format(ex))
+            PP.pl_red(ex)
 
 
 def run_config_cmdline(cmdline):
@@ -730,7 +759,6 @@ def run_config_cmdline(cmdline):
     try:
         logger.info("running command: %s", cmdline)
         shell.run_cmdline(cmdline)
-        print("OK")
     except Exception as ex:  # pylint: disable=broad-except
         logger.exception(ex)
-        print("An error occurred: {}".format(ex))
+        PP.pl_red(ex)
