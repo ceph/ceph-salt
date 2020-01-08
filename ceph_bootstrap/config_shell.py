@@ -470,7 +470,7 @@ class OptionNode(configshell.ConfigNode):
         configshell.ConfigNode.__init__(self, option_name, parent)
         self.option_name = option_name
         self.option_dict = option_dict
-        self.help_intro = option_dict.get('help', '')
+        self.help_intro = option_dict.get('help', ' ')
         self.value = None
 
     def _list_commands(self):
