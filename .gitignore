@@ -9,3 +9,4 @@ virtualenv*
 .coverage
 .pytest_cache
 .tox
+.idea
