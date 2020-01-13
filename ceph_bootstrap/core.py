@@ -64,10 +64,7 @@ class CephNodeManager:
 
     @classmethod
     def save_in_pillar(cls):
-        minions = []
-        for node in cls._ceph_salt_nodes.values():
-            if node.roles:
-                minions.append(node.short_name)
+        minions = [n.short_name for n in cls._ceph_salt_nodes.values()]
         PillarManager.set('ceph-salt:minions:all', minions)
         PillarManager.set('ceph-salt:minions:mon',
                           {n.short_name: n.public_ip for n in cls._ceph_salt_nodes.values()
