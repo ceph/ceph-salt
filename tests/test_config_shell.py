@@ -1,3 +1,4 @@
+from ceph_bootstrap.exceptions import CephNodeHasRolesException
 from ceph_bootstrap.salt_utils import GrainsManager, PillarManager
 from ceph_bootstrap.config_shell import CephBootstrapConfigShell, generate_config_shell_tree
 
@@ -34,6 +35,16 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertEqual(PillarManager.get('ceph-salt:minions:mgr'), [])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mon'), {})
         self.assertEqual(PillarManager.get('ceph-salt:bootstrap_mon'), None)
+
+    def test_cluster_minions_rm_with_role(self):
+        self.shell.run_cmdline('/Cluster/Minions add node1.ceph.com')
+        self.shell.run_cmdline('/Cluster/Roles/Mgr add node1.ceph.com')
+
+        with self.assertRaises(CephNodeHasRolesException):
+            self.shell.run_cmdline('/Cluster/Minions rm node1.ceph.com')
+
+        self.shell.run_cmdline('/Cluster/Roles/Mgr rm node1.ceph.com')
+        self.shell.run_cmdline('/Cluster/Minions rm node1.ceph.com')
 
     def test_cluster_roles_mgr(self):
         self.shell.run_cmdline('/Cluster/Minions add node1.ceph.com')

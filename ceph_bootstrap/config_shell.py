@@ -648,8 +648,10 @@ class MinionsOptionNode(OptionNode):
         counter = 0
         for match in matching:
             if match not in self.value:
-                self.value.append(match)
-                self.option_dict['handler'].save(self.value)
+                new_value = list(self.value)
+                new_value.append(match)
+                self.option_dict['handler'].save(new_value)
+                self.value = new_value
                 MinionOptionNode(match, self.option_dict['handler'].children_handler(match), self)
                 counter += 1
         if counter == 1:
@@ -662,8 +664,10 @@ class MinionsOptionNode(OptionNode):
     def ui_command_rm(self, minion_id):
         matching = fnmatch.filter(self.value, minion_id)
         for match in matching:
-            self.value.remove(match)
-            self.option_dict['handler'].save(self.value)
+            new_value = list(self.value)
+            new_value.remove(match)
+            self.option_dict['handler'].save(new_value)
+            self.value = new_value
             self.remove_child(self.get_child(match))
         counter = len(matching)
         if counter == 1:
