@@ -114,7 +114,7 @@ Requires(pre):  salt-master
 %define fname ceph-salt
 %define fdir  %{_datadir}/salt-formulas
 
-%description
+%description -n ceph-salt-formula
 Salt Formula to deploy Ceph clusters.
 
 %files -n ceph-salt-formula
