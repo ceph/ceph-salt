@@ -67,6 +67,9 @@ Octopus.
 %fdupes %{buildroot}%{python3_sitelib}
 
 # ceph-salt-formula installation
+%define fname ceph-salt
+%define fdir  %{_datadir}/salt-formulas
+
 mkdir -p %{buildroot}%{fdir}/states/%{fname}/
 mkdir -p %{buildroot}%{fdir}/metadata/%{fname}/
 cp -R ceph-salt-formula/states/* %{buildroot}%{fdir}/states/%{fname}/
@@ -110,9 +113,6 @@ Requires(pre):  salt-formulas-configuration
 %else
 Requires(pre):  salt-master
 %endif
-
-%define fname ceph-salt
-%define fdir  %{_datadir}/salt-formulas
 
 %description -n ceph-salt-formula
 Salt Formula to deploy Ceph clusters.
