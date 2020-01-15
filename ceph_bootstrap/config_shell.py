@@ -646,35 +646,49 @@ class MinionsOptionNode(OptionNode):
     def ui_command_add(self, minion_id):
         matching = fnmatch.filter(self.option_dict['handler'].possible_values(), minion_id)
         counter = 0
+        has_errors = False
         for match in matching:
             if match not in self.value:
                 new_value = list(self.value)
                 new_value.append(match)
-                self.option_dict['handler'].save(new_value)
-                self.value = new_value
-                MinionOptionNode(match, self.option_dict['handler'].children_handler(match), self)
-                counter += 1
+                try:
+                    self.option_dict['handler'].save(new_value)
+                    self.value = new_value
+                    MinionOptionNode(match, self.option_dict['handler'].children_handler(match),
+                                     self)
+                    counter += 1
+                except Exception as ex:  # pylint: disable=broad-except
+                    logger.exception(ex)
+                    PP.pl_red(ex)
+                    has_errors = True
         if counter == 1:
             PP.pl_green('1 minion added.')
         elif counter > 1:
             PP.pl_green('{} minions added.'.format(counter))
-        else:
+        elif not has_errors:
             PP.pl_red('No minions matched "{}".'.format(minion_id))
 
     def ui_command_rm(self, minion_id):
         matching = fnmatch.filter(self.value, minion_id)
+        counter = 0
+        has_errors = False
         for match in matching:
             new_value = list(self.value)
             new_value.remove(match)
-            self.option_dict['handler'].save(new_value)
-            self.value = new_value
-            self.remove_child(self.get_child(match))
-        counter = len(matching)
+            try:
+                self.option_dict['handler'].save(new_value)
+                self.value = new_value
+                self.remove_child(self.get_child(match))
+                counter += 1
+            except Exception as ex:  # pylint: disable=broad-except
+                logger.exception(ex)
+                PP.pl_red(ex)
+                has_errors = True
         if counter == 1:
             PP.pl_green('1 minion removed.')
         elif counter > 1:
             PP.pl_green('{} minions removed.'.format(counter))
-        else:
+        elif not has_errors:
             PP.pl_red('No minions matched "{}".'.format(minion_id))
 
     # pylint: disable=unused-argument
