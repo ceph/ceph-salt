@@ -66,11 +66,69 @@ Octopus.
 %py3_install
 %fdupes %{buildroot}%{python3_sitelib}
 
-%files
+# ceph-salt-formula installation
+%define fname ceph-salt
+%define fdir  %{_datadir}/salt-formulas
+
+mkdir -p %{buildroot}%{fdir}/states/%{fname}/
+mkdir -p %{buildroot}%{fdir}/metadata/%{fname}/
+cp -R ceph-salt-formula/states/* %{buildroot}%{fdir}/states/%{fname}/
+cp ceph-salt-formula/metadata/* %{buildroot}%{fdir}/metadata/%{fname}/
+
+mkdir -p %{buildroot}%{_datadir}/%{fname}/pillar
+
+# pillar top sls file
+cat <<EOF > %{buildroot}%{_datadir}/%{fname}/pillar/top.sls
+base:
+    '*':
+    - ceph-salt
+EOF
+
+# empty ceph-salt.sls file
+cat <<EOF > %{buildroot}%{_datadir}/%{fname}/pillar/ceph-salt.sls
+ceph-salt:
+
+EOF
+
+cat <<EOF > %{buildroot}%{_datadir}/%{fname}/pillar.conf.example
+pillar_roots:
+    base:
+    - /srv/pillar
+    - %{_datadir}/%{fname}/pillar
+EOF
+
+
+%files -n ceph-bootstrap
 %license LICENSE
 %doc CHANGELOG.md README.md
 %{python3_sitelib}/ceph_bootstrap*/
 %{_bindir}/ceph-bootstrap
+
+%package -n ceph-salt-formula
+Summary:    Ceph Salt Formula
+Group:      System/Management
+
+%if ! (0%{?sle_version:1} && 0%{?sle_version} < 150100)
+Requires(pre):  salt-formulas-configuration
+%else
+Requires(pre):  salt-master
+%endif
+
+%description -n ceph-salt-formula
+Salt Formula to deploy Ceph clusters.
+
+%files -n ceph-salt-formula
+%defattr(-,root,root,-)
+%license LICENSE
+%doc README.md
+%dir %attr(0755, root, salt) %{fdir}/
+%dir %attr(0755, root, salt) %{fdir}/states/
+%dir %attr(0755, root, salt) %{fdir}/metadata/
+%dir %attr(0755, root, root) %{_datadir}/%{fname}
+%{fdir}/states/
+%{fdir}/metadata/
+%{_datadir}/%{fname}
+
 
 %changelog
 

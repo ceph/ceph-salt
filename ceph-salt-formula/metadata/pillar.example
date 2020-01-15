@@ -1,0 +1,20 @@
+ceph-salt:
+  minions:
+    - <minion_id_1>
+    - <minion_id_1>
+    # ...
+  bootstrap_mon: <mon_minion_id>
+  ssh:
+    private_key: |
+      <key_data_line1>
+      <key_data_line2>
+      # ...
+
+    public_key: <key_data>
+  time_server:
+    enabled: True
+    host_server: <fqdn of admin node>
+    external_time_servers:
+      - <server1>
+      - <server2>
+      # ...
