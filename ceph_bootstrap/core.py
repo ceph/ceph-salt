@@ -4,7 +4,7 @@ import hashlib
 
 from Cryptodome.PublicKey import RSA
 
-from .exceptions import CephNodeHasRolesException
+from .exceptions import CephNodeHasRolesException, CephNodeFqdnResolvesToLoopbackException
 from .salt_utils import SaltClient, GrainsManager, PillarManager
 
 
@@ -89,6 +89,8 @@ class CephNodeManager:
     def add_node(cls, minion_id):
         cls._load()
         node = CephNode(minion_id)
+        if not node.public_ip or node.public_ip == '127.0.0.1':
+            raise CephNodeFqdnResolvesToLoopbackException(minion_id)
         node.save()
         cls._ceph_salt_nodes[minion_id] = node
         cls.save_in_pillar()

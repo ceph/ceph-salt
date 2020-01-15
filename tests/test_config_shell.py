@@ -35,6 +35,17 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertEqual(PillarManager.get('ceph-salt:minions:mon'), {})
         self.assertEqual(PillarManager.get('ceph-salt:bootstrap_mon'), None)
 
+    def test_cluster_minions_add_invalid_ip(self):
+        fqdn_ip4 = GrainsManager.get_grain('node1.ceph.com', 'fqdn_ip4')
+        GrainsManager.set_grain('node1.ceph.com', 'fqdn_ip4', ['127.0.0.1'])
+
+        self.shell.run_cmdline('/Cluster/Minions add node1.ceph.com')
+        self.assertInSysOut("Host 'node1.ceph.com' FQDN resolves to the loopback interface IP "
+                            "address")
+        self.assertEqual(PillarManager.get('ceph-salt:minions:all'), [])
+
+        GrainsManager.set_grain('node1.ceph.com', 'fqdn_ip4', fqdn_ip4)
+
     def test_cluster_minions_rm_with_role(self):
         self.shell.run_cmdline('/Cluster/Minions add node1.ceph.com')
         self.shell.run_cmdline('/Cluster/Roles/Mgr add node1.ceph.com')

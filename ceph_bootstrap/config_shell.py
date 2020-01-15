@@ -9,6 +9,7 @@ import configshell_fb as configshell
 from configshell_fb.shell import locatedExpr
 
 from .core import CephNodeManager, SshKeyManager
+from .exceptions import CephBootstrapException
 from .salt_utils import PillarManager
 from .terminal_utils import PrettyPrinter as PP
 
@@ -657,7 +658,7 @@ class MinionsOptionNode(OptionNode):
                     MinionOptionNode(match, self.option_dict['handler'].children_handler(match),
                                      self)
                     counter += 1
-                except Exception as ex:  # pylint: disable=broad-except
+                except CephBootstrapException as ex:
                     logger.exception(ex)
                     PP.pl_red(ex)
                     has_errors = True
@@ -680,7 +681,7 @@ class MinionsOptionNode(OptionNode):
                 self.value = new_value
                 self.remove_child(self.get_child(match))
                 counter += 1
-            except Exception as ex:  # pylint: disable=broad-except
+            except CephBootstrapException as ex:
                 logger.exception(ex)
                 PP.pl_red(ex)
                 has_errors = True
