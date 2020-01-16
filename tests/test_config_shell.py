@@ -1,4 +1,3 @@
-from ceph_bootstrap.exceptions import CephNodeHasRolesException
 from ceph_bootstrap.salt_utils import GrainsManager, PillarManager
 from ceph_bootstrap.config_shell import CephBootstrapConfigShell, generate_config_shell_tree
 
@@ -36,12 +35,26 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertEqual(PillarManager.get('ceph-salt:minions:mon'), {})
         self.assertEqual(PillarManager.get('ceph-salt:bootstrap_mon'), None)
 
+    def test_cluster_minions_add_invalid_ip(self):
+        fqdn_ip4 = GrainsManager.get_grain('node1.ceph.com', 'fqdn_ip4')
+        GrainsManager.set_grain('node1.ceph.com', 'fqdn_ip4', ['127.0.0.1'])
+
+        self.shell.run_cmdline('/Cluster/Minions add node1.ceph.com')
+        self.assertInSysOut("Host 'node1.ceph.com' FQDN resolves to the loopback interface IP "
+                            "address")
+        self.assertEqual(PillarManager.get('ceph-salt:minions:all'), [])
+
+        GrainsManager.set_grain('node1.ceph.com', 'fqdn_ip4', fqdn_ip4)
+
     def test_cluster_minions_rm_with_role(self):
         self.shell.run_cmdline('/Cluster/Minions add node1.ceph.com')
         self.shell.run_cmdline('/Cluster/Roles/Mgr add node1.ceph.com')
+        self.clearSysOut()
 
-        with self.assertRaises(CephNodeHasRolesException):
-            self.shell.run_cmdline('/Cluster/Minions rm node1.ceph.com')
+        self.shell.run_cmdline('/Cluster/Minions rm node1.ceph.com')
+        self.assertInSysOut("Cannot remove host 'node1.ceph.com' because it has roles defined: "
+                            "{'mgr'}")
+        self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1'])
 
         self.shell.run_cmdline('/Cluster/Roles/Mgr rm node1.ceph.com')
         self.shell.run_cmdline('/Cluster/Minions rm node1.ceph.com')
