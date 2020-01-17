@@ -8,6 +8,7 @@ from pyparsing import alphanums, OneOrMore, Optional, Regex, Suppress, Word
 import configshell_fb as configshell
 from configshell_fb.shell import locatedExpr
 
+from ceph_bootstrap.exceptions import MinionDoesNotExistException
 from .core import CephNodeManager, SshKeyManager
 from .exceptions import CephBootstrapException
 from .salt_utils import PillarManager
@@ -15,6 +16,10 @@ from .terminal_utils import PrettyPrinter as PP
 
 
 logger = logging.getLogger(__name__)
+
+
+class ConfigShellSettings:
+    advanced = False
 
 
 class OptionHandler:
@@ -56,6 +61,45 @@ class PillarHandler(OptionHandler):
 
     def read_only(self):
         return False
+
+
+class BootstrapMonHandler(PillarHandler):
+    def __init__(self):
+        super(BootstrapMonHandler, self).__init__('ceph-salt:bootstrap_mon')
+
+    def value(self):
+        val, _ = super().value()
+        if not val:
+            return 'no bootstrap mon', False
+        return val, True
+
+    @staticmethod
+    def _clear_all_roles():
+        for current_minion_id in CephNodeManager.ceph_salt_nodes():
+            CephNodeManager.ceph_salt_nodes()[current_minion_id].roles.clear()
+            CephNodeManager.ceph_salt_nodes()[current_minion_id].save()
+
+    @staticmethod
+    def _set_bootstrap_roles(minion_id):
+        CephNodeManager.ceph_salt_nodes()[minion_id].add_role('mon')
+        CephNodeManager.ceph_salt_nodes()[minion_id].add_role('mgr')
+        CephNodeManager.ceph_salt_nodes()[minion_id].save()
+
+    def save(self, minion_id):
+        if minion_id not in CephNodeManager.ceph_salt_nodes():
+            raise MinionDoesNotExistException(minion_id)
+        BootstrapMonHandler._clear_all_roles()
+        BootstrapMonHandler._set_bootstrap_roles(minion_id)
+        CephNodeManager.save_in_pillar()
+        super().save(minion_id)
+
+    def reset(self):
+        BootstrapMonHandler._clear_all_roles()
+        CephNodeManager.save_in_pillar()
+        super().reset()
+
+    def possible_values(self):
+        return CephNodeManager.ceph_salt_nodes()
 
 
 class RolesGroupHandler(OptionHandler):
@@ -125,7 +169,7 @@ class CephSaltNodeHandler(OptionHandler):
 
     def value(self):
         if not self.ceph_salt_node.roles:
-            return 'no roles', False
+            return 'no roles', False if ConfigShellSettings.advanced else None
         return ", ".join(self.ceph_salt_node.roles), None
 
 
@@ -260,8 +304,16 @@ CEPH_BOOTSTRAP_OPTIONS = {
                 'type': 'minions',
                 'handler': CephSaltNodesHandler()
             },
+            'Bootstrap_Mon': {
+                'help': 'Cluster’s first manager and monitor',
+                'default': None,
+                'type': 'value',
+                'advanced': False,
+                'handler': BootstrapMonHandler()
+            },
             'Roles': {
                 'type': 'group',
+                'advanced': True,
                 'handler': RolesGroupHandler(),
                 'help': '''
                         Roles Configuration
@@ -311,6 +363,7 @@ CEPH_BOOTSTRAP_OPTIONS = {
                 =========================================
                 Options to control the deployment of Ceph and other services
                 ''',
+        'advanced': True,
         'options': {
             'Bootstrap': {
                 'type': 'flag',
@@ -359,6 +412,7 @@ CEPH_BOOTSTRAP_OPTIONS = {
                 =====================================
                 Options for configuring storage disks used by OSDs
                 ''',
+        'advanced': True,
         'options': {
             'Drive_Groups': {
                 'type': 'list',
@@ -708,7 +762,15 @@ class MinionsOptionNode(OptionNode):
         return matching
 
 
+def _is_option_enabled(option_dict):
+    advanced_group = option_dict.get('advanced')
+    return advanced_group is None or advanced_group == ConfigShellSettings.advanced
+
+
 def _generate_option_node(option_name, option_dict, parent):
+    if not _is_option_enabled(option_dict):
+        return
+
     if option_dict.get('type', None) == 'group':
         _generate_group_node(option_name, option_dict, parent)
         return
@@ -727,6 +789,9 @@ def _generate_option_node(option_name, option_dict, parent):
 
 
 def _generate_group_node(group_name, group_dict, parent):
+    if not _is_option_enabled(group_dict):
+        return
+
     group_node = GroupNode(group_name, group_dict.get('help', ""), group_dict.get('handler', None),
                            parent)
     for option_name, option_dict in group_dict['options'].items():
@@ -760,7 +825,8 @@ class CephBootstrapConfigShell(configshell.ConfigShell):
         self._parser = parser
 
 
-def run_config_shell():
+def run_config_shell(advanced):
+    ConfigShellSettings.advanced = advanced
     shell = CephBootstrapConfigShell()
     generate_config_shell_tree(shell)
     while True:
@@ -772,7 +838,8 @@ def run_config_shell():
             PP.pl_red(ex)
 
 
-def run_config_cmdline(cmdline):
+def run_config_cmdline(advanced, cmdline):
+    ConfigShellSettings.advanced = advanced
     shell = CephBootstrapConfigShell()
     generate_config_shell_tree(shell)
     try:

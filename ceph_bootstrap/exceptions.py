@@ -12,3 +12,9 @@ class CephNodeFqdnResolvesToLoopbackException(CephBootstrapException):
     def __init__(self, minion_id):
         super(CephNodeFqdnResolvesToLoopbackException, self).__init__(
             "Host '{}' FQDN resolves to the loopback interface IP address".format(minion_id))
+
+
+class MinionDoesNotExistException(CephBootstrapException):
+    def __init__(self, minion_id):
+        super(MinionDoesNotExistException, self).__init__(
+            "Minion '{}' does not exist in current configuration".format(minion_id))

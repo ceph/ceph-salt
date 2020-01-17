@@ -66,15 +66,17 @@ def cli(log_level, log_file):
 
 
 @cli.command(name='config')
+@click.option('-a', '--advanced', is_flag=True, default=False,
+              help='Enable all features')
 @click.argument('config_args', nargs=-1, type=click.UNPROCESSED, required=False)
-def config_shell(config_args):
+def config_shell(advanced, config_args):
     """
     Starts ceph-bootstrap configuration shell
     """
     if config_args:
-        run_config_cmdline(" ".join(config_args))
+        run_config_cmdline(advanced, " ".join(config_args))
     else:
-        run_config_shell()
+        run_config_shell(advanced)
 
 
 if __name__ == '__main__':
