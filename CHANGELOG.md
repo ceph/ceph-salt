@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [15.0.1] - 2020-01-17
+### Added
+- Each config shell command now returns a success or error message (#13)
+- Moved ceph-salt-formula into ceph-bootstrap project as a subpackage (#26)
+### Fixed
+- Check if minion FQDN resolves to loopback IP address (#21)
+- Fixed "help" command when help text is not provided (#14)
+- Fixed "bootstrap_mon" update when the last MON is removed (#17)
+- Minions without role are also added to "ceph-salt:minions:all" (#22)
+- Fix minion removal upon error (#24)
+
 ## [0.1.0] - 2019-12-12
 ### Added
 - Mgr/Mon roles configuration
@@ -22,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal README.
 - The CHANGELOG file.
 
-[Unreleased]: https://github.com/SUSE/ceph-bootstrap/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/SUSE/ceph-bootstrap/compare/v15.0.1...HEAD
+[15.0.1]: https://github.com/SUSE/ceph-bootstrap/releases/tag/v15.0.1
 [0.1.0]: https://github.com/SUSE/ceph-bootstrap/releases/tag/v0.1.0
 [0.0.1]: https://github.com/SUSE/ceph-bootstrap/releases/tag/v0.0.1
