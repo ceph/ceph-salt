@@ -28,7 +28,7 @@ License:        MIT
 %if 0%{?suse_version}
 Group:          System/Management
 %endif
-URL:            https://github.com/SUSE/ceph-bootstrap
+URL:            https://github.com/SUSE/%{name}
 Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 BuildArch:      noarch
 
@@ -52,19 +52,33 @@ Requires:       python3-salt >= 2019.2.0
 Requires:       ceph-salt-formula
 Requires:       salt-master >= 2019.2.0
 
+
 %description
 ceph-bootstrap is a CLI tool for deploying Ceph clusters starting from version
 Octopus.
 
+
 %prep
 %autosetup -n %{name}-%{version} -p1
+
 
 %build
 %py3_build
 
+
 %install
 %py3_install
 %fdupes %{buildroot}%{python3_sitelib}
+install -m 0755 -d %{buildroot}/%{_datadir}/%{name}
+
+# qa script installation
+install -m 0755 -d %{buildroot}/%{_datadir}/%{name}/qa
+install -m 0755 -d %{buildroot}/%{_datadir}/%{name}/qa/common
+install -m 0755 qa/health-ok.sh %{buildroot}/%{_datadir}/%{name}/qa/health-ok.sh
+install -m 0644 qa/common/common.sh %{buildroot}/%{_datadir}/%{name}/qa/common/common.sh
+install -m 0644 qa/common/helper.sh %{buildroot}/%{_datadir}/%{name}/qa/common/helper.sh
+install -m 0644 qa/common/json.sh %{buildroot}/%{_datadir}/%{name}/qa/common/json.sh
+install -m 0644 qa/common/zypper.sh %{buildroot}/%{_datadir}/%{name}/qa/common/zypper.sh
 
 # ceph-salt-formula installation
 %define fname ceph-salt
@@ -98,11 +112,27 @@ pillar_roots:
 EOF
 
 
-%files -n ceph-bootstrap
+%files
 %license LICENSE
 %doc CHANGELOG.md README.md
 %{python3_sitelib}/ceph_bootstrap*/
-%{_bindir}/ceph-bootstrap
+%{_bindir}/%{name}
+%dir %{_datadir}/%{name}
+
+
+%package qa
+Summary:    Integration test script for ceph-bootstrap
+Group:      System/Management
+
+
+%description qa
+Integration test script for validating Ceph clusters deployed
+by ceph-bootstrap
+
+
+%files qa
+%{_datadir}/%{name}/qa
+
 
 %package -n ceph-salt-formula
 Summary:    Ceph Salt Formula
@@ -114,8 +144,10 @@ Requires(pre):  salt-formulas-configuration
 Requires(pre):  salt-master
 %endif
 
+
 %description -n ceph-salt-formula
 Salt Formula to deploy Ceph clusters.
+
 
 %files -n ceph-salt-formula
 %defattr(-,root,root,-)
