@@ -76,9 +76,9 @@ class CephNodeManager:
         minions = [n.minion_id for n in cls._ceph_salt_nodes.values() if 'mon' in n.roles]
         minions.sort()
         if minions:  # i.e., it has at least one
-            PillarManager.set('ceph-salt:bootstrap_mon', minions[0])
+            PillarManager.set('ceph-salt:bootstrap_minion', minions[0])
         else:
-            PillarManager.reset('ceph-salt:bootstrap_mon')
+            PillarManager.reset('ceph-salt:bootstrap_minion')
 
     @classmethod
     def ceph_salt_nodes(cls):
