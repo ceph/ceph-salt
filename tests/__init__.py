@@ -84,6 +84,10 @@ class TestMock:
     def ping():
         return True
 
+    @staticmethod
+    def true():
+        return True
+
 
 class SaltUtilMock:
     @staticmethod

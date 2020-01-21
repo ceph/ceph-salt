@@ -88,7 +88,7 @@ class GrainsManager:
 
     @classmethod
     def filter_by(cls, key, val=None):
-        result = SaltClient.local().cmd('{}:{}'.format(key, val if val else '*'), 'test.ping',
+        result = SaltClient.local().cmd('{}:{}'.format(key, val if val else '*'), 'test.true',
                                         tgt_type='grain')
         return list(result)
 
