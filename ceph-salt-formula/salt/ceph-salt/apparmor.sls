@@ -1,3 +1,7 @@
+{% import 'macros.yml' as macros %}
+
+{{ macros.begin_stage('Install and configure AppArmor') }}
+
 aa-enabled:
   cmd.run:
     - onfail:
@@ -20,3 +24,5 @@ uninstall apparmor:
 
 apparmor:
   test.nop
+
+{{ macros.end_stage('Install and configure AppArmor') }}

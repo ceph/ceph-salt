@@ -1,0 +1,26 @@
+{% macro send_event(action, type, desc) -%}
+{{ action }}_{{ type }}_{{ desc }}_enter:
+#   module.run:
+#     - event.send:
+#       - tag: ceph-salt/{{ type }}/{{ action }}
+#       - data:
+#           desc: {{ desc }}
+  ceph_salt.{{ action }}_{{ type }}:
+    - name: {{ desc }}
+{%- endmacro %}
+
+{% macro begin_stage(desc) -%}
+{{ send_event('begin', 'stage', desc) }}
+{%- endmacro %}
+
+{% macro end_stage(desc) -%}
+{{ send_event('end', 'stage', desc) }}
+{%- endmacro %}
+
+{% macro begin_step(desc) -%}
+{{ send_event('begin', 'step', desc) }}
+{%- endmacro %}
+
+{% macro end_step(desc) -%}
+{{ send_event('end', 'step', desc) }}
+{%- endmacro %}

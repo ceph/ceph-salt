@@ -1,3 +1,7 @@
+{% import 'macros.yml' as macros %}
+
+{{ macros.begin_stage('Setting up SSH keys') }}
+
 # make sure .ssh is present with the right permissions
 /home/root/.ssh:
   file.directory:
@@ -31,3 +35,5 @@ install ssh key:
       - comment: ssh_orchestrator_key
       - config: /%h/.ssh/authorized_keys
       - name: {{ pillar['ceph-salt']['ssh']['public_key'] }}
+
+{{ macros.end_stage('Setting up SSH keys') }}

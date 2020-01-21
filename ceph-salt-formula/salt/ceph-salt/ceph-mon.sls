@@ -1,3 +1,5 @@
+{% import 'macros.yml' as macros %}
+
 {% if pillar['ceph-salt']['minions']['mon'] | length > 1 %}
 {% set mon_update_args = [pillar['ceph-salt']['minions']['mon'] | length | string] %}
 {% for minion, ip in pillar['ceph-salt']['minions']['mon'].items() %}
@@ -5,6 +7,8 @@
 {% if mon_update_args.append(minion + ":" + ip) %}{% endif %}
 {% endif %}
 {% endfor %}
+
+{{ macros.begin_stage('Deployment of Ceph MONs') }}
 
 deploy remaining mons:
   cmd.run:
@@ -26,5 +30,7 @@ copy ceph.conf and keyring to other mons:
         scp -o "StrictHostKeyChecking=no" /etc/ceph/ceph.client.admin.keyring root@{{ ip }}:/etc/ceph/
 {%- endif %}
 {%- endfor %}
+
+{{ macros.end_stage('Deployment of Ceph MONs') }}
 
 {% endif %}

@@ -1,18 +1,27 @@
+{% import 'macros.yml' as macros %}
+
+{{ macros.begin_stage('Ceph bootstrap') }}
+
+{{ macros.begin_step('Install cephadm and other packages') }}
+
 install cephadm:
   pkg.installed:
     - pkgs:
         - cephadm
-
 {% if 'mon' in grains['ceph-salt']['roles'] %}
         - ceph-common
 {% endif %}
 
+{{ macros.end_step('Install cephadm and other packages') }}
+
+{{ macros.begin_step('Download ceph container image') }}
 {% if 'container' in pillar['ceph-salt'] and 'ceph' in pillar['ceph-salt']['container']['images'] %}
 download ceph container image:
   cmd.run:
     - name: |
         podman pull {{ pillar['ceph-salt']['container']['images']['ceph'] }}
 {% endif %}
+{{ macros.end_step('Download ceph container image') }}
 
 {% if grains['id'] == pillar['ceph-salt']['bootstrap_minion'] %}
 /var/log/ceph:
@@ -21,6 +30,8 @@ download ceph container image:
     - group: ceph
     - mode: '0770'
     - makedirs: True
+
+{{ macros.begin_step('Run cephadm bootstrap') }}
 
 {% set dashboard_username = pillar['ceph-salt'].get('dashboard', {'username': 'admin'}).get('username', 'admin') %}
 
@@ -39,6 +50,8 @@ run cephadm bootstrap:
       - /etc/ceph/ceph.conf
       - /etc/ceph/ceph.client.admin.keyring
 
+{{ macros.end_step('Run cephadm bootstrap') }}
+
 {% set dashboard_password = pillar['ceph-salt'].get('dashboard', {'password': None}).get('password', None) %}
 {% if dashboard_password %}
 set ceph-dashboard password:
@@ -48,6 +61,8 @@ set ceph-dashboard password:
     - onchanges:
       - cmd: run cephadm bootstrap
 {% endif %}
+
+{{ macros.begin_step('Configure SSH orchestrator') }}
 
 configure ssh orchestrator:
   cmd.run:
@@ -62,4 +77,9 @@ configure ssh orchestrator:
         true
     - onchanges:
       - cmd: run cephadm bootstrap
+
+{{ macros.end_step('Configure SSH orchestrator') }}
+
 {% endif %}
+
+{{ macros.end_stage('Ceph bootstrap') }}
