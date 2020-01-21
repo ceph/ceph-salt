@@ -70,9 +70,8 @@ Octopus.
 %define fname ceph-salt
 %define fdir  %{_datadir}/salt-formulas
 
-mkdir -p %{buildroot}%{fdir}/states/%{fname}/
 mkdir -p %{buildroot}%{fdir}/metadata/%{fname}/
-cp -R ceph-salt-formula/states/* %{buildroot}%{fdir}/states/%{fname}/
+cp -R ceph-salt-formula/salt/* %{buildroot}%{fdir}/states/
 cp ceph-salt-formula/metadata/* %{buildroot}%{fdir}/metadata/%{fname}/
 
 mkdir -p %{buildroot}%{_datadir}/%{fname}/pillar
