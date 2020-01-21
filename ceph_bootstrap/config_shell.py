@@ -314,7 +314,7 @@ CEPH_BOOTSTRAP_OPTIONS = {
         'options': {
             'Bootstrap': {
                 'type': 'flag',
-                'help': 'Run ceph-daemon --bootstrap on one of the Mon machines',
+                'help': 'Run "cephadm bootstrap" on one of the Mon machines',
                 'handler': PillarHandler('ceph-salt:deploy:bootstrap'),
                 'default': True
             },
