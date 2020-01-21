@@ -1,7 +1,7 @@
 {% set time_server = pillar['ceph-salt']['time_server']['server_host'] %}
 
 {% if grains['fqdn'] == time_server %}
-{% for server in pillar['ceph-salt']['time_server']['external_time_servers'] %}
+{% for server in pillar['ceph-salt']['time_server'].get('external_time_servers', []) %}
 pool {{ server }} iburst
 {% endfor %}
 
