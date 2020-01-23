@@ -7,8 +7,10 @@ pool {{ server }} iburst
 
 local stratum 10
 manual
-{% set fqdn_ip = grains['fqdn_ip4'] %}
-{% for subnet in salt['network.subnets']() %}
+{% set is_ip4 = 'ip4' == pillar['ceph-salt'].get('network', {}).get('address_family', 'ip4')%}
+{% set fqdn_ip = grains['fqdn_ip4' if is_ip4 else 'fqdn_ip6'] %}
+{% set subnets = salt['network.subnets' if is_ip4 else 'network.subnets6'] %}
+{% for subnet in subnets() %}
 {% if salt['network.ip_in_subnet'](fqdn_ip, subnet) %}
 allow {{ subnet }}
 {% endif %}

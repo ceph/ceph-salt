@@ -15,8 +15,11 @@ class ConfigShellTest(SaltMockTestCase):
 
         self.salt_env.minions = ['node1.ceph.com', 'node2.ceph.com', 'node3.ceph.com']
         GrainsManager.set_grain('node1.ceph.com', 'fqdn_ip4', ['10.20.39.201'])
+        GrainsManager.set_grain('node1.ceph.com', 'fqdn_ip6', ['fde4:8dba:82e1:0:5054:ff:feeb:901'])
         GrainsManager.set_grain('node2.ceph.com', 'fqdn_ip4', ['10.20.39.202'])
+        GrainsManager.set_grain('node2.ceph.com', 'fqdn_ip6', ['fde4:8dba:82e1:0:5054:ff:feeb:902'])
         GrainsManager.set_grain('node3.ceph.com', 'fqdn_ip4', ['10.20.39.203'])
+        GrainsManager.set_grain('node3.ceph.com', 'fqdn_ip6', ['fde4:8dba:82e1:0:5054:ff:feeb:903'])
 
     def test_cluster_minions(self):
         self.shell.run_cmdline('/Cluster/Minions add node1.ceph.com')
@@ -137,6 +140,21 @@ class ConfigShellTest(SaltMockTestCase):
     def test_deployment_osd(self):
         self.assertFlagOption('/Deployment/OSD',
                               'ceph-salt:deploy:osd')
+
+    def test_network_address_family(self):
+        self.shell.run_cmdline('/Cluster/Minions add node1.ceph.com')
+        self.shell.run_cmdline('/Cluster/Roles/Mon add node1.ceph.com')
+        self.clearSysOut()
+
+        self.assertEqual(PillarManager.get('ceph-salt:minions:mon'), {'node1': '10.20.39.201'})
+        self.shell.run_cmdline('/Network/Address_Family set ip6')
+        self.assertInSysOut('Value set.')
+        self.assertEqual(PillarManager.get('ceph-salt:network:address_family'), 'ip6')
+        self.assertEqual(PillarManager.get('ceph-salt:minions:mon'),
+                         {'node1': 'fde4:8dba:82e1:0:5054:ff:feeb:901'})
+
+        self.shell.run_cmdline('/Cluster/Roles/Mon rm node1.ceph.com')
+        self.shell.run_cmdline('/Cluster/Minions rm node1.ceph.com')
 
     def test_ssh(self):
         self.shell.run_cmdline('/SSH generate')

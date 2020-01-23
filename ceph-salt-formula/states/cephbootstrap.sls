@@ -24,13 +24,15 @@ download ceph container image:
 
 {% set dashboard_username = pillar['ceph-salt'].get('dashboard', {'username': 'admin'}).get('username', 'admin') %}
 
+{% set short_name = grains['id'].split('.', 1)[0] %}
+
 run cephadm bootstrap:
   cmd.run:
     - name: |
 {%- if 'container' in pillar['ceph-salt'] and 'ceph' in pillar['ceph-salt']['container']['images'] %}
         CEPHADM_IMAGE={{ pillar['ceph-salt']['container']['images']['ceph'] }} \
 {%- endif %}
-        cephadm --verbose bootstrap --mon-ip {{ grains['fqdn_ip4'][0] }} \
+        cephadm --verbose bootstrap --mon-ip {{ pillar['ceph-salt']['minions']['mon'][short_name] }} \
                 --initial-dashboard-user {{ dashboard_username }} \
                 --output-keyring /etc/ceph/ceph.client.admin.keyring \
                 --output-config /etc/ceph/ceph.conf \

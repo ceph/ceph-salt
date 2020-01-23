@@ -8,9 +8,10 @@ from pyparsing import alphanums, OneOrMore, Optional, Regex, Suppress, Word
 import configshell_fb as configshell
 from configshell_fb.shell import locatedExpr
 
-from .core import CephNodeManager, SshKeyManager
-from .exceptions import CephBootstrapException
-from .salt_utils import PillarManager
+from .core import CephNodeManager, SshKeyManager, Defaults
+from .exceptions import CephBootstrapException, NoAddressAvailableException, \
+    InvalidAddressFamilyException
+from .salt_utils import PillarManager, GrainsManager
 from .terminal_utils import PrettyPrinter as PP
 
 
@@ -56,6 +57,38 @@ class PillarHandler(OptionHandler):
 
     def read_only(self):
         return False
+
+
+class AddressFamilyHandler(PillarHandler):
+    def __init__(self):
+        super(AddressFamilyHandler, self).__init__('ceph-salt:network:address_family')
+
+    def _update_nodes(self, address_family):
+        ip_cache = {}
+        fqdn_grain = 'fqdn_{}'.format(address_family)
+        for node in CephNodeManager.ceph_salt_nodes().values():
+            result = GrainsManager.get_grain(node.minion_id, fqdn_grain)
+            if len(result[node.minion_id]) > 0:
+                ip_cache[node.minion_id] = result[node.minion_id][0]
+            else:
+                raise NoAddressAvailableException(address_family, node.minion_id)
+        for node in CephNodeManager.ceph_salt_nodes().values():
+            node.public_ip = ip_cache[node.minion_id]
+
+    def save(self, address_family):
+        if address_family not in self.possible_values():
+            raise InvalidAddressFamilyException(address_family)
+        self._update_nodes(address_family)
+        CephNodeManager.save_in_pillar()
+        super().save(address_family)
+
+    def reset(self):
+        self._update_nodes(Defaults.NETWORK_ADDRESS_FAMILY)
+        CephNodeManager.save_in_pillar()
+        super().reset()
+
+    def possible_values(self):
+        return ['ip4', 'ip6']
 
 
 class RolesGroupHandler(OptionHandler):
@@ -365,6 +398,21 @@ CEPH_BOOTSTRAP_OPTIONS = {
                 'default': [],
                 'help': 'List of drive groups specifications to be used in OSD deployment',
                 'handler': PillarHandler('ceph-salt:storage:drive_groups')
+            }
+        }
+    },
+    'Network': {
+        'help': '''
+                Network configuration
+                ============================
+                Options for configuring Network settings
+                ''',
+        'options': {
+            'Address_Family': {
+                'default': Defaults.NETWORK_ADDRESS_FAMILY,
+                'type': 'value',
+                'help': "IP address family",
+                'handler': AddressFamilyHandler()
             }
         }
     },

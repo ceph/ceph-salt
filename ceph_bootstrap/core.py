@@ -14,6 +14,10 @@ logger = logging.getLogger(__name__)
 CEPH_SALT_GRAIN_KEY = 'ceph-salt'
 
 
+class Defaults:
+    NETWORK_ADDRESS_FAMILY = 'ip4'
+
+
 class CephNode:
     def __init__(self, minion_id):
         self.minion_id = minion_id
@@ -34,7 +38,9 @@ class CephNode:
         else:
             self.roles = set(result[self.minion_id]['roles'])
 
-        result = GrainsManager.get_grain(self.minion_id, 'fqdn_ip4')
+        fqdn_grain = 'fqdn_{}'.format(PillarManager.get('ceph-salt:network:address_family',
+                                                        Defaults.NETWORK_ADDRESS_FAMILY))
+        result = GrainsManager.get_grain(self.minion_id, fqdn_grain)
         self.public_ip = result[self.minion_id][0]
 
     def add_role(self, role):
@@ -89,7 +95,7 @@ class CephNodeManager:
     def add_node(cls, minion_id):
         cls._load()
         node = CephNode(minion_id)
-        if not node.public_ip or node.public_ip == '127.0.0.1':
+        if not node.public_ip or node.public_ip in ['127.0.0.1', '::1']:
             raise CephNodeFqdnResolvesToLoopbackException(minion_id)
         node.save()
         cls._ceph_salt_nodes[minion_id] = node
