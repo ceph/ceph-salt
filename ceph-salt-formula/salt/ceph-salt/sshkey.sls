@@ -9,6 +9,7 @@
     - group: root
     - mode: '0700'
     - makedirs: True
+    - failhard: True
 
 {% if 'mgr' in grains['ceph-salt']['roles'] or grains['id'] == pillar['ceph-salt']['bootstrap_minion'] %}
 # private key
@@ -18,6 +19,7 @@
     - group: root
     - mode: '0600'
     - contents_pillar: ceph-salt:ssh:private_key
+    - failhard: True
 
 # public key
 /root/.ssh/id_rsa.pub:
@@ -26,6 +28,7 @@
     - group: root
     - mode: '0644'
     - contents_pillar: ceph-salt:ssh:public_key
+    - failhard: True
 {% endif %}
 
 # add public key to authorized_keys
@@ -35,5 +38,6 @@ install ssh key:
       - comment: ssh_orchestrator_key
       - config: /%h/.ssh/authorized_keys
       - name: {{ pillar['ceph-salt']['ssh']['public_key'] }}
+      - failhard: True
 
 {{ macros.end_stage('Setting up SSH keys') }}

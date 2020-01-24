@@ -6,21 +6,25 @@ aa-enabled:
   cmd.run:
     - onfail:
       - test: apparmor
+    - failhard: True
 
 aa-teardown:
   cmd.run:
     - onlyif:
       - which aa-teardown
+    - failhard: True
 
 stop apparmor:
   service.dead:
     - enable: False
+    - failhard: True
 
 uninstall apparmor:
   pkg.removed:
     - pkgs:
       - apparmor
       - apparmor-utils
+    - failhard: True
 
 apparmor:
   test.nop

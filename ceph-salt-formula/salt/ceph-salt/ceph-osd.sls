@@ -11,6 +11,7 @@ deploy ceph osds ({{ loop.index }}/{{ dg_list | length }}):
   cmd.run:
     - name: |
         echo '{{ dg_spec }}' | ceph orchestrator osd create -i -
+    - failhard: True
 
 {{ macros.end_step('Deploying OSD groups ' + (loop.index | string) + '/' + (dg_list | length | string)) }}
 

@@ -6,6 +6,7 @@ install iputils:
   pkg.installed:
     - pkgs:
       - iputils
+    - failhard: True
 
 {% if pillar['ceph-salt'].get('upgrades', {'enabled': False})['enabled'] %}
 
@@ -14,6 +15,7 @@ install iputils:
 upgrade packages:
   module.run:
     - name: pkg.upgrade
+    - failhard: True
 
 {{ macros.end_step('Upgrading all packages') }}
 

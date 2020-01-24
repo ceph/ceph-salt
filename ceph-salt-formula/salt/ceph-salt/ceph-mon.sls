@@ -14,12 +14,14 @@ deploy remaining mons:
   cmd.run:
     - name: |
         ceph orchestrator mon update {{ mon_update_args | join(' ') }}
+    - failhard: True
 
 generate up-to-date ceph.conf:
   cmd.run:
     - name: |
         ceph config generate-minimal-conf > /tmp/ceph.conf
         mv /tmp/ceph.conf /etc/ceph/
+    - failhard: True
 
 copy ceph.conf and keyring to other mons:
   cmd.run:
@@ -30,6 +32,7 @@ copy ceph.conf and keyring to other mons:
         scp -o "StrictHostKeyChecking=no" /etc/ceph/ceph.client.admin.keyring root@{{ ip }}:/etc/ceph/
 {%- endif %}
 {%- endfor %}
+    - failhard: True
 
 {{ macros.end_stage('Deployment of Ceph MONs') }}
 

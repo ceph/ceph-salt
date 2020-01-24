@@ -10,11 +10,13 @@ install chrony:
     - pkgs:
       - chrony
     - refresh: True
+    - failhard: True
 {{ macros.end_step('Install chrony package') }}
 
 service_reload:
   module.run:
     - name: service.systemctl_reload
+    - failhard: True
 
 {{ macros.begin_step('Configure chrony service') }}
 /etc/chrony.conf:
@@ -27,7 +29,7 @@ service_reload:
     - mode: '0644'
     - makedirs: True
     - backup: minion
-    - fire_event: True
+    - failhard: True
 
 {{ macros.end_step('Configure chrony service') }}
 
@@ -36,7 +38,7 @@ start chronyd:
   service.running:
     - name: chronyd
     - enable: True
-    - fire_event: True
+    - failhard: True
 {{ macros.end_step('Start chrony service') }}
 
 {% endif %}

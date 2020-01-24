@@ -10,6 +10,7 @@ install cephadm:
         - cephadm
 {% if 'mon' in grains['ceph-salt']['roles'] %}
         - ceph-common
+    - failhard: True
 {% endif %}
 
 {{ macros.end_step('Install cephadm and other packages') }}
@@ -20,6 +21,7 @@ download ceph container image:
   cmd.run:
     - name: |
         podman pull {{ pillar['ceph-salt']['container']['images']['ceph'] }}
+    - failhard: True
 {% endif %}
 {{ macros.end_step('Download ceph container image') }}
 
@@ -30,6 +32,7 @@ download ceph container image:
     - group: ceph
     - mode: '0770'
     - makedirs: True
+    - failhard: True
 
 {{ macros.begin_step('Run cephadm bootstrap') }}
 
@@ -49,6 +52,7 @@ run cephadm bootstrap:
     - creates:
       - /etc/ceph/ceph.conf
       - /etc/ceph/ceph.client.admin.keyring
+    - failhard: True
 
 {{ macros.end_step('Run cephadm bootstrap') }}
 
@@ -60,6 +64,7 @@ set ceph-dashboard password:
         ceph dashboard ac-user-set-password --force-password admin {{ dashboard_password }}
     - onchanges:
       - cmd: run cephadm bootstrap
+    - failhard: True
 {% endif %}
 
 {{ macros.begin_step('Configure SSH orchestrator') }}
@@ -77,6 +82,7 @@ configure ssh orchestrator:
         true
     - onchanges:
       - cmd: run cephadm bootstrap
+    - failhard: True
 
 {{ macros.end_step('Configure SSH orchestrator') }}
 
