@@ -3,7 +3,7 @@
 {% if pillar['ceph-salt']['minions']['mon'] | length > 1 %}
 {% set mon_update_args = [pillar['ceph-salt']['minions']['mon'] | length | string] %}
 {% for minion, ip in pillar['ceph-salt']['minions']['mon'].items() %}
-{% if minion != grains['id'] %}
+{% if minion != grains['host'] %}
 {% if mon_update_args.append(minion + ":" + ip) %}{% endif %}
 {% endif %}
 {% endfor %}
