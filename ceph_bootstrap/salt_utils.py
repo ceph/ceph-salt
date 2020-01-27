@@ -5,6 +5,8 @@ import yaml
 import salt.client
 import salt.minion
 
+from .exceptions import SaltCallException
+
 
 logger = logging.getLogger(__name__)
 
@@ -88,8 +90,11 @@ class GrainsManager:
 
     @classmethod
     def filter_by(cls, key, val=None):
-        result = SaltClient.local().cmd('{}:{}'.format(key, val if val else '*'), 'test.true',
-                                        tgt_type='grain')
+        condition = '{}:{}'.format(key, val if val else '*')
+        result = SaltClient.local().cmd(condition, 'test.true', tgt_type='grain')
+        if result is None or not isinstance(result, dict):
+            raise SaltCallException(condition, 'test.true', result)
+        logger.debug("list of minions that match '%s': %s", condition, list(result))
         return list(result)
 
     @classmethod

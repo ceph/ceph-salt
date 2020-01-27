@@ -47,6 +47,7 @@ Requires:       python3-pycryptodomex >= 3.4.6
 Requires:       python3-PyYAML >= 3.13
 Requires:       python3-setuptools
 Requires:       python3-salt >= 2019.2.0
+Requires:       python3-curses
 %endif
 
 Requires:       ceph-salt-formula

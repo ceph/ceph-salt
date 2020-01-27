@@ -12,3 +12,9 @@ class CephNodeFqdnResolvesToLoopbackException(CephBootstrapException):
     def __init__(self, minion_id):
         super(CephNodeFqdnResolvesToLoopbackException, self).__init__(
             "Host '{}' FQDN resolves to the loopback interface IP address".format(minion_id))
+
+
+class SaltCallException(CephBootstrapException):
+    def __init__(self, target, func, ret):
+        super(SaltCallException, self).__init__(
+            "Salt call target='{}' func='{}' failed: {}".format(target, func, ret))

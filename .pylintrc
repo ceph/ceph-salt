@@ -1,5 +1,5 @@
 [MASTER]
-extension-pkg-whitelist=fcntl
+extension-pkg-whitelist=fcntl,curses
 ignore=CVS,ven,virtualenv,templates
 ignore-patterns=
 jobs=1
@@ -103,6 +103,7 @@ disable=print-statement,
         redefined-builtin,
         no-self-use,
         too-many-public-methods,
+        too-many-lines,
 
 enable=c-extension-no-member
 
@@ -130,7 +131,7 @@ ignore-mixin-members=yes
 ignore-none=yes
 ignore-on-opaque-inference=yes
 ignored-classes=optparse.Values,thread._local,_thread._local
-ignored-modules=
+ignored-modules=curses
 missing-member-hint=yes
 missing-member-hint-distance=1
 missing-member-max-choices=1

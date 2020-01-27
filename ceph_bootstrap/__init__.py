@@ -1,12 +1,16 @@
 import logging
 import logging.config
+import signal
 import sys
+import time
 
 import click
 import pkg_resources
 
 from .config_shell import run_config_cmdline, run_config_shell
 from .exceptions import CephBootstrapException
+from .salt_event import SaltEventProcessor
+from .deploy import CephSaltExecutor
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +79,15 @@ def config_shell(config_args):
         run_config_cmdline(" ".join(config_args))
     else:
         run_config_shell()
+
+
+@cli.command(name='deploy')
+@click.option('-n', '--non-interactive', is_flag=True, default=False,
+              help='Run deploy in non-interactive mode')
+def deploy(non_interactive):
+    executor = CephSaltExecutor(not non_interactive)
+    retcode = executor.run()
+    sys.exit(retcode)
 
 
 if __name__ == '__main__':
