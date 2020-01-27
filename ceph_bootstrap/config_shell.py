@@ -343,6 +343,7 @@ CEPH_BOOTSTRAP_OPTIONS = {
                     'password': {
                         'default': None,
                         'default_text': 'randomly generated',
+                        'sensitive': True,
                         'handler': PillarHandler('ceph-salt:dashboard:password')
                     },
                     'username': {
@@ -492,6 +493,8 @@ class OptionNode(configshell.ConfigNode):
             if 'handler' in self.option_dict:
                 value, val_type = self.option_dict['handler'].value()
             if value is not None:
+                if self.option_dict.get('sensitive', False):
+                    return '***', None
                 return value, val_type
             if 'default_text' in self.option_dict:
                 return self.option_dict['default_text'], None
