@@ -3,7 +3,7 @@ ceph-salt:
     - <minion_id_1>
     - <minion_id_1>
     # ...
-  bootstrap_mon: <mon_minion_id>
+  bootstrap_minion: <bootstrap_minion_id>
   ssh:
     private_key: |
       <key_data_line1>

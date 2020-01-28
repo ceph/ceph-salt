@@ -8,7 +8,7 @@ include:
 {% if pillar['ceph-salt'].get('deploy', {'bootstrap': True}).get('bootstrap', True) %}
     - .cephbootstrap
 {% endif %}
-{% if grains['id'] == pillar['ceph-salt']['bootstrap_mon'] %}
+{% if grains['id'] == pillar['ceph-salt']['bootstrap_minion'] %}
 {% if pillar['ceph-salt'].get('deploy', {'mon': False}).get('mon', False) %}
     - .ceph-mon
 {% endif %}

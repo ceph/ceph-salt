@@ -66,7 +66,9 @@ class RolesGroupHandler(OptionHandler):
             if node.roles:
                 minions.add(node.minion_id)
         count = len(minions)
-        return 'Minions w/ roles: {}'.format(count), count == idx + 1
+        bootstrap_minion = PillarManager.get('ceph-salt:bootstrap_minion')
+        return 'Bootstrap minion: {}, Minions w/ roles: {}'.format(bootstrap_minion, count), \
+               bootstrap_minion is not None and count == idx + 1
 
 
 class RoleElementHandler(OptionHandler):

@@ -25,7 +25,7 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1'])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mgr'), [])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mon'), {})
-        self.assertEqual(PillarManager.get('ceph-salt:bootstrap_mon'), None)
+        self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), None)
 
         self.shell.run_cmdline('/Cluster/Minions rm node1.ceph.com')
         self.assertInSysOut('1 minion removed.')
@@ -33,7 +33,7 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertEqual(PillarManager.get('ceph-salt:minions:all'), [])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mgr'), [])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mon'), {})
-        self.assertEqual(PillarManager.get('ceph-salt:bootstrap_mon'), None)
+        self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), None)
 
     def test_cluster_minions_add_invalid_ip(self):
         fqdn_ip4 = GrainsManager.get_grain('node1.ceph.com', 'fqdn_ip4')
@@ -69,7 +69,7 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1'])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mgr'), ['node1'])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mon'), {})
-        self.assertEqual(PillarManager.get('ceph-salt:bootstrap_mon'), None)
+        self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), None)
 
         self.shell.run_cmdline('/Cluster/Roles/Mgr rm node1.ceph.com')
         self.assertInSysOut('1 minion removed.')
@@ -77,7 +77,7 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1'])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mgr'), [])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mon'), {})
-        self.assertEqual(PillarManager.get('ceph-salt:bootstrap_mon'), None)
+        self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), None)
 
         self.shell.run_cmdline('/Cluster/Minions rm node1.ceph.com')
 
@@ -85,24 +85,26 @@ class ConfigShellTest(SaltMockTestCase):
         self.shell.run_cmdline('/Cluster/Minions add node1.ceph.com')
         self.shell.run_cmdline('/Cluster/Minions add node2.ceph.com')
         self.shell.run_cmdline('/Cluster/Roles/Mgr add node1.ceph.com')
+        self.shell.run_cmdline('/Cluster/Roles/Mgr add node2.ceph.com')
         self.clearSysOut()
 
         self.shell.run_cmdline('/Cluster/Roles/Mon add node2.ceph.com')
         self.assertInSysOut('1 minion added.')
-        self.assertGrains('node2.ceph.com', 'ceph-salt', {'member': True, 'roles': ['mon']})
+        self.assertGrains('node2.ceph.com', 'ceph-salt', {'member': True, 'roles': ['mgr', 'mon']})
         self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1', 'node2'])
-        self.assertEqual(PillarManager.get('ceph-salt:minions:mgr'), ['node1'])
+        self.assertEqual(PillarManager.get('ceph-salt:minions:mgr'), ['node1', 'node2'])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mon'), {'node2': '10.20.39.202'})
-        self.assertEqual(PillarManager.get('ceph-salt:bootstrap_mon'), 'node2.ceph.com')
+        self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), 'node2.ceph.com')
 
         self.shell.run_cmdline('/Cluster/Roles/Mon rm node2.ceph.com')
         self.assertInSysOut('1 minion removed.')
-        self.assertGrains('node2.ceph.com', 'ceph-salt', {'member': True, 'roles': []})
+        self.assertGrains('node2.ceph.com', 'ceph-salt', {'member': True, 'roles': ['mgr']})
         self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1', 'node2'])
-        self.assertEqual(PillarManager.get('ceph-salt:minions:mgr'), ['node1'])
+        self.assertEqual(PillarManager.get('ceph-salt:minions:mgr'), ['node1', 'node2'])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mon'), {})
-        self.assertEqual(PillarManager.get('ceph-salt:bootstrap_mon'), None)
+        self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), None)
 
+        self.shell.run_cmdline('/Cluster/Roles/Mgr rm node2.ceph.com')
         self.shell.run_cmdline('/Cluster/Roles/Mgr rm node1.ceph.com')
         self.shell.run_cmdline('/Cluster/Minions rm node2.ceph.com')
         self.shell.run_cmdline('/Cluster/Minions rm node1.ceph.com')

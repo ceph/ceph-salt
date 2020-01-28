@@ -41,7 +41,9 @@ class CephNode:
         self.roles.add(role)
 
     def _role_list(self):
-        return list(self.roles)
+        role_list = list(self.roles)
+        role_list.sort()
+        return role_list
 
     def _grains_value(self):
         return {
@@ -73,12 +75,13 @@ class CephNodeManager:
                           [n.short_name for n in cls._ceph_salt_nodes.values() if 'mgr' in n.roles])
 
         # choose the the main Mon
-        minions = [n.minion_id for n in cls._ceph_salt_nodes.values() if 'mon' in n.roles]
+        minions = [n.minion_id for n in cls._ceph_salt_nodes.values()
+                   if all(r in n.roles for r in ['mon', 'mgr'])]
         minions.sort()
         if minions:  # i.e., it has at least one
-            PillarManager.set('ceph-salt:bootstrap_mon', minions[0])
+            PillarManager.set('ceph-salt:bootstrap_minion', minions[0])
         else:
-            PillarManager.reset('ceph-salt:bootstrap_mon')
+            PillarManager.reset('ceph-salt:bootstrap_minion')
 
     @classmethod
     def ceph_salt_nodes(cls):

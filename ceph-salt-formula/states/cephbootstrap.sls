@@ -14,7 +14,7 @@ download ceph container image:
         podman pull {{ pillar['ceph-salt']['container']['images']['ceph'] }}
 {% endif %}
 
-{% if grains['id'] == pillar['ceph-salt']['bootstrap_mon'] %}
+{% if grains['id'] == pillar['ceph-salt']['bootstrap_minion'] %}
 /var/log/ceph:
   file.directory:
     - user: ceph
