@@ -1,3 +1,4 @@
+import contextlib
 import logging
 import os
 import yaml
@@ -78,22 +79,25 @@ class GrainsManager:
     def set_grain(cls, target, key, val):
         target, tgt_type = cls._format_target(target)
         cls.logger.debug("Adding '%s = %s' grain to %s", key, val, target)
-        result = SaltClient.local().cmd(target, 'grains.setval', [key, val], tgt_type=tgt_type)
+        with contextlib.redirect_stdout(None):
+            result = SaltClient.local().cmd(target, 'grains.setval', [key, val], tgt_type=tgt_type)
         cls.logger.info("Added '%s = %s' grain to %s: result=%s", key, val, target, result)
 
     @classmethod
     def del_grain(cls, target, key):
         target, tgt_type = cls._format_target(target)
         cls.logger.debug("Deleting '%s' grain from %s", key, target)
-        result = SaltClient.local().cmd(target, 'grains.delkey', [key], tgt_type=tgt_type)
+        with contextlib.redirect_stdout(None):
+            result = SaltClient.local().cmd(target, 'grains.delkey', [key], tgt_type=tgt_type)
         cls.logger.info("Deleted '%s' grain from %s: result=%s", key, target, result)
 
     @classmethod
     def filter_by(cls, key, val=None):
         condition = '{}:{}'.format(key, val if val else '*')
-        result = SaltClient.local().cmd(condition, 'test.true', tgt_type='grain')
-        if result is None or not isinstance(result, dict):
-            raise SaltCallException(condition, 'test.true', result)
+        with contextlib.redirect_stdout(None):
+            result = SaltClient.local().cmd(condition, 'test.true', tgt_type='grain')
+            if result is None or not isinstance(result, dict):
+                raise SaltCallException(condition, 'test.true', result)
         logger.debug("list of minions that match '%s': %s", condition, list(result))
         return list(result)
 
@@ -101,7 +105,8 @@ class GrainsManager:
     def get_grain(cls, target, key):
         target, tgt_type = cls._format_target(target)
         cls.logger.debug("Getting '%s' grain from %s", key, target)
-        result = SaltClient.local().cmd(target, 'grains.get', [key], tgt_type=tgt_type)
+        with contextlib.redirect_stdout(None):
+            result = SaltClient.local().cmd(target, 'grains.get', [key], tgt_type=tgt_type)
         cls.logger.info("Got '%s' grain from %s: result=%s", key, target, result)
         return result
 
