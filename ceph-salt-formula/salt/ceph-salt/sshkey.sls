@@ -11,7 +11,7 @@
     - makedirs: True
     - failhard: True
 
-{% if 'mgr' in grains['ceph-salt']['roles'] or grains['id'] == pillar['ceph-salt']['bootstrap_minion'] %}
+{% if 'mgr' in grains['ceph-salt']['roles'] %}
 # private key
 /root/.ssh/id_rsa:
   file.managed:
