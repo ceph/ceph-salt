@@ -85,6 +85,7 @@ install -m 0644 qa/common/zypper.sh %{buildroot}/%{_datadir}/%{name}/qa/common/z
 %define fname ceph-salt
 %define fdir  %{_datadir}/salt-formulas
 
+mkdir -p %{buildroot}%{fdir}/states/
 mkdir -p %{buildroot}%{fdir}/metadata/%{fname}/
 cp -R ceph-salt-formula/salt/* %{buildroot}%{fdir}/states/
 cp ceph-salt-formula/metadata/* %{buildroot}%{fdir}/metadata/%{fname}/
