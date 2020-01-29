@@ -47,6 +47,7 @@ Requires:       python3-pycryptodomex >= 3.4.6
 Requires:       python3-PyYAML >= 3.13
 Requires:       python3-setuptools
 Requires:       python3-salt >= 2019.2.0
+Requires:       python3-curses
 %endif
 
 Requires:       ceph-salt-formula
@@ -84,9 +85,8 @@ install -m 0644 qa/common/zypper.sh %{buildroot}/%{_datadir}/%{name}/qa/common/z
 %define fname ceph-salt
 %define fdir  %{_datadir}/salt-formulas
 
-mkdir -p %{buildroot}%{fdir}/states/%{fname}/
 mkdir -p %{buildroot}%{fdir}/metadata/%{fname}/
-cp -R ceph-salt-formula/states/* %{buildroot}%{fdir}/states/%{fname}/
+cp -R ceph-salt-formula/salt/* %{buildroot}%{fdir}/states/
 cp ceph-salt-formula/metadata/* %{buildroot}%{fdir}/metadata/%{fname}/
 
 mkdir -p %{buildroot}%{_datadir}/%{fname}/pillar

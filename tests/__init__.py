@@ -72,6 +72,9 @@ class SaltGrainsMock:
                 entries.extend(["{}:{}".format(key, e) for e in _entries])
             elif isinstance(val, list):
                 entries.extend(["{}:{}".format(key, e) for e in val])
+            elif isinstance(val, bool):
+                entries.append('{}:{}'.format(key, val))
+                entries.append(key)
             else:
                 entries.append('{}:{}'.format(key, val))
 
@@ -82,6 +85,10 @@ class SaltGrainsMock:
 class TestMock:
     @staticmethod
     def ping():
+        return True
+
+    @staticmethod
+    def true():
         return True
 
 
@@ -147,52 +154,48 @@ class SaltCallerMock:
         raise NotImplementedError()
 
 
-class SaltClientMock:
-
-    caller_client = SaltCallerMock()
-    local_client = SaltLocalClientMock()
-    local_fs = None
-
-    @classmethod
-    def caller(cls):
-        return cls.caller_client
-
-    @classmethod
-    def local(cls):
-        return cls.local_client
-
-    @classmethod
-    def pillar_fs_path(cls):
-        return '/srv/pillar'
+class SaltMasterMinionMock:
+    def __init__(self):
+        self.opts = {'pillar_roots': {'base': ['/srv/pillar']}}
 
 
 # pylint: disable=invalid-name
 class SaltMockTestCase(TestCase):
 
+    caller_client = SaltCallerMock()
+    local_client = SaltLocalClientMock()
+    master_minion = SaltMasterMinionMock()
+    local_fs = None
+
     def __init__(self, methodName='runTest'):
         super(SaltMockTestCase, self).__init__(methodName)
         self.capsys = None
         self.salt_env = SaltEnv
-        self.salt_client = None
+
+    def pillar_fs_path(self):
+        return '/srv/pillar'
 
     def setUp(self):
         super(SaltMockTestCase, self).setUp()
         self.setUpPyfakefs()
-        self.salt_client = SaltClientMock
-        self.salt_client.local_fs = self.fs
+        self.local_fs = self.fs
         patchers = [
-            patch('ceph_bootstrap.salt_utils.SaltClient', new=self.salt_client),
-            patch('ceph_bootstrap.core.SaltClient', new=self.salt_client)
+            patch('salt.config.master_config'),
+            patch('salt.client.Caller', return_value=self.caller_client),
+            patch('salt.client.LocalClient', return_value=self.local_client),
+            patch('salt.minion.MasterMinion', return_value=self.master_minion),
         ]
         for patcher in patchers:
             patcher.start()
             self.addCleanup(patcher.stop)
-        self.fs.create_dir(self.salt_client.pillar_fs_path())
-        self.fs.create_file(os.path.join(self.salt_client.pillar_fs_path(), 'ceph-salt.sls'))
+        self.fs.create_dir(self.pillar_fs_path())
+        self.fs.create_file(os.path.join(self.pillar_fs_path(), 'ceph-salt.sls'))
 
     def tearDown(self):
         super(SaltMockTestCase, self).tearDown()
-        self.fs.remove_object(os.path.join(self.salt_client.pillar_fs_path(), 'ceph-salt.sls'))
+        self.fs.remove_object(os.path.join(self.pillar_fs_path(), 'ceph-salt.sls'))
+        self.salt_env.minions = []
+        self.local_client.grains.clear()
 
     @pytest.fixture(autouse=True)
     def capsys(self, capsys):
@@ -206,16 +209,14 @@ class SaltMockTestCase(TestCase):
         self.assertIn(text, out)
 
     def assertGrains(self, target, key, value):
-        local = self.salt_client.local()
-        self.assertIn(target, local.grains)
-        target_grains = local.grains[target].grains
+        self.assertIn(target, self.local_client.grains)
+        target_grains = self.local_client.grains[target].grains
         self.assertIn(key, target_grains)
         self.assertEqual(target_grains[key], value)
 
     def assertNotInGrains(self, target, key):
-        local = self.salt_client.local()
-        self.assertIn(target, local.grains)
-        target_grains = local.grains[target].grains
+        self.assertIn(target, self.local_client.grains)
+        target_grains = self.local_client.grains[target].grains
         self.assertNotIn(key, target_grains)
 
     def assertYamlEqual(self, file_path, _dict):
