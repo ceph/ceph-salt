@@ -21,7 +21,7 @@
 %endif
 
 Name:           ceph-bootstrap
-Version:        15.0.1
+Version:        15.0.2
 Release:        1%{?dist}
 Summary:        CLI tool to deploy Ceph clusters
 License:        MIT
