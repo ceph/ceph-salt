@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- New "deploy" command with real-time feedback (#9)
+- Use salt-event bus to notify about execution progress (#30)
+- Initial integration testing (#33)
+### Fixed
+- Require root privileges (#18)
+- Remove salt python API terminal output (#10)
+- Hide Dashboard password (#48)
+- Fixed error when deploying without any role (#45)
+- Fixed error when deploying without any time server (#40)
+- Fixed bootstrap help message (#36)
 
 ## [15.0.1] - 2020-01-17
 ### Added
