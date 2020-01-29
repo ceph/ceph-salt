@@ -10,6 +10,7 @@ import pkg_resources
 from .config_shell import run_config_cmdline, run_config_shell
 from .exceptions import CephBootstrapException
 from .salt_event import SaltEventProcessor
+from .terminal_utils import check_root_privileges
 from .deploy import CephSaltExecutor
 
 logger = logging.getLogger(__name__)
@@ -65,6 +66,7 @@ def ceph_bootstrap_main():
               type=click.Path(dir_okay=False),
               help="the file path for the log to be stored")
 @click.version_option(pkg_resources.get_distribution('ceph-bootstrap'), message="%(version)s")
+@check_root_privileges
 def cli(log_level, log_file):
     _setup_logging(log_level, log_file)
 

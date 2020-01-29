@@ -1,4 +1,6 @@
+import os
 import sys
+from functools import wraps
 
 
 class PrettyPrinter:
@@ -60,3 +62,18 @@ class PrettyPrinter:
         Prints text formatted as red
         """
         cls.println(cls.red(text))
+
+
+def check_root_privileges(func):
+    """
+    This function checks if the current user is root.
+    If the user is not root it exits immediately.
+    """
+    @wraps(func)
+    def do_root_check(*args, **kwargs):
+        if os.getuid() != 0:
+            # check if root user
+            PrettyPrinter.pl_red("Root privileges are required to run this tool")
+            sys.exit(1)
+        return func(*args, **kwargs)
+    return do_root_check
