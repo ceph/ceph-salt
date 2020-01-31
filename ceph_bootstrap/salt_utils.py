@@ -1,12 +1,14 @@
 import contextlib
 import logging
 import os
+import shutil
+
 import yaml
 
 import salt.client
 import salt.minion
 
-from .exceptions import SaltCallException
+from .exceptions import SaltCallException, PillarFileNotPureYaml
 
 
 logger = logging.getLogger(__name__)
@@ -19,7 +21,7 @@ class SaltClient:
     _MASTER_ = None
 
     @classmethod
-    def _opts(cls):
+    def _opts(cls, local=True):
         """
         Initializes and retrieves the Salt opts structure
         """
@@ -27,18 +29,19 @@ class SaltClient:
             logger.info("Initializing SaltClient with master config")
             cls._OPTS_ = salt.config.master_config('/etc/salt/master')
             # pylint: disable=unsupported-assignment-operation
-            cls._OPTS_['file_client'] = 'local'
+            if local:
+                cls._OPTS_['file_client'] = 'local'
             logger.debug("SaltClient __opts__ = %s", cls._OPTS_)
 
         return cls._OPTS_
 
     @classmethod
-    def caller(cls):
+    def caller(cls, local=True):
         """
         Initializes and retrieves the Salt caller client instance
         """
         if cls._CALLER_ is None:
-            cls._CALLER_ = salt.client.Caller(mopts=cls._opts())
+            cls._CALLER_ = salt.client.Caller(mopts=cls._opts(local))
         return cls._CALLER_
 
     @classmethod
@@ -51,16 +54,20 @@ class SaltClient:
         return cls._LOCAL_
 
     @classmethod
-    def master(cls):
+    def master(cls, local=True):
         if cls._MASTER_ is None:
             _opts = salt.config.master_config('/etc/salt/master')
-            _opts['file_client'] = 'local'
+            if local:
+                _opts['file_client'] = 'local'
             cls._MASTER_ = salt.minion.MasterMinion(_opts)
         return cls._MASTER_
 
     @classmethod
     def pillar_fs_path(cls):
-        return cls.master().opts['pillar_roots']['base'][0]
+        pillar_dirs = cls._opts().get('pillar_roots', {'base': []})['base']
+        if not pillar_dirs:
+            return None
+        return pillar_dirs[0]
 
 
 class GrainsManager:
@@ -116,6 +123,43 @@ class PillarManager:
     pillar_data = {}
     logger = logging.getLogger(__name__ + '.pillar')
 
+    @classmethod
+    def pillar_installed(cls):
+        pillar_base_path = SaltClient.pillar_fs_path()
+        if not os.path.exists(os.path.join(pillar_base_path, cls.PILLAR_FILE)):
+            return False
+        try:
+            top_data = cls._load_yaml("top.sls")
+            if 'base' not in top_data:
+                return False
+            if 'ceph-salt:member' not in top_data['base']:
+                return False
+            if 'ceph-salt' not in top_data['base']['ceph-salt:member']:
+                return False
+        except PillarFileNotPureYaml:
+            with open(os.path.join(pillar_base_path, "top.sls"), "r") as top_file:
+                contents = top_file.read()
+            if 'ceph-salt:member' in contents and 'ceph-salt' in contents:
+                return True
+            return False
+        return True
+
+    @classmethod
+    def install_pillar(cls):
+        pillar_base_path = SaltClient.pillar_fs_path()
+
+        top_data = cls._load_yaml("top.sls")
+        if 'base' not in top_data:
+            top_data['base'] = {}
+        if 'ceph-salt:member' not in top_data['base']:
+            top_data['base']['ceph-salt:member'] = [{'match': 'grain'}, 'ceph-salt']
+        logger.info("writing top.sls file: %s", top_data)
+        cls._save_yaml(top_data, "top.sls")
+
+        if not os.path.exists(os.path.join(pillar_base_path, cls.PILLAR_FILE)):
+            logger.info("creating ceph-salt.sls pillar file: %s", top_data)
+            cls._save_yaml({'ceph-salt': {}}, cls.PILLAR_FILE)
+
     @staticmethod
     def _get_dict_value(dict_, key_path):
         path = key_path.split(":")
@@ -162,20 +206,23 @@ class PillarManager:
     @classmethod
     def _load_yaml(cls, custom_file):
         pillar_base_path = SaltClient.pillar_fs_path()
-        full_path = "{}/{}".format(pillar_base_path, custom_file)
+        full_path = os.path.join(pillar_base_path, custom_file)
         cls.logger.info("Reading pillar items from file: %s", full_path)
         if not os.path.exists(full_path):
             return {}
         with open(full_path, 'r') as file:
-            data = yaml.load(file)
-            if data is None:
-                data = {}
+            try:
+                data = yaml.load(file)
+                if data is None:
+                    data = {}
+            except yaml.error.YAMLError:
+                raise PillarFileNotPureYaml(full_path)
         return data
 
     @staticmethod
     def _save_yaml(data, custom_file):
         pillar_base_path = SaltClient.pillar_fs_path()
-        full_path = "{}/{}".format(pillar_base_path, custom_file)
+        full_path = os.path.join(pillar_base_path, custom_file)
         with open(full_path, 'w') as file:
             content = yaml.dump(data, default_flow_style=False)
             if content == '{}\n':
@@ -183,6 +230,7 @@ class PillarManager:
             else:
                 file.write(content)
             file.write("\n")
+        shutil.chown(full_path, "salt", "salt")
 
     @classmethod
     def _load(cls):
@@ -227,3 +275,4 @@ class PillarManager:
     @classmethod
     def reload(cls):
         cls.pillar_data = {}
+        cls._load()

@@ -104,6 +104,7 @@ disable=print-statement,
         no-self-use,
         too-many-public-methods,
         too-many-lines,
+        too-many-return-statements,
 
 enable=c-extension-no-member
 

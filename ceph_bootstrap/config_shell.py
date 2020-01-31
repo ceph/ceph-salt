@@ -9,9 +9,10 @@ import configshell_fb as configshell
 from configshell_fb.shell import locatedExpr
 
 from .core import CephNodeManager, SshKeyManager
-from .exceptions import CephBootstrapException
+from .exceptions import CephBootstrapException, PillarFileNotPureYaml
 from .salt_utils import PillarManager
 from .terminal_utils import PrettyPrinter as PP
+from .validate.salt_master import check_salt_master_status, CephSaltPillarNotConfigured
 
 
 logger = logging.getLogger(__name__)
@@ -765,24 +766,53 @@ class CephBootstrapConfigShell(configshell.ConfigShell):
         self._parser = parser
 
 
+def check_config_prerequesites():
+    try:
+        check_salt_master_status()
+        return True
+    except CephSaltPillarNotConfigured:
+        try:
+            PillarManager.install_pillar()
+            return True
+        except PillarFileNotPureYaml:
+            PP.println("""
+ceph-salt pillar file is not installed yet, and we can't add it automatically
+because pillar's top.sls is probably using Jinja2 expressions.
+Please create a ceph-salt.sls file in salt's pillar directory with the following
+content:
+
+ceph-salt: {}
+
+and add the following pillar configuration to top.sls file:
+
+base:
+  'ceph-salt:member':
+    - match: grain
+    - ceph-salt
+""")
+    return False
+
+
 def run_config_shell():
+    if not check_config_prerequesites():
+        return False
     shell = CephBootstrapConfigShell()
     generate_config_shell_tree(shell)
     while True:
         try:
             shell.run_interactive()
             break
-        except Exception as ex:  # pylint: disable=broad-except
+        except CephBootstrapException as ex:
             logger.exception(ex)
             PP.pl_red(ex)
+    return True
 
 
 def run_config_cmdline(cmdline):
+    if not check_config_prerequesites():
+        return False
     shell = CephBootstrapConfigShell()
     generate_config_shell_tree(shell)
-    try:
-        logger.info("running command: %s", cmdline)
-        shell.run_cmdline(cmdline)
-    except Exception as ex:  # pylint: disable=broad-except
-        logger.exception(ex)
-        PP.pl_red(ex)
+    logger.info("running command: %s", cmdline)
+    shell.run_cmdline(cmdline)
+    return True

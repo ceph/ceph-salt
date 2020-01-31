@@ -9,9 +9,9 @@ import pkg_resources
 
 from .config_shell import run_config_cmdline, run_config_shell
 from .exceptions import CephBootstrapException
-from .salt_event import SaltEventProcessor
-from .terminal_utils import check_root_privileges
+from .terminal_utils import check_root_privileges, PrettyPrinter as PP
 from .deploy import CephSaltExecutor
+
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,8 @@ def ceph_bootstrap_main():
         cli(prog_name='ceph-bootstrap')
     except CephBootstrapException as ex:
         logger.exception(ex)
-        click.echo(str(ex))
+        PP.pl_red(str(ex))
+        sys.exit(1)
 
 
 @click.group()
