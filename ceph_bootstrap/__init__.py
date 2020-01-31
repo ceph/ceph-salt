@@ -78,15 +78,20 @@ def config_shell(config_args):
     Starts ceph-bootstrap configuration shell
     """
     if config_args:
-        run_config_cmdline(" ".join(config_args))
+        if not run_config_cmdline(" ".join(config_args)):
+            sys.exit(1)
     else:
-        run_config_shell()
+        if not run_config_shell():
+            sys.exit(1)
 
 
 @cli.command(name='deploy')
 @click.option('-n', '--non-interactive', is_flag=True, default=False,
               help='Run deploy in non-interactive mode')
 def deploy(non_interactive):
+    """
+    Runs ceph-salt formula and shows real-time progress
+    """
     executor = CephSaltExecutor(not non_interactive)
     retcode = executor.run()
     sys.exit(retcode)
