@@ -129,16 +129,19 @@ function ceph_health_test {
     echo "WWWW: ceph_health_test"
     local minutes_to_wait="5"
     local cluster_status=""
-    for minute in {1..$minutes_to_wait} ; do
-        set -x
-        ceph status
-        cluster_status="$(ceph health detail --format json | jq -r .status)"
-        set +x
-        if [ "$cluster_status" = "HEALTH_OK" ] ; then
-            break
-        else
-            _grace_period 60
-        fi
+    for minute in $(seq 1 "$minutes_to_wait") ; do
+        for i in $(seq 1 4) ; do
+            set -x
+            ceph status
+            cluster_status="$(ceph health detail --format json | jq -r .status)"
+            set +x
+            if [ "$cluster_status" = "HEALTH_OK" ] ; then
+                break 2
+            else
+                _grace_period 15
+            fi
+        done
+        echo "Minutes left to wait: $((minutes_to_wait - minute))"
     done
     if [ "$cluster_status" != "HEALTH_OK" ] ; then
         echo "Failed to reach HEALTH_OK even after waiting for $minutes_to_wait minutes"
