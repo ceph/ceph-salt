@@ -18,6 +18,10 @@ class ConfigShellTest(SaltMockTestCase):
         GrainsManager.set_grain('node2.ceph.com', 'fqdn_ip4', ['10.20.39.202'])
         GrainsManager.set_grain('node3.ceph.com', 'fqdn_ip4', ['10.20.39.203'])
 
+    def tearDown(self):
+        super(ConfigShellTest, self).tearDown()
+        PillarManager.reload()
+
     def test_cluster_minions(self):
         self.shell.run_cmdline('/Cluster/Minions add node1.ceph.com')
         self.assertInSysOut('1 minion added.')
@@ -42,7 +46,7 @@ class ConfigShellTest(SaltMockTestCase):
         self.shell.run_cmdline('/Cluster/Minions add node1.ceph.com')
         self.assertInSysOut("Host 'node1.ceph.com' FQDN resolves to the loopback interface IP "
                             "address")
-        self.assertEqual(PillarManager.get('ceph-salt:minions:all'), [])
+        self.assertIsNone(PillarManager.get('ceph-salt:minions:all'))
 
         GrainsManager.set_grain('node1.ceph.com', 'fqdn_ip4', fqdn_ip4)
 
