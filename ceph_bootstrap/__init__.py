@@ -9,9 +9,9 @@ import pkg_resources
 
 from .config_shell import run_config_cmdline, run_config_shell
 from .exceptions import CephBootstrapException
-from .salt_event import SaltEventProcessor
-from .terminal_utils import check_root_privileges
+from .terminal_utils import check_root_privileges, PrettyPrinter as PP
 from .deploy import CephSaltExecutor
+
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,8 @@ def ceph_bootstrap_main():
         cli(prog_name='ceph-bootstrap')
     except CephBootstrapException as ex:
         logger.exception(ex)
-        click.echo(str(ex))
+        PP.pl_red(str(ex))
+        sys.exit(1)
 
 
 @click.group()
@@ -78,15 +79,20 @@ def config_shell(config_args):
     Starts ceph-bootstrap configuration shell
     """
     if config_args:
-        run_config_cmdline(" ".join(config_args))
+        if not run_config_cmdline(" ".join(config_args)):
+            sys.exit(1)
     else:
-        run_config_shell()
+        if not run_config_shell():
+            sys.exit(1)
 
 
 @cli.command(name='deploy')
 @click.option('-n', '--non-interactive', is_flag=True, default=False,
               help='Run deploy in non-interactive mode')
 def deploy(non_interactive):
+    """
+    Runs ceph-salt formula and shows real-time progress
+    """
     executor = CephSaltExecutor(not non_interactive)
     retcode = executor.run()
     sys.exit(retcode)

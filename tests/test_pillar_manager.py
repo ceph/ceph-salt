@@ -26,3 +26,74 @@ class PillarManagerTest(SaltMockTestCase):
         PillarManager.reset('ceph-salt:test')
         val = PillarManager.get('ceph-salt:test')
         self.assertIsNone(val)
+
+    def test_pillar_installed_no_top(self):
+        self.fs.remove_object('/srv/pillar/ceph-salt.sls')
+        self.assertFalse(PillarManager.pillar_installed())
+        self.fs.create_file('/srv/pillar/ceph-salt.sls')
+
+    def test_pillar_installed_no_top2(self):
+        self.assertFalse(PillarManager.pillar_installed())
+
+    def test_pillar_installed_top_with_jinja(self):
+        self.fs.remove_object('/srv/pillar/ceph-salt.sls')
+        self.fs.create_file('/srv/pillar/top.sls', contents='{% set x = 2 %}')
+        self.assertFalse(PillarManager.pillar_installed())
+        self.fs.create_file('/srv/pillar/ceph-salt.sls')
+        self.fs.remove_object('/srv/pillar/top.sls')
+
+    def test_pillar_installed_top_with_jinja2(self):
+        self.fs.create_file('/srv/pillar/top.sls', contents='''
+{% set x = 2 %}'
+base:
+    'ceph-salt:member':
+        - ceph-salt
+''')
+        self.assertTrue(PillarManager.pillar_installed())
+        self.fs.remove_object('/srv/pillar/top.sls')
+
+    def test_pillar_installed_top_without_base(self):
+        self.fs.remove_object('/srv/pillar/ceph-salt.sls')
+        self.fs.create_file('/srv/pillar/top.sls', contents='')
+        self.assertFalse(PillarManager.pillar_installed())
+        self.fs.create_file('/srv/pillar/ceph-salt.sls')
+        self.fs.remove_object('/srv/pillar/top.sls')
+
+    def test_pillar_installed_top_without_ceph_salt(self):
+        self.fs.create_file('/srv/pillar/top.sls', contents='''
+base:
+  '*': []
+''')
+        self.assertFalse(PillarManager.pillar_installed())
+        self.fs.remove_object('/srv/pillar/top.sls')
+
+    def test_pillar_installed(self):
+        self.fs.create_file('/srv/pillar/top.sls', contents='''
+base:
+  'ceph-salt:member': [ceph-salt]
+''')
+        self.assertTrue(PillarManager.pillar_installed())
+        self.fs.remove_object('/srv/pillar/top.sls')
+
+    def test_pillar_install(self):
+        self.fs.remove_object('/srv/pillar/ceph-salt.sls')
+        self.assertFalse(PillarManager.pillar_installed())
+        PillarManager.install_pillar()
+        self.assertTrue(PillarManager.pillar_installed())
+
+    def test_pillar_install2(self):
+        self.fs.create_file('/srv/pillar/top.sls', contents='''
+base:
+  '*': []
+''')
+        self.assertFalse(PillarManager.pillar_installed())
+        PillarManager.install_pillar()
+        self.assertTrue(PillarManager.pillar_installed())
+        self.fs.remove_object('/srv/pillar/top.sls')
+
+    def test_pillar_install3(self):
+        self.fs.remove_object('/srv/pillar/ceph-salt.sls')
+        self.fs.create_file('/srv/pillar/top.sls', contents='')
+        self.assertFalse(PillarManager.pillar_installed())
+        PillarManager.install_pillar()
+        self.assertTrue(PillarManager.pillar_installed())

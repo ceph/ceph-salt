@@ -52,6 +52,7 @@ Requires:       python3-curses
 
 Requires:       ceph-salt-formula
 Requires:       salt-master >= 2019.2.0
+Requires:       procps
 
 
 %description

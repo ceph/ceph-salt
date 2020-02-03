@@ -9,6 +9,9 @@ import yaml
 from mock import patch
 from pyfakefs.fake_filesystem_unittest import TestCase
 
+from ceph_bootstrap.salt_utils import SaltClient
+
+
 logging.config.dictConfig({
     'version': 1,
     'disable_existing_loggers': False,
@@ -32,6 +35,9 @@ logging.config.dictConfig({
         }
     }
 })
+
+
+logger = logging.getLogger(__name__)
 
 
 class ModuleUtil:
@@ -131,6 +137,8 @@ class SaltLocalClientMock:
             else:
                 raise NotImplementedError()
 
+        self.logger.info("Grains: %s", self.grains)
+
         return result
 
 
@@ -151,22 +159,26 @@ class SaltCallerMock:
         mod, func = ModuleUtil.parse_module(fun)
         if mod == 'minion':
             return getattr(MinionMock, func)(*args, **kwargs)
+        if mod == 'test':
+            return getattr(TestMock, func)(*args, **kwargs)
         raise NotImplementedError()
 
 
 class SaltMasterMinionMock:
+    pass
+
+
+class SaltMasterConfigMock:
     def __init__(self):
         self.opts = {'pillar_roots': {'base': ['/srv/pillar']}}
+
+    def __call__(self, *args):
+        logger.info("Getting salt options: %s", self.opts)
+        return self.opts
 
 
 # pylint: disable=invalid-name
 class SaltMockTestCase(TestCase):
-
-    caller_client = SaltCallerMock()
-    local_client = SaltLocalClientMock()
-    master_minion = SaltMasterMinionMock()
-    local_fs = None
-
     def __init__(self, methodName='runTest'):
         super(SaltMockTestCase, self).__init__(methodName)
         self.capsys = None
@@ -179,11 +191,26 @@ class SaltMockTestCase(TestCase):
         super(SaltMockTestCase, self).setUp()
         self.setUpPyfakefs()
         self.local_fs = self.fs
+
+        logger.info("Initializing Salt mocks")
+
+        # pylint: disable=protected-access
+        SaltClient._OPTS_ = None
+        SaltClient._LOCAL_ = None
+        SaltClient._CALLER_ = None
+        SaltClient._MASTER_ = None
+
+        self.caller_client = SaltCallerMock()
+        self.local_client = SaltLocalClientMock()
+        self.master_minion = SaltMasterMinionMock()
+        self.master_config = SaltMasterConfigMock()
+
         patchers = [
-            patch('salt.config.master_config'),
+            patch('salt.config.master_config', new=self.master_config),
             patch('salt.client.Caller', return_value=self.caller_client),
             patch('salt.client.LocalClient', return_value=self.local_client),
             patch('salt.minion.MasterMinion', return_value=self.master_minion),
+            patch('shutil.chown'),
         ]
         for patcher in patchers:
             patcher.start()
@@ -195,7 +222,6 @@ class SaltMockTestCase(TestCase):
         super(SaltMockTestCase, self).tearDown()
         self.fs.remove_object(os.path.join(self.pillar_fs_path(), 'ceph-salt.sls'))
         self.salt_env.minions = []
-        self.local_client.grains.clear()
 
     @pytest.fixture(autouse=True)
     def capsys(self, capsys):
