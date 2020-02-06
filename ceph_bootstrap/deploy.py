@@ -1116,7 +1116,47 @@ class CephSaltExecutor:
 
         self.executor = CephSaltExecutorThread(self.controller)
 
+    @staticmethod
+    def check_ceph_salt_formula():
+        # verify that deployment can run
+        PP.println("Checking if ceph-salt formula is available...")
+        result = SaltClient.local_cmd('ceph-salt:member', 'state.sls_exists', ['ceph-salt'],
+                                      tgt_type='grain')
+        if not all(result.values()):
+            PP.println("salt-master will be restarted to load ceph-salt formula")
+            logger.info('restarting salt-master service')
+            result = SaltClient.caller_cmd('service.restart', ['salt-master'])
+            if not result:
+                logger.warning('failed to restart salt-master process')
+                PP.pl_red('Failed to restart salt-master service, please restart it manually')
+                return 1
+
+        # checking ceph-salt again after salt-master restart
+        result = SaltClient.local_cmd('ceph-salt:member', 'state.sls_exists', ['ceph-salt'],
+                                      tgt_type='grain')
+        if not all(result.values()):
+            logger.error("ceph-salt formula still not found")
+            PP.pl_red("Could not find ceph-salt formula. Please check if ceph-salt-formula package"
+                      " is installed")
+            return 1
+
+        PP.println("Syncing minions with the master...")
+        result = SaltClient.local_cmd('ceph-salt:member', 'saltutil.sync_all', tgt_type='grain')
+        for minion, value in result.items():
+            if not value:
+                logger.error("saltutil.sync_all failed to sync in minion: %s", minion)
+                PP.pl_red("Sync failed, please run: "
+                          "\"salt -G 'ceph-salt:member' saltutil.sync_all\" manually and fix "
+                          "the problems reported")
+                return 1
+        logger.info("minions sync finished")
+        PP.println("Ready for deployment!")
+        return 0
+
     def run(self):
+        retcode = self.check_ceph_salt_formula()
+        if retcode > 0:
+            return retcode
         self.event_proc.start()
         self.executor.start()
         self.renderer.run()
