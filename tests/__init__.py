@@ -99,9 +99,29 @@ class TestMock:
 
 
 class SaltUtilMock:
+    sync_all_result = True
+
     @staticmethod
     def pillar_refresh():
         return True
+
+    @classmethod
+    def sync_all(cls):
+        return cls.sync_all_result
+
+
+class StateMock:
+    @staticmethod
+    def sls_exists(state):
+        return os.path.exists(os.path.join(SaltMockTestCase.states_fs_path(), state)) or \
+            os.path.exists(os.path.join(SaltMockTestCase.states_fs_path(), "{}.sls".format(state)))
+
+
+class ServiceMock:
+    restart_result = True
+    @classmethod
+    def restart(cls, service):  # pylint: disable=unused-argument
+        return cls.restart_result
 
 
 class SaltLocalClientMock:
@@ -134,6 +154,10 @@ class SaltLocalClientMock:
                 result[tgt] = getattr(TestMock, func)(*args)
             elif mod == 'saltutil':
                 result[tgt] = getattr(SaltUtilMock, func)(*args)
+            elif mod == 'state':
+                result[tgt] = getattr(StateMock, func)(*args)
+            elif mod == 'service':
+                result[tgt] = getattr(ServiceMock, func)(*args)
             else:
                 raise NotImplementedError()
 
@@ -161,6 +185,8 @@ class SaltCallerMock:
             return getattr(MinionMock, func)(*args, **kwargs)
         if mod == 'test':
             return getattr(TestMock, func)(*args, **kwargs)
+        if mod == 'service':
+            return getattr(ServiceMock, func)(*args)
         raise NotImplementedError()
 
 
@@ -184,8 +210,13 @@ class SaltMockTestCase(TestCase):
         self.capsys = None
         self.salt_env = SaltEnv
 
-    def pillar_fs_path(self):
+    @staticmethod
+    def pillar_fs_path():
         return '/srv/pillar'
+
+    @staticmethod
+    def states_fs_path():
+        return '/srv/salt'
 
     def setUp(self):
         super(SaltMockTestCase, self).setUp()
@@ -216,6 +247,7 @@ class SaltMockTestCase(TestCase):
             patcher.start()
             self.addCleanup(patcher.stop)
         self.fs.create_dir(self.pillar_fs_path())
+        self.fs.create_dir(self.states_fs_path())
         self.fs.create_file(os.path.join(self.pillar_fs_path(), 'ceph-salt.sls'))
 
     def tearDown(self):

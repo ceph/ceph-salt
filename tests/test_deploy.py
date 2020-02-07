@@ -2,15 +2,16 @@ import datetime
 import threading
 import time
 import logging
+import os
 
 import mock
 
 from ceph_bootstrap.deploy import CephSaltController, TerminalRenderer, CephSaltModel, Event, \
-    CursesRenderer
+    CursesRenderer, CephSaltExecutor
 from ceph_bootstrap.salt_utils import GrainsManager
 from ceph_bootstrap.salt_event import CephSaltEvent
 
-from . import SaltMockTestCase
+from . import SaltMockTestCase, ServiceMock, SaltUtilMock
 
 
 # pylint: disable=unused-argument
@@ -79,21 +80,21 @@ class DeployTest(SaltMockTestCase):
         controller = CephSaltController(model, renderer)
 
         controller.begin()
-        time.sleep(0.5)
+        time.sleep(0.2)
         controller.handle_begin_stage(begin_stage('node1.ceph.com', 'Stage 1', 49))
-        time.sleep(0.5)
+        time.sleep(0.2)
         controller.handle_begin_stage(begin_stage('node2.ceph.com', 'Stage 1', 50))
-        time.sleep(0.5)
+        time.sleep(0.2)
         controller.handle_begin_step(begin_step('node1.ceph.com', 'Step 1', 51))
-        time.sleep(0.5)
+        time.sleep(0.2)
         controller.handle_end_step(end_step('node1.ceph.com', 'Step 1', 52))
-        time.sleep(0.5)
+        time.sleep(0.2)
         controller.handle_begin_step(begin_step('node2.ceph.com', 'Step 2', 53))
-        time.sleep(0.5)
+        time.sleep(0.2)
         controller.handle_end_step(end_step('node2.ceph.com', 'Step 2', 54))
-        time.sleep(0.5)
+        time.sleep(0.2)
         controller.handle_end_stage(end_stage('node2.ceph.com', 'Stage 1', 55))
-        time.sleep(0.5)
+        time.sleep(0.2)
         controller.handle_end_stage(end_stage('node1.ceph.com', 'Stage 1', 56))
 
         tstamp1 = datetime.datetime.strptime('2020-01-17T15:19:58.819390', "%Y-%m-%dT%H:%M:%S.%f")
@@ -101,16 +102,16 @@ class DeployTest(SaltMockTestCase):
         controller.minion_finished('node1.ceph.com', tstamp2, False)
         controller.minion_finished('node2.ceph.com', tstamp1, False)
 
-        time.sleep(0.5)
+        time.sleep(0.2)
         controller.minion_failure('node2.ceph.com', Event('begin_step', 'Step 2',
                                                           Event('begin_stage', 'Stage 1')),
                                   failure())
-        time.sleep(0.5)
+        time.sleep(0.2)
         controller.minion_failure('node1.ceph.com', Event('end_step', 'Step 1',
                                                           Event('begin_stage', 'Stage 1')),
                                   failure())
 
-        time.sleep(0.5)
+        time.sleep(0.2)
         controller.end()
 
         self.assertEqual(len(model.minions_list()), 2)
@@ -297,3 +298,23 @@ class DeployTest(SaltMockTestCase):
         self.assertIsNotNone(step.failure)
         self.assertEqual(step.failure['state'],
                          'file_|-/etc/chrony.conf_|-/etc/chrony.conf_|-managed')
+
+    def test_check_ceph_salt_formula_exists(self):
+        self.fs.create_file(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
+        self.assertEqual(CephSaltExecutor.check_ceph_salt_formula(), 0)
+        self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
+
+    def test_check_ceph_salt_formula_exists2(self):
+        self.assertEqual(CephSaltExecutor.check_ceph_salt_formula(), 1)
+
+    def test_check_ceph_salt_formula_exists3(self):
+        ServiceMock.restart_result = False
+        self.assertEqual(CephSaltExecutor.check_ceph_salt_formula(), 1)
+        ServiceMock.restart_result = True
+
+    def test_check_ceph_salt_formula_exists4(self):
+        SaltUtilMock.sync_all_result = False
+        self.fs.create_file(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
+        self.assertEqual(CephSaltExecutor.check_ceph_salt_formula(), 1)
+        SaltUtilMock.sync_all_result = True
+        self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
