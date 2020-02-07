@@ -19,6 +19,7 @@ class CephNode:
         self.minion_id = minion_id
         self.short_name = minion_id.split('.', 1)[0]
         self.roles = None
+        self.execution = {}
         self.public_ip = None
         self._load()
 
@@ -33,6 +34,8 @@ class CephNode:
             self.roles = set()
         else:
             self.roles = set(result[self.minion_id]['roles'])
+        if 'execution' in result[self.minion_id]:
+            self.execution = result[self.minion_id]['execution']
 
         result = GrainsManager.get_grain(self.minion_id, 'fqdn_ip4')
         self.public_ip = result[self.minion_id][0]
@@ -48,6 +51,7 @@ class CephNode:
     def _grains_value(self):
         return {
             'member': True,
+            'execution': self.execution,
             'roles': self._role_list()
         }
 

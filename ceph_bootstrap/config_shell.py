@@ -308,6 +308,27 @@ CEPH_BOOTSTRAP_OPTIONS = {
             },
         }
     },
+    'System_Update': {
+        'help': '''
+                System Update Options Configuration
+                =========================================
+                Options to control system updates
+                ''',
+        'options': {
+            'Packages': {
+                'type': 'flag',
+                'help': 'Update all packages',
+                'handler': PillarHandler('ceph-salt:updates:enabled'),
+                'default': True
+            },
+            'Reboot': {
+                'type': 'flag',
+                'help': 'Reboot if needed',
+                'handler': PillarHandler('ceph-salt:updates:reboot'),
+                'default': True
+            }
+        }
+    },
     'Deployment': {
         'help': '''
                 Deployment Options Configuration

@@ -5,13 +5,15 @@ import logging
 import os
 
 import mock
+import pytest
 
 from ceph_bootstrap.deploy import CephSaltController, TerminalRenderer, CephSaltModel, Event, \
     CursesRenderer, CephSaltExecutor
+from ceph_bootstrap.exceptions import MinionDoesNotExistInConfiguration
 from ceph_bootstrap.salt_utils import GrainsManager
 from ceph_bootstrap.salt_event import CephSaltEvent
 
-from . import SaltMockTestCase, ServiceMock, SaltUtilMock
+from . import SaltMockTestCase, ServiceMock, SaltUtilMock, CephOrchMock
 
 
 # pylint: disable=unused-argument
@@ -71,11 +73,19 @@ class DeployTest(SaltMockTestCase):
     def setUp(self):
         super(DeployTest, self).setUp()
         self.salt_env.minions = ['node1.ceph.com', 'node2.ceph.com']
-        GrainsManager.set_grain('node1.ceph.com', 'ceph-salt', {'member': True, 'roles': ['mon']})
-        GrainsManager.set_grain('node2.ceph.com', 'ceph-salt', {'member': True, 'roles': ['mgr']})
+        GrainsManager.set_grain('node1.ceph.com', 'ceph-salt', {'member': True,
+                                                                'roles': ['mon'],
+                                                                'execution': {}})
+        GrainsManager.set_grain('node2.ceph.com', 'ceph-salt', {'member': True,
+                                                                'roles': ['mgr'],
+                                                                'execution': {}})
+
+    def test_minion_does_not_exist(self):
+        with pytest.raises(MinionDoesNotExistInConfiguration):
+            CephSaltModel('node3.ceph.com')
 
     def test_controller_with_terminal_renderer(self):
-        model = CephSaltModel()
+        model = CephSaltModel(None)
         renderer = TerminalRenderer(model)
         controller = CephSaltController(model, renderer)
 
@@ -202,7 +212,7 @@ class DeployTest(SaltMockTestCase):
         body.addstr = mock.MagicMock(side_effect=addstr)
         body.getyx = mock.MagicMock(side_effect=addstr.getyx)
 
-        model = CephSaltModel()
+        model = CephSaltModel(None)
         renderer = CursesRenderer(model)
         controller = CephSaltController(model, renderer)
 
@@ -299,22 +309,41 @@ class DeployTest(SaltMockTestCase):
         self.assertEqual(step.failure['state'],
                          'file_|-/etc/chrony.conf_|-/etc/chrony.conf_|-managed')
 
-    def test_check_ceph_salt_formula_exists(self):
+    def test_check_deploy_prerequesites_formula_exists(self):
         self.fs.create_file(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
-        self.assertEqual(CephSaltExecutor.check_ceph_salt_formula(), 0)
+        self.assertEqual(CephSaltExecutor.check_deploy_prerequesites(None), 0)
         self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
 
-    def test_check_ceph_salt_formula_exists2(self):
-        self.assertEqual(CephSaltExecutor.check_ceph_salt_formula(), 1)
-
-    def test_check_ceph_salt_formula_exists3(self):
+    def test_check_deploy_prerequesites_formula_exists1(self):
         ServiceMock.restart_result = False
-        self.assertEqual(CephSaltExecutor.check_ceph_salt_formula(), 1)
+        self.assertEqual(CephSaltExecutor.check_deploy_prerequesites(None), 1)
         ServiceMock.restart_result = True
 
-    def test_check_ceph_salt_formula_exists4(self):
+    def test_check_deploy_prerequesites_formula_exists2(self):
+        self.assertEqual(CephSaltExecutor.check_deploy_prerequesites(None), 2)
+
+    def test_check_deploy_prerequesites_formula_exists3(self):
         SaltUtilMock.sync_all_result = False
         self.fs.create_file(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
-        self.assertEqual(CephSaltExecutor.check_ceph_salt_formula(), 1)
+        self.assertEqual(CephSaltExecutor.check_deploy_prerequesites(None), 3)
         SaltUtilMock.sync_all_result = True
+        self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
+
+    def test_check_deploy_prerequesites_day1_with_minion(self):
+        self.fs.create_file(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
+        self.assertEqual(CephSaltExecutor.check_deploy_prerequesites('node1.test.com'), 4)
+        self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
+
+    def test_check_deploy_prerequesites_day2_without_minion(self):
+        self.fs.create_file(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
+        CephOrchMock.host_ls_result = [{'host': 'node1.test.com'}]
+        self.assertEqual(CephSaltExecutor.check_deploy_prerequesites(None), 5)
+        CephOrchMock.host_ls_result = []
+        self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
+
+    def test_check_deploy_prerequesites_day2_with_minion_deployed(self):
+        self.fs.create_file(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
+        CephOrchMock.host_ls_result = [{'host': 'node1'}]
+        self.assertEqual(CephSaltExecutor.check_deploy_prerequesites('node1.test.com'), 6)
+        CephOrchMock.host_ls_result = []
         self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))

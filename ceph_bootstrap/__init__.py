@@ -89,11 +89,12 @@ def config_shell(config_args):
 @cli.command(name='deploy')
 @click.option('-n', '--non-interactive', is_flag=True, default=False,
               help='Run deploy in non-interactive mode')
-def deploy(non_interactive):
+@click.argument('minion_id', required=False)
+def deploy(non_interactive, minion_id):
     """
     Runs ceph-salt formula and shows real-time progress
     """
-    executor = CephSaltExecutor(not non_interactive)
+    executor = CephSaltExecutor(not non_interactive, minion_id)
     retcode = executor.run()
     sys.exit(retcode)
 

@@ -28,3 +28,9 @@ class PillarFileNotPureYaml(CephBootstrapException):
     def __init__(self, top_file_path):
         super(PillarFileNotPureYaml, self).__init__(
             "Salt pillar file '{}' may contain Jinja2 expressions".format(top_file_path))
+
+
+class MinionDoesNotExistInConfiguration(CephBootstrapException):
+    def __init__(self, minion_id):
+        super(MinionDoesNotExistInConfiguration, self).__init__(
+            "Minion '{}' does not exist in configuration".format(minion_id))

@@ -2,29 +2,6 @@
 
 {{ macros.begin_stage('Ceph bootstrap') }}
 
-{{ macros.begin_step('Install cephadm and other packages') }}
-
-install cephadm:
-  pkg.installed:
-    - pkgs:
-        - cephadm
-{% if 'mon' in grains['ceph-salt']['roles'] %}
-        - ceph-common
-    - failhard: True
-{% endif %}
-
-{{ macros.end_step('Install cephadm and other packages') }}
-
-{{ macros.begin_step('Download ceph container image') }}
-{% if 'container' in pillar['ceph-salt'] and 'ceph' in pillar['ceph-salt']['container']['images'] %}
-download ceph container image:
-  cmd.run:
-    - name: |
-        podman pull {{ pillar['ceph-salt']['container']['images']['ceph'] }}
-    - failhard: True
-{% endif %}
-{{ macros.end_step('Download ceph container image') }}
-
 {% if grains['id'] == pillar['ceph-salt']['bootstrap_minion'] %}
 /var/log/ceph:
   file.directory:
@@ -33,6 +10,13 @@ download ceph container image:
     - mode: '0770'
     - makedirs: True
     - failhard: True
+
+{{ macros.begin_step('Wait for other minions') }}
+wait for other minions:
+  ceph_salt.wait_for_grain:
+    - grain: ceph-salt:execution:provisioned
+    - failhard: True
+{{ macros.end_step('Wait for other minions') }}
 
 {{ macros.begin_step('Run cephadm bootstrap') }}
 
