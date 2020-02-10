@@ -27,11 +27,6 @@ class SaltMasterCommError(ValidationException):
                                                   .format(salt_exception_error))
 
 
-class CephSaltFormulaNotInstalled(ValidationException):
-    def __init__(self):
-        super(CephSaltFormulaNotInstalled, self).__init__("ceph-salt formula is not installed")
-
-
 class NoPillarDirectoryConfigured(ValidationException):
     def __init__(self):
         super(NoPillarDirectoryConfigured, self).__init__(
@@ -68,19 +63,6 @@ def check_salt_master_communication():
     except SaltException as ex:
         logger.exception(ex)
         logger.error("failed to run test.ping in salt-master")
-        raise SaltMasterCommError(str(ex))
-
-
-def check_ceph_salt_formula_installed():
-    logger.info("checking if ceph-salt formula is installed")
-    try:
-        result = SaltClient.caller(False).cmd('state.sls_exists', ['ceph-salt'])
-        if not result:
-            logger.error("ceph-salt formula is not installed")
-            raise CephSaltFormulaNotInstalled()
-    except SaltException as ex:
-        logger.exception(ex)
-        logger.error("failed to run state.sls_exists in salt-master")
         raise SaltMasterCommError(str(ex))
 
 

@@ -7,6 +7,7 @@ import yaml
 
 import salt.client
 import salt.minion
+from salt.exceptions import SaltException
 
 from .exceptions import SaltCallException, PillarFileNotPureYaml
 
@@ -68,6 +69,30 @@ class SaltClient:
         if not pillar_dirs:
             return None
         return pillar_dirs[0]
+
+    @classmethod
+    def local_cmd(cls, target, func, args=None, tgt_type=None):
+        if args is None:
+            args = []
+        try:
+            result = cls.local().cmd(target, func, args, tgt_type=tgt_type)
+            if result is None or not isinstance(result, dict):
+                raise SaltCallException(target, func, result)
+        except SaltException as ex:
+            logger.exception(ex)
+            raise SaltCallException(target, func, result)
+        return result
+
+    @classmethod
+    def caller_cmd(cls, func, args=None):
+        if args is None:
+            args = []
+        try:
+            result = cls.caller(False).cmd(func, args)
+        except SaltException as ex:
+            logger.exception(ex)
+            raise SaltCallException('master', func, result)
+        return result
 
 
 class GrainsManager:
