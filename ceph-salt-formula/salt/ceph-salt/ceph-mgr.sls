@@ -13,7 +13,7 @@
 deploy remaining mgrs:
   cmd.run:
     - name: |
-        ceph orchestrator mgr update {{ mgr_update_args | join(' ') }}
+        ceph orch mgr update {{ mgr_update_args | join(' ') }}
     - failhard: True
 
 {{ macros.end_stage('Deployment of Ceph MGRs') }}

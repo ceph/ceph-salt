@@ -75,9 +75,9 @@ configure ssh orchestrator:
         ceph config-key set mgr/cephadm/ssh_identity_key -i ~/.ssh/id_rsa
         ceph config-key set mgr/cephadm/ssh_identity_pub -i ~/.ssh/id_rsa.pub
         ceph mgr module enable cephadm && \
-        ceph orchestrator set backend cephadm && \
+        ceph orch set backend cephadm && \
 {% for minion in pillar['ceph-salt']['minions']['all'] %}
-        ceph orchestrator host add {{ minion }} && \
+        ceph orch host add {{ minion }} && \
 {% endfor %}
         true
     - onchanges:
