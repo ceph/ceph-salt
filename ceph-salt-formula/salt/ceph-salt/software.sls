@@ -2,10 +2,11 @@
 
 {{ macros.begin_stage('Install and update required packages') }}
 
-install iputils:
+install required packages:
   pkg.installed:
     - pkgs:
       - iputils
+      - podman
     - failhard: True
 
 {% if pillar['ceph-salt'].get('upgrades', {'enabled': False})['enabled'] %}
