@@ -13,7 +13,7 @@
 deploy remaining mons:
   cmd.run:
     - name: |
-        ceph orch mon update {{ mon_update_args | join(' ') }}
+        ceph orch apply mon {{ mon_update_args | join(' ') }}
     - failhard: True
 
 generate up-to-date ceph.conf:
