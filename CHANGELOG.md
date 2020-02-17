@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [15.1.0] - 2020-02-17
+### Added
+- System update and reboot during deployment (#11)
+- Ensure ceph-salt-formula is loaded by the salt-master before deploy (#65)
+- Automatic pillar setup (#8)
+- Check salt-master is up and running (#61)
+- Wait more verbosely on QA ceph_health_test (#62)
+### Fixed
+- Rename calls to Ceph Orchestrator Apply (#80)
+- Rename calls to Ceph Orchestrator (#73)
+- Explicitly install podman (#72)
+
+
 ## [15.0.2] - 2020-01-29
 ### Added
 - New "deploy" command with real-time feedback (#9)
@@ -46,7 +59,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal README.
 - The CHANGELOG file.
 
-[Unreleased]: https://github.com/SUSE/ceph-bootstrap/compare/v15.0.2...HEAD
+[Unreleased]: https://github.com/SUSE/ceph-bootstrap/compare/v15.1.0...HEAD
+[15.1.0]: https://github.com/SUSE/ceph-bootstrap/releases/tag/v15.1.0
 [15.0.2]: https://github.com/SUSE/ceph-bootstrap/releases/tag/v15.0.2
 [15.0.1]: https://github.com/SUSE/ceph-bootstrap/releases/tag/v15.0.1
 [0.1.0]: https://github.com/SUSE/ceph-bootstrap/releases/tag/v0.1.0
