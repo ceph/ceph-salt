@@ -124,6 +124,19 @@ class ServiceMock:
         return cls.restart_result
 
 
+class CephOrchMock:
+    configured_result = True
+    host_ls_result = []
+
+    @classmethod
+    def configured(cls):
+        return cls.configured_result
+
+    @classmethod
+    def host_ls(cls):
+        return cls.host_ls_result
+
+
 class SaltLocalClientMock:
 
     def __init__(self):
@@ -158,6 +171,8 @@ class SaltLocalClientMock:
                 result[tgt] = getattr(StateMock, func)(*args)
             elif mod == 'service':
                 result[tgt] = getattr(ServiceMock, func)(*args)
+            elif mod == 'ceph_orch':
+                result[tgt] = getattr(CephOrchMock, func)(*args)
             else:
                 raise NotImplementedError()
 

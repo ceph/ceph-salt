@@ -16,52 +16,34 @@ logger = logging.getLogger(__name__)
 
 
 class SaltClient:
-    _OPTS_ = None
-    _CALLER_ = None
-    _LOCAL_ = None
-    _MASTER_ = None
 
     @classmethod
     def _opts(cls, local=True):
         """
-        Initializes and retrieves the Salt opts structure
+        Retrieves the Salt opts structure
         """
-        if cls._OPTS_ is None:
-            logger.info("Initializing SaltClient with master config")
-            cls._OPTS_ = salt.config.master_config('/etc/salt/master')
-            # pylint: disable=unsupported-assignment-operation
-            if local:
-                cls._OPTS_['file_client'] = 'local'
-            logger.debug("SaltClient __opts__ = %s", cls._OPTS_)
-
-        return cls._OPTS_
+        _opts = salt.config.master_config('/etc/salt/master')
+        if local:
+            _opts['file_client'] = 'local'
+        return _opts
 
     @classmethod
     def caller(cls, local=True):
         """
-        Initializes and retrieves the Salt caller client instance
+        Retrieves a new Salt caller client instance
         """
-        if cls._CALLER_ is None:
-            cls._CALLER_ = salt.client.Caller(mopts=cls._opts(local))
-        return cls._CALLER_
+        return salt.client.Caller(mopts=cls._opts(local))
 
     @classmethod
     def local(cls):
         """
-        Initializes and retrieves the Salt local client instance
+        Retrieves a new Salt local client instance
         """
-        if cls._LOCAL_ is None:
-            cls._LOCAL_ = salt.client.LocalClient()
-        return cls._LOCAL_
+        return salt.client.LocalClient()
 
     @classmethod
     def master(cls, local=True):
-        if cls._MASTER_ is None:
-            _opts = salt.config.master_config('/etc/salt/master')
-            if local:
-                _opts['file_client'] = 'local'
-            cls._MASTER_ = salt.minion.MasterMinion(_opts)
-        return cls._MASTER_
+        return salt.minion.MasterMinion(cls._opts(local))
 
     @classmethod
     def pillar_fs_path(cls):

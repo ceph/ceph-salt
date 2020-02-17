@@ -12,6 +12,7 @@ from typing import Dict, List
 
 import yaml
 
+from .exceptions import MinionDoesNotExistInConfiguration
 from .salt_event import EventListener, SaltEventProcessor
 from .salt_utils import SaltClient, GrainsManager
 from .terminal_utils import PrettyPrinter as PP
@@ -346,19 +347,31 @@ class Stage:
                 step.end(timestamp, True)
 
     def step_begin(self, desc, timestamp):
+        """
+        :return: "False" if duplicated, otherwise "True"
+        """
         if desc in self.steps:
+            if self.steps[desc].begin_time:
+                return False
             logger.warning("[%s] received begin_step event after end: %s", self.minion, desc)
-            self.steps[desc].being_time = timestamp
-            return
+            self.steps[desc].begin_time = timestamp
+            return True
         self.steps[desc] = Step(self.minion, desc, timestamp)
         self.current_step = self.steps[desc]
+        return True
 
     def step_end(self, desc, timestamp):
+        """
+        :return: "False" if duplicated, otherwise "True"
+        """
         if desc not in self.steps:
             logger.warning("[%s] received end_step event without a begin: %s", self.minion, desc)
             self.steps[desc] = Step(self.minion, desc, None)
+        if self.steps[desc].finished():
+            return False
         self.steps[desc].end(timestamp)
         self.current_step = None
+        return True
 
     def finished(self):
         return self.end_time is not None
@@ -387,6 +400,7 @@ class MinionExecution:
         self.current_stage = None
         self.begin_time = datetime.datetime.utcnow()
         self.end_time = None
+        self.rebooting = False
         self.success = None
 
     @property
@@ -396,31 +410,49 @@ class MinionExecution:
         return self.current_stage
 
     def stage_begin(self, desc, timestamp):
+        """
+        :return: "False" if duplicated, otherwise "True"
+        """
         if desc in self.stages:
+            if self.stages[desc].begin_time:
+                return False
             logger.warning("[%s] received begin_stage event after end: %s", self.name, desc)
             self.stages[desc].begin_time = timestamp
-            return
+            return True
         self.stages[desc] = Stage(self.name, desc, timestamp)
         self.current_stage = self.stages[desc]
+        return True
 
     def stage_end(self, desc, timestamp):
+        """
+        :return: "False" if duplicated, otherwise "True"
+        """
         if desc not in self.stages:
             logger.warning("[%s] received end_stage event without a begin: %s", self.name, desc)
             self.stages[desc] = Stage(self.name, desc, None)
+        if self.stages[desc].finished():
+            return False
         self.stages[desc].end(timestamp)
         self.current_stage = None
+        return True
 
     def step_begin(self, desc, timestamp):
+        """
+        :return: "False" if duplicated, "None" if outside stage, otherwise "True"
+        """
         if self.current_stage:
-            self.current_stage.step_begin(desc, timestamp)
-        else:
-            logger.warning("[%s] received begin_step event outside of stage: %s", self.name, desc)
+            return self.current_stage.step_begin(desc, timestamp)
+        logger.warning("[%s] received begin_step event outside of stage: %s", self.name, desc)
+        return None
 
     def step_end(self, desc, timestamp):
+        """
+        :return: "False" if duplicated, "None" if outside stage, otherwise "True"
+        """
         if self.current_stage:
-            self.current_stage.step_end(desc, timestamp)
-        else:
-            logger.warning("[%s] received end_step event outside of stage: %s", self.name, desc)
+            return self.current_stage.step_end(desc, timestamp)
+        logger.warning("[%s] received end_step event outside of stage: %s", self.name, desc)
+        return None
 
     def end(self, timestamp, success):
         self.end_time = timestamp
@@ -457,14 +489,20 @@ class MinionExecution:
 
 
 class CephSaltModel:
-    def __init__(self):
+    def __init__(self, minion_id):
+        self.minion_id = minion_id
         self._minions: Dict[str, MinionExecution] = {}
         self.begin_time = None
         self.end_time = None
         self._init_minions()
 
     def _init_minions(self) -> None:
-        for minion in GrainsManager.filter_by('ceph-salt', 'member'):
+        minions = GrainsManager.filter_by('ceph-salt', 'member')
+        if self.minion_id is not None:
+            if self.minion_id not in minions:
+                raise MinionDoesNotExistInConfiguration(self.minion_id)
+            minions = [self.minion_id]
+        for minion in minions:
             logger.info("adding minion: %s", minion)
             self._minions[minion] = MinionExecution(minion)
 
@@ -486,6 +524,9 @@ class CephSaltModel:
     def minions_finished(self) -> int:
         return len([m for m in self._minions.values() if m.finished()])
 
+    def minions_rebooting(self) -> int:
+        return len([m for m in self._minions.values() if m.rebooting])
+
     def minions_total(self) -> int:
         return len(self._minions)
 
@@ -495,11 +536,18 @@ class CephSaltModel:
     def minions_list(self) -> List[MinionExecution]:
         return sorted(list(self._minions.values()), key=lambda m: m.name)
 
+    def minions_names(self) -> List[MinionExecution]:
+        return [m.name for m in self._minions.values()]
+
 
 class Renderer:
     def __init__(self, model: CephSaltModel):
         self.model = model
         self.running = False
+        if self.model.minion_id:
+            self.cmd_str = "salt {} state.apply ceph-salt".format(self.model.minion_id)
+        else:
+            self.cmd_str = "salt -G 'ceph-salt:member' state.apply ceph-salt"
 
     def minion_update(self, minion: str):
         pass
@@ -525,34 +573,62 @@ class CephSaltController(EventListener):
     def __init__(self, model: CephSaltModel, renderer: Renderer):
         self.model = model
         self.renderer = renderer
+        self.executors = 0
+        self.retcode = 0
+        self.running = False
 
     def begin(self):
+        self.retcode = 0
+        self.running = True
         self.model.begin()
         self.renderer.execution_started()
 
     def end(self):
+        self.running = False
         self.model.end()
         self.renderer.execution_stopped()
 
+    def set_retcode(self, retcode):
+        if retcode > self.retcode:
+            self.retcode = retcode
+
     def handle_begin_stage(self, event):
         minion = self.model.get_minion(event.minion)
-        minion.stage_begin(event.desc, event.stamp)
-        self.renderer.minion_update(event.minion)
+        if minion.stage_begin(event.desc, event.stamp):
+            self.renderer.minion_update(event.minion)
 
     def handle_end_stage(self, event):
         minion = self.model.get_minion(event.minion)
-        minion.stage_end(event.desc, event.stamp)
-        self.renderer.minion_update(event.minion)
+        if minion.stage_end(event.desc, event.stamp):
+            self.renderer.minion_update(event.minion)
 
     def handle_begin_step(self, event):
         minion = self.model.get_minion(event.minion)
-        minion.step_begin(event.desc, event.stamp)
-        self.renderer.minion_update(event.minion)
+        if minion.step_begin(event.desc, event.stamp):
+            self.renderer.minion_update(event.minion)
 
     def handle_end_step(self, event):
         minion = self.model.get_minion(event.minion)
-        minion.step_end(event.desc, event.stamp)
-        self.renderer.minion_update(event.minion)
+        if minion.step_end(event.desc, event.stamp):
+            self.renderer.minion_update(event.minion)
+
+    def handle_minion_reboot(self, event):
+        minion = self.model.get_minion(event.minion)
+        minion.rebooting = True
+        if minion.stage_begin('Reboot', event.stamp):
+            self.renderer.minion_update(event.minion)
+
+    def handle_minion_start(self, event):
+        minion = self.model.get_minion(event.minion)
+        minion.rebooting = False
+        if minion.stage_end('Reboot', event.stamp):
+            self.renderer.minion_update(event.minion)
+        executor = CephSaltExecutorThread(self, event.minion)
+        executor.start()
+
+    def handle_state_apply_return(self, event):
+        if not event.success:
+            SaltClient.local().cmd(event.minion, 'grains.set', ['ceph-salt:execution:failed', True])
 
     def minion_finished(self, minion_name, timestamp, success):
         minion = self.model.get_minion(minion_name)
@@ -566,17 +642,23 @@ class CephSaltController(EventListener):
 
 
 class CephSaltExecutorThread(threading.Thread):
-    def __init__(self, controller: CephSaltController):
+    def __init__(self, controller: CephSaltController, minion_id=None):
         super(CephSaltExecutorThread, self).__init__()
         self.controller = controller
-        self.retcode = 0
+        self.minion_id = minion_id
 
     def run(self):
+        self.controller.executors += 1
         try:
-            logger.info("Calling: salt -G 'ceph-salt:member' state.apply ceph-salt")
-            self.controller.begin()
-            returns = SaltClient.local().cmd_iter('ceph-salt:member', 'state.apply', ['ceph-salt'],
-                                                  tgt_type='grain')
+            if not self.controller.running:
+                self.controller.begin()
+            if self.minion_id:
+                logger.info("Calling: salt '%s' state.apply ceph-salt", self.minion_id)
+                returns = SaltClient.local().cmd_iter(self.minion_id, 'state.apply', ['ceph-salt'])
+            else:
+                logger.info("Calling: salt -G 'ceph-salt:member' state.apply ceph-salt")
+                returns = SaltClient.local().cmd_iter('ceph-salt:member', 'state.apply',
+                                                      ['ceph-salt'], tgt_type='grain')
             for ret in returns:
                 logger.info("Response:\n%s", json.dumps(ret, sort_keys=True, indent=2))
                 now = datetime.datetime.utcnow()
@@ -584,12 +666,14 @@ class CephSaltExecutorThread(threading.Thread):
                     self.controller.minion_finished(minion, now, ret[minion]['retcode'] == 0)
                     self._process_failures(minion, data['ret'])
                     if ret[minion]['retcode'] != 0:
-                        self.retcode = 2  # failure in state execution
+                        self.controller.set_retcode(2)  # failure in state execution
         except Exception as ex:  # pylint: disable=broad-except
             logger.exception(ex)
-            self.retcode = 3  # failure in CephSaltExecutor execution
+            self.controller.set_retcode(3)  # failure in CephSaltExecutor execution
 
-        self.controller.end()
+        if not self.controller.model.minions_rebooting() and self.controller.executors <= 1:
+            self.controller.end()
+        self.controller.executors -= 1
 
     def _find_outer_event(self, exec_seq, failure_idx, ev_type=None):
         def parse_event(state_name):
@@ -699,7 +783,7 @@ class CursesRenderer(Renderer, ScreenKeyListener):
 
         else:
             self.screen.clear_header()
-            run_cmd_str = "Running: salt -G 'ceph-salt:member' state.apply ceph-salt"
+            run_cmd_str = "Running: {}".format(self.cmd_str)
             total_minions = self.model.minions_total()
             finished_minions = self.model.minions_finished()
             finished_str = "Finished: {}/{}".format(finished_minions, total_minions)
@@ -1061,7 +1145,7 @@ class CursesRenderer(Renderer, ScreenKeyListener):
 
 class TerminalRenderer(Renderer):
     def execution_started(self):
-        PP.println("Starting the execution of: salt -G 'ses:member' state.apply ceph-salt")
+        PP.println("Starting the execution of: {}".format(self.cmd_str))
         PP.println()
 
     def minion_update(self, minion: str):
@@ -1104,20 +1188,21 @@ class TerminalRenderer(Renderer):
 
 
 class CephSaltExecutor:
-    def __init__(self, interactive):
-        self.model = CephSaltModel()
+    def __init__(self, interactive, minion_id):
+        self.minion_id = minion_id
+        self.model = CephSaltModel(self.minion_id)
         if interactive:
             self.renderer = CursesRenderer(self.model)
         else:
             self.renderer = TerminalRenderer(self.model)
         self.controller = CephSaltController(self.model, self.renderer)
-        self.event_proc = SaltEventProcessor()
+        self.event_proc = SaltEventProcessor(self.model.minions_names())
         self.event_proc.add_listener(self.controller)
 
-        self.executor = CephSaltExecutorThread(self.controller)
+        self.executor = CephSaltExecutorThread(self.controller, self.minion_id)
 
     @staticmethod
-    def check_ceph_salt_formula():
+    def check_deploy_prerequesites(minion_id):
         # verify that deployment can run
         PP.println("Checking if ceph-salt formula is available...")
         result = SaltClient.local_cmd('ceph-salt:member', 'state.sls_exists', ['ceph-salt'],
@@ -1138,7 +1223,7 @@ class CephSaltExecutor:
             logger.error("ceph-salt formula still not found")
             PP.pl_red("Could not find ceph-salt formula. Please check if ceph-salt-formula package"
                       " is installed")
-            return 1
+            return 2
 
         PP.println("Syncing minions with the master...")
         result = SaltClient.local_cmd('ceph-salt:member', 'saltutil.sync_all', tgt_type='grain')
@@ -1148,13 +1233,43 @@ class CephSaltExecutor:
                 PP.pl_red("Sync failed, please run: "
                           "\"salt -G 'ceph-salt:member' saltutil.sync_all\" manually and fix "
                           "the problems reported")
-                return 1
-        logger.info("minions sync finished")
+                return 3
+
+        PP.println("Checking existing deployment...")
+        result = SaltClient.local().cmd('ceph-salt:member', 'ceph_orch.configured',
+                                        tgt_type='grain')
+        deployed = False
+        host_ls = []
+        for minion, value in result.items():
+            if value:
+                host_ls = SaltClient.local().cmd(minion, 'ceph_orch.host_ls')[minion]
+                deployed = len(host_ls) > 0
+                break
+        # day 1, but minion_id specified
+        if minion_id is not None and not deployed:
+            logger.error("cluster not deployed and minion_id provided")
+            PP.pl_red("Cluster is not deployed yet, please apply the deployment to "
+                      "all minions at the same time: \"ceph-bootstrap deploy\"")
+            return 4
+        # day 2, but minion_id not specified
+        if deployed and minion_id is None:
+            logger.error("cluster already deployed and minion_id not provided")
+            PP.pl_red("Cluster is already deployed, please apply the deployment to a "
+                      "single minion at a time: \"ceph-bootstrap deploy <minion_id>\"")
+            return 5
+        # day 2, but minion_id already deployed
+        if deployed and minion_id is not None:
+            minion_short_name = minion_id.split('.', 1)[0]
+            for host in host_ls:
+                if minion_short_name == host['host']:
+                    logger.error("minion_id already deployed: %s", minion_id)
+                    PP.pl_red("Minion '{}' is already deployed".format(minion_id))
+                    return 6
         PP.println("Ready for deployment!")
         return 0
 
     def run(self):
-        retcode = self.check_ceph_salt_formula()
+        retcode = self.check_deploy_prerequesites(self.minion_id)
         if retcode > 0:
             return retcode
         self.event_proc.start()
@@ -1162,4 +1277,4 @@ class CephSaltExecutor:
         self.renderer.run()
         self.event_proc.stop()
         self.executor.join()
-        return self.executor.retcode
+        return self.controller.retcode

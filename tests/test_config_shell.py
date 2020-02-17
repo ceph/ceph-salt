@@ -25,7 +25,9 @@ class ConfigShellTest(SaltMockTestCase):
     def test_cluster_minions(self):
         self.shell.run_cmdline('/Cluster/Minions add node1.ceph.com')
         self.assertInSysOut('1 minion added.')
-        self.assertGrains('node1.ceph.com', 'ceph-salt', {'member': True, 'roles': []})
+        self.assertGrains('node1.ceph.com', 'ceph-salt', {'member': True,
+                                                          'roles': [],
+                                                          'execution': {}})
         self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1'])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mgr'), [])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mon'), {})
@@ -69,7 +71,9 @@ class ConfigShellTest(SaltMockTestCase):
 
         self.shell.run_cmdline('/Cluster/Roles/Mgr add node1.ceph.com')
         self.assertInSysOut('1 minion added.')
-        self.assertGrains('node1.ceph.com', 'ceph-salt', {'member': True, 'roles': ['mgr']})
+        self.assertGrains('node1.ceph.com', 'ceph-salt', {'member': True,
+                                                          'roles': ['mgr'],
+                                                          'execution': {}})
         self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1'])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mgr'), ['node1'])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mon'), {})
@@ -77,7 +81,9 @@ class ConfigShellTest(SaltMockTestCase):
 
         self.shell.run_cmdline('/Cluster/Roles/Mgr rm node1.ceph.com')
         self.assertInSysOut('1 minion removed.')
-        self.assertGrains('node1.ceph.com', 'ceph-salt', {'member': True, 'roles': []})
+        self.assertGrains('node1.ceph.com', 'ceph-salt', {'member': True,
+                                                          'roles': [],
+                                                          'execution': {}})
         self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1'])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mgr'), [])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mon'), {})
@@ -94,7 +100,9 @@ class ConfigShellTest(SaltMockTestCase):
 
         self.shell.run_cmdline('/Cluster/Roles/Mon add node2.ceph.com')
         self.assertInSysOut('1 minion added.')
-        self.assertGrains('node2.ceph.com', 'ceph-salt', {'member': True, 'roles': ['mgr', 'mon']})
+        self.assertGrains('node2.ceph.com', 'ceph-salt', {'member': True,
+                                                          'roles': ['mgr', 'mon'],
+                                                          'execution': {}})
         self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1', 'node2'])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mgr'), ['node1', 'node2'])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mon'), {'node2': '10.20.39.202'})
@@ -102,7 +110,9 @@ class ConfigShellTest(SaltMockTestCase):
 
         self.shell.run_cmdline('/Cluster/Roles/Mon rm node2.ceph.com')
         self.assertInSysOut('1 minion removed.')
-        self.assertGrains('node2.ceph.com', 'ceph-salt', {'member': True, 'roles': ['mgr']})
+        self.assertGrains('node2.ceph.com', 'ceph-salt', {'member': True,
+                                                          'roles': ['mgr'],
+                                                          'execution': {}})
         self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1', 'node2'])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mgr'), ['node1', 'node2'])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mon'), {})
@@ -179,6 +189,14 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertValueOption('/Time_Server/Server_Hostname',
                                'ceph-salt:time_server:server_host',
                                'server1')
+
+    def test_system_update_packages(self):
+        self.assertFlagOption('/System_Update/Packages',
+                              'ceph-salt:updates:enabled')
+
+    def test_system_update_reboot(self):
+        self.assertFlagOption('/System_Update/Reboot',
+                              'ceph-salt:updates:reboot')
 
     def assertFlagOption(self, path, pillar_key, reset_supported=True):
         self.shell.run_cmdline('{} enable'.format(path))

@@ -20,8 +20,14 @@ class GrainsManagerTest(SaltMockTestCase):
         self.assertNotInGrains('test', 'key')
 
     def test_grains_filter_by(self):
-        GrainsManager.set_grain('node1', 'ceph-salt', {'member': True, 'roles': ['mon']})
-        GrainsManager.set_grain('node2', 'ceph-salt', {'member': True, 'roles': ['mgr']})
-        GrainsManager.set_grain('node3', 'ceph-salt', {'member': True, 'roles': ['storage']})
+        GrainsManager.set_grain('node1', 'ceph-salt', {'member': True,
+                                                       'roles': ['mon'],
+                                                       'execution': {}})
+        GrainsManager.set_grain('node2', 'ceph-salt', {'member': True,
+                                                       'roles': ['mgr'],
+                                                       'execution': {}})
+        GrainsManager.set_grain('node3', 'ceph-salt', {'member': True,
+                                                       'roles': ['storage'],
+                                                       'execution': {}})
         result = GrainsManager.filter_by('ceph-salt:member')
         self.assertEqual(set(result), {'node1', 'node2', 'node3'})
