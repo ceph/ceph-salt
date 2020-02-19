@@ -7,7 +7,7 @@ import time
 import click
 import pkg_resources
 
-from .config_shell import run_config_cmdline, run_config_shell, run_status
+from .config_shell import run_config_cmdline, run_config_shell, run_status, run_export, run_import
 from .exceptions import CephSaltException
 from .terminal_utils import check_root_privileges, PrettyPrinter as PP
 from .deploy import CephSaltExecutor
@@ -96,6 +96,27 @@ def status(no_color):
     if no_color:
         PP.disable_colors()
     if not run_status():
+        sys.exit(1)
+
+
+@cli.command(name='export')
+@click.option('-p', '--pretty', is_flag=True, default=False,
+              help='Pretty-prints JSON ouput')
+def export_config(pretty):
+    """
+    Export ceph-bootstrap configuration
+    """
+    if not run_export(pretty):
+        sys.exit(1)
+
+
+@cli.command(name='import')
+@click.argument('config_file', required=True)
+def import_config(config_file):
+    """
+    Import ceph-bootstrap configuration
+    """
+    if not run_import(config_file):
         sys.exit(1)
 
 
