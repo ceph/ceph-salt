@@ -1235,7 +1235,7 @@ class CephSaltExecutor:
                           "the problems reported")
                 return 3
 
-        PP.println("Checking existing deployment...")
+        PP.println("Checking if there is an existing deployment...")
         result = SaltClient.local().cmd('ceph-salt:member', 'ceph_orch.configured',
                                         tgt_type='grain')
         deployed = False
