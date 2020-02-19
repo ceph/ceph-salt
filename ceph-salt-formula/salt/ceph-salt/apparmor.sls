@@ -11,7 +11,7 @@ aa-enabled:
 aa-teardown:
   cmd.run:
     - onlyif:
-      - which aa-teardown
+      - sh -c "type aa-teardown"
     - failhard: True
 
 stop apparmor:
