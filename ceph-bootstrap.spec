@@ -73,15 +73,6 @@ Octopus.
 %fdupes %{buildroot}%{python3_sitelib}
 install -m 0755 -d %{buildroot}/%{_datadir}/%{name}
 
-# qa script installation
-install -m 0755 -d %{buildroot}/%{_datadir}/%{name}/qa
-install -m 0755 -d %{buildroot}/%{_datadir}/%{name}/qa/common
-install -m 0755 qa/health-ok.sh %{buildroot}/%{_datadir}/%{name}/qa/health-ok.sh
-install -m 0644 qa/common/common.sh %{buildroot}/%{_datadir}/%{name}/qa/common/common.sh
-install -m 0644 qa/common/helper.sh %{buildroot}/%{_datadir}/%{name}/qa/common/helper.sh
-install -m 0644 qa/common/json.sh %{buildroot}/%{_datadir}/%{name}/qa/common/json.sh
-install -m 0644 qa/common/zypper.sh %{buildroot}/%{_datadir}/%{name}/qa/common/zypper.sh
-
 # ceph-salt-formula installation
 %define fname ceph-salt
 %define fdir  %{_datadir}/salt-formulas
@@ -120,20 +111,6 @@ EOF
 %{python3_sitelib}/ceph_bootstrap*/
 %{_bindir}/%{name}
 %dir %{_datadir}/%{name}
-
-
-%package qa
-Summary:    Integration test script for ceph-bootstrap
-Group:      System/Management
-
-
-%description qa
-Integration test script for validating Ceph clusters deployed
-by ceph-bootstrap
-
-
-%files qa
-%{_datadir}/%{name}/qa
 
 
 %package -n ceph-salt-formula
