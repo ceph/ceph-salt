@@ -34,7 +34,11 @@ def end_step(name):
 
 def reboot_if_needed(name):
     ret = {'name': name, 'changes': {}, 'comment': '', 'result': False}
-    needs_reboot = __salt__['cmd.run_all']('zypper ps')['retcode'] > 0
+    if __grains__.get('os_family') == 'Suse':
+        needs_reboot = __salt__['cmd.run_all']('zypper ps')['retcode'] > 0
+    else:
+        ret['comment'] = 'Unsupported distribution: Unable to check if reboot is needed'
+        return ret
     if needs_reboot:
         is_master = __salt__['service.status']('salt-master')
         if is_master:
