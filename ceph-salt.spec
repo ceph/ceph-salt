@@ -1,5 +1,5 @@
 #
-# spec file for package ceph-bootstrap
+# spec file for package ceph-salt
 #
 # Copyright (c) 2019 SUSE LINUX GmbH, Nuernberg, Germany.
 #
@@ -20,7 +20,7 @@
 %{python_enable_dependency_generator}
 %endif
 
-Name:           ceph-bootstrap
+Name:           ceph-salt
 Version:        15.1.0
 Release:        1%{?dist}
 Summary:        CLI tool to deploy Ceph clusters
@@ -56,7 +56,7 @@ Requires:       procps
 
 
 %description
-ceph-bootstrap is a CLI tool for deploying Ceph clusters starting from version
+ceph-salt is a CLI tool for deploying Ceph clusters starting from version
 Octopus.
 
 
@@ -108,7 +108,7 @@ EOF
 %files
 %license LICENSE
 %doc CHANGELOG.md README.md
-%{python3_sitelib}/ceph_bootstrap*/
+%{python3_sitelib}/ceph_salt*/
 %{_bindir}/%{name}
 %dir %{_datadir}/%{name}
 

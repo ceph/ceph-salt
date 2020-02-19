@@ -9,7 +9,7 @@ import configshell_fb as configshell
 from configshell_fb.shell import locatedExpr
 
 from .core import CephNodeManager, SshKeyManager
-from .exceptions import CephBootstrapException, PillarFileNotPureYaml
+from .exceptions import CephSaltException, PillarFileNotPureYaml
 from .salt_utils import PillarManager
 from .terminal_utils import PrettyPrinter as PP
 from .validate.salt_master import check_salt_master_status, CephSaltPillarNotConfigured
@@ -248,7 +248,7 @@ class TimeServerHandler(PillarHandler):
         return [n.minion_id for n in CephNodeManager.ceph_salt_nodes().values()]
 
 
-CEPH_BOOTSTRAP_OPTIONS = {
+CEPH_SALT_OPTIONS = {
     'Cluster': {
         'help': '''
                 Cluster Options Configuration
@@ -438,11 +438,11 @@ CEPH_BOOTSTRAP_OPTIONS = {
 }
 
 
-class CephBootstrapRoot(configshell.ConfigNode):
+class CephSaltRoot(configshell.ConfigNode):
     help_intro = '''
-                 ceph-bootstrap Configuration
+                 ceph-salt Configuration
                  =====================
-                 This is a shell where you can manipulate ceph-bootstrap's configuration.
+                 This is a shell where you can manipulate ceph-salt's configuration.
                  Each configuration option is present under a configuration group.
                  You can navigate through the groups and options using the B{ls} and
                  B{cd} commands as in a typical shell.
@@ -685,7 +685,7 @@ class MinionsOptionNode(OptionNode):
                     MinionOptionNode(match, self.option_dict['handler'].children_handler(match),
                                      self)
                     counter += 1
-                except CephBootstrapException as ex:
+                except CephSaltException as ex:
                     logger.exception(ex)
                     PP.pl_red(ex)
                     has_errors = True
@@ -708,7 +708,7 @@ class MinionsOptionNode(OptionNode):
                 self.value = new_value
                 self.remove_child(self.get_child(match))
                 counter += 1
-            except CephBootstrapException as ex:
+            except CephSaltException as ex:
                 logger.exception(ex)
                 PP.pl_red(ex)
                 has_errors = True
@@ -761,16 +761,16 @@ def _generate_group_node(group_name, group_dict, parent):
 
 
 def generate_config_shell_tree(shell):
-    root_node = CephBootstrapRoot(shell)
-    for group_name, group_dict in CEPH_BOOTSTRAP_OPTIONS.items():
+    root_node = CephSaltRoot(shell)
+    for group_name, group_dict in CEPH_SALT_OPTIONS.items():
         _generate_group_node(group_name, group_dict, root_node)
 
 
-class CephBootstrapConfigShell(configshell.ConfigShell):
+class CephSaltConfigShell(configshell.ConfigShell):
     # pylint: disable=anomalous-backslash-in-string
     def __init__(self):
-        super(CephBootstrapConfigShell, self).__init__(
-            '~/.ceph_bootstrap_config_shell')
+        super(CephSaltConfigShell, self).__init__(
+            '~/.ceph_salt_config_shell')
         # Grammar of the command line
         command = locatedExpr(Word(alphanums + '_'))('command')
         var = Word(alphanums + ';,=_\+/.<>()~@:-%[]*{}" ')  # adding '*'
@@ -817,13 +817,13 @@ base:
 def run_config_shell():
     if not check_config_prerequesites():
         return False
-    shell = CephBootstrapConfigShell()
+    shell = CephSaltConfigShell()
     generate_config_shell_tree(shell)
     while True:
         try:
             shell.run_interactive()
             break
-        except CephBootstrapException as ex:
+        except CephSaltException as ex:
             logger.exception(ex)
             PP.pl_red(ex)
     return True
@@ -832,7 +832,7 @@ def run_config_shell():
 def run_config_cmdline(cmdline):
     if not check_config_prerequesites():
         return False
-    shell = CephBootstrapConfigShell()
+    shell = CephSaltConfigShell()
     generate_config_shell_tree(shell)
     logger.info("running command: %s", cmdline)
     shell.run_cmdline(cmdline)

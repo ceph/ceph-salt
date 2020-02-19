@@ -1,5 +1,5 @@
-from ceph_bootstrap.salt_utils import GrainsManager, PillarManager
-from ceph_bootstrap.config_shell import CephBootstrapConfigShell, generate_config_shell_tree
+from ceph_salt.salt_utils import GrainsManager, PillarManager
+from ceph_salt.config_shell import CephSaltConfigShell, generate_config_shell_tree
 
 from . import SaltMockTestCase
 
@@ -10,7 +10,7 @@ class ConfigShellTest(SaltMockTestCase):
 
     def setUp(self):
         super(ConfigShellTest, self).setUp()
-        self.shell = CephBootstrapConfigShell()
+        self.shell = CephSaltConfigShell()
         generate_config_shell_tree(self.shell)
 
         self.salt_env.minions = ['node1.ceph.com', 'node2.ceph.com', 'node3.ceph.com']

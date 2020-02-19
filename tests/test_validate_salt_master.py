@@ -3,7 +3,7 @@ import subprocess
 from mock import patch
 from salt.exceptions import SaltException
 
-from ceph_bootstrap.validate.salt_master import check_salt_master, SaltMasterNotInstalled, \
+from ceph_salt.validate.salt_master import check_salt_master, SaltMasterNotInstalled, \
     NoSaltMasterProcess, SaltMasterCommError, check_salt_master_communication, \
     check_ceph_salt_pillar, NoPillarDirectoryConfigured, CephSaltPillarNotConfigured
 

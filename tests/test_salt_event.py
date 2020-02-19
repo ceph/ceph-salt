@@ -5,7 +5,7 @@ from typing import List
 
 import mock
 
-from ceph_bootstrap.salt_event import SaltEventProcessor, EventListener, CephSaltEvent, \
+from ceph_salt.salt_event import SaltEventProcessor, EventListener, CephSaltEvent, \
     SaltEvent, JobRetEvent
 
 
