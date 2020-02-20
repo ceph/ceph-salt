@@ -7,11 +7,11 @@ import os
 import mock
 import pytest
 
-from ceph_bootstrap.deploy import CephSaltController, TerminalRenderer, CephSaltModel, Event, \
+from ceph_salt.deploy import CephSaltController, TerminalRenderer, CephSaltModel, Event, \
     CursesRenderer, CephSaltExecutor
-from ceph_bootstrap.exceptions import MinionDoesNotExistInConfiguration
-from ceph_bootstrap.salt_utils import GrainsManager
-from ceph_bootstrap.salt_event import CephSaltEvent
+from ceph_salt.exceptions import MinionDoesNotExistInConfiguration
+from ceph_salt.salt_utils import GrainsManager
+from ceph_salt.salt_event import CephSaltEvent
 
 from . import SaltMockTestCase, ServiceMock, SaltUtilMock, CephOrchMock
 

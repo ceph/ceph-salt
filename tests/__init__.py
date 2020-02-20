@@ -9,7 +9,7 @@ import yaml
 from mock import patch
 from pyfakefs.fake_filesystem_unittest import TestCase
 
-from ceph_bootstrap.salt_utils import SaltClient
+from ceph_salt.salt_utils import SaltClient
 
 
 logging.config.dictConfig({

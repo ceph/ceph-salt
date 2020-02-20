@@ -1,5 +1,5 @@
 import unittest
-from ceph_bootstrap.core import SshKeyManager
+from ceph_salt.core import SshKeyManager
 
 
 class SshManagerTest(unittest.TestCase):

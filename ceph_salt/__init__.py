@@ -8,7 +8,7 @@ import click
 import pkg_resources
 
 from .config_shell import run_config_cmdline, run_config_shell
-from .exceptions import CephBootstrapException
+from .exceptions import CephSaltException
 from .terminal_utils import check_root_privileges, PrettyPrinter as PP
 from .deploy import CephSaltExecutor
 
@@ -49,11 +49,11 @@ def _setup_logging(log_level, log_file):
     })
 
 
-def ceph_bootstrap_main():
+def ceph_salt_main():
     try:
         # pylint: disable=unexpected-keyword-arg,no-value-for-parameter
-        cli(prog_name='ceph-bootstrap')
-    except CephBootstrapException as ex:
+        cli(prog_name='ceph-salt')
+    except CephSaltException as ex:
         logger.exception(ex)
         PP.pl_red(str(ex))
         sys.exit(1)
@@ -63,10 +63,10 @@ def ceph_bootstrap_main():
 @click.option('-l', '--log-level', default='info',
               type=click.Choice(["info", "error", "debug", "silent"]),
               help="set log level (default: info)")
-@click.option('--log-file', default='/var/log/ceph-bootstrap.log',
+@click.option('--log-file', default='/var/log/ceph-salt.log',
               type=click.Path(dir_okay=False),
               help="the file path for the log to be stored")
-@click.version_option(pkg_resources.get_distribution('ceph-bootstrap'), message="%(version)s")
+@click.version_option(pkg_resources.get_distribution('ceph-salt'), message="%(version)s")
 @check_root_privileges
 def cli(log_level, log_file):
     _setup_logging(log_level, log_file)
@@ -76,7 +76,7 @@ def cli(log_level, log_file):
 @click.argument('config_args', nargs=-1, type=click.UNPROCESSED, required=False)
 def config_shell(config_args):
     """
-    Starts ceph-bootstrap configuration shell
+    Starts ceph-salt configuration shell
     """
     if config_args:
         if not run_config_cmdline(" ".join(config_args)):
@@ -100,4 +100,4 @@ def deploy(non_interactive, minion_id):
 
 
 if __name__ == '__main__':
-    ceph_bootstrap_main()
+    ceph_salt_main()

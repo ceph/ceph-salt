@@ -1,5 +1,5 @@
 import os
-from ceph_bootstrap.salt_utils import PillarManager
+from ceph_salt.salt_utils import PillarManager
 from . import SaltMockTestCase
 
 

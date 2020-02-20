@@ -1249,13 +1249,13 @@ class CephSaltExecutor:
         if minion_id is not None and not deployed:
             logger.error("cluster not deployed and minion_id provided")
             PP.pl_red("Cluster is not deployed yet, please apply the deployment to "
-                      "all minions at the same time: \"ceph-bootstrap deploy\"")
+                      "all minions at the same time: \"ceph-salt deploy\"")
             return 4
         # day 2, but minion_id not specified
         if deployed and minion_id is None:
             logger.error("cluster already deployed and minion_id not provided")
             PP.pl_red("Cluster is already deployed, please apply the deployment to a "
-                      "single minion at a time: \"ceph-bootstrap deploy <minion_id>\"")
+                      "single minion at a time: \"ceph-salt deploy <minion_id>\"")
             return 5
         # day 2, but minion_id already deployed
         if deployed and minion_id is not None:
