@@ -1,4 +1,4 @@
-# ceph-salt - Deploy Ceph clusters using cephadm<br/> [![Build Status](https://travis-ci.com/SUSE/ceph-salt.svg?branch=master)](https://travis-ci.com/SUSE/ceph-salt) [![codecov](https://codecov.io/gh/SUSE/ceph-salt/branch/master/graph/badge.svg)](https://codecov.io/gh/SUSE/ceph-salt)
+# ceph-salt - Deploy Ceph clusters using cephadm<br/> [![Build Status](https://travis-ci.com/ceph/ceph-salt.svg?branch=master)](https://travis-ci.com/ceph/ceph-salt) [![codecov](https://codecov.io/gh/ceph/ceph-salt/branch/master/graph/badge.svg)](https://codecov.io/gh/ceph/ceph-salt)
 
 This project provides tools for deploying [Ceph][ceph] clusters managed by
 [cephadm][cephadm] using [Salt][salt]. It delivers missing pieces to fully

@@ -4,7 +4,7 @@ These are the steps to make a release for version `<version_number>`:
 
 1. Make sure you are working on the current tip of the master branch.
 2. Make sure the merged PRs of all important changes have the "Add To Changelog" label:
-   https://github.com/SUSE/ceph-salt/pulls?utf8=%E2%9C%93&q=is%3Apr+is%3Amerged+label%3A%22Add+To+Changelog%22+
+   https://github.com/ceph/ceph-salt/pulls?utf8=%E2%9C%93&q=is%3Apr+is%3Amerged+label%3A%22Add+To+Changelog%22+
 3. Update `CHANGELOG.md` with all important changes introduced since previous version.
     - Create a new section `[<version_number>] <date YYYY-MM-DD>` and move all entries
       from the `[Unreleased]` section to the new section.
@@ -20,4 +20,4 @@ These are the steps to make a release for version `<version_number>`:
 7. Push commit and tag to github repo: `git push <remote> master --tags`
 8. Remove the "Add To Changelog" labels from all the merged PRs
 9. Verify that no merged PRs have "Add To Changelog" label:
-   https://github.com/SUSE/ceph-salt/pulls?utf8=%E2%9C%93&q=is%3Apr+is%3Amerged+label%3A%22Add+To+Changelog%22+
+   https://github.com/ceph/ceph-salt/pulls?utf8=%E2%9C%93&q=is%3Apr+is%3Amerged+label%3A%22Add+To+Changelog%22+
