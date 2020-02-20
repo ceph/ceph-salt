@@ -28,7 +28,7 @@ License:        MIT
 %if 0%{?suse_version}
 Group:          System/Management
 %endif
-URL:            https://github.com/SUSE/%{name}
+URL:            https://github.com/ceph/%{name}
 Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 BuildArch:      noarch
 
