@@ -177,7 +177,8 @@ class SaltEventProcessor(threading.Thread):
         elif event['tag'] == 'minion_start':
             wrapper = SaltEvent(event)
         elif fnmatch.fnmatch(event['tag'], 'salt/job/*/ret/*'):
-            wrapper = JobRetEvent(event)
+            if event['data'].get('fun') == 'state.apply':
+                wrapper = JobRetEvent(event)
         if wrapper:
             if wrapper.minion not in self.minions:
                 return
