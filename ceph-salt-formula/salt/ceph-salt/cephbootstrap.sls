@@ -1,5 +1,15 @@
 {% import 'macros.yml' as macros %}
 
+{% set dg_list = pillar['ceph-salt'].get('storage', {'drive_groups': []}).get('drive_groups', []) %}
+
+{% if dg_list | length == 1 %}
+osd crush chooseleaf for single-node cluster:
+  cmd.run:
+    - name: |
+        echo -en "[global]\n        osd crush chooseleaf type = 0\n" > /root/ceph.conf
+    - failhard: True
+{% endif %}
+
 {{ macros.begin_stage('Ceph bootstrap') }}
 
 {% if grains['id'] == pillar['ceph-salt']['bootstrap_minion'] %}
@@ -29,6 +39,9 @@ run cephadm bootstrap:
         CEPHADM_IMAGE={{ pillar['ceph-salt']['container']['images']['ceph'] }} \
 {%- endif %}
         cephadm --verbose bootstrap --mon-ip {{ grains['fqdn_ip4'][0] }} \
+{%- if dg_list | length == 1 -%}
+                --config /root/ceph.conf \
+{%- endif %}
                 --initial-dashboard-user {{ dashboard_username }} \
                 --output-keyring /etc/ceph/ceph.client.admin.keyring \
                 --output-config /etc/ceph/ceph.conf \
