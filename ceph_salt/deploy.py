@@ -1242,7 +1242,7 @@ class CephSaltExecutor:
         host_ls = []
         for minion, value in result.items():
             if value:
-                host_ls = SaltClient.local().cmd(minion, 'ceph_orch.host_ls')[minion]
+                host_ls = SaltClient.local_cmd(minion, 'ceph_orch.host_ls')[minion]
                 deployed = len(host_ls) > 0
                 break
         # day 1, but minion_id specified

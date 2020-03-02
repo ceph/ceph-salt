@@ -53,13 +53,22 @@ class SaltClient:
         return pillar_dirs[0]
 
     @classmethod
-    def local_cmd(cls, target, func, args=None, tgt_type=None):
+    def local_cmd(cls, target, func, args=None, tgt_type='glob'):
+        """
+        Equal to `local().cmd(...)`, but with proper error checking.
+        """
         if args is None:
             args = []
         try:
             result = cls.local().cmd(target, func, args, tgt_type=tgt_type)
             if result is None or not isinstance(result, dict):
                 raise SaltCallException(target, func, result)
+            if isinstance(target, str) \
+                    and tgt_type == 'glob' \
+                    and not any(c in target for c in '*?[]') \
+                    and target not in result:
+                raise SaltCallException(target, func, 'minion not in result: ' + result)
+
         except SaltException as ex:
             logger.exception(ex)
             raise SaltCallException(target, func, result)
