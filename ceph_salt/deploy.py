@@ -1261,7 +1261,7 @@ class CephSaltExecutor:
         if deployed and minion_id is not None:
             minion_short_name = minion_id.split('.', 1)[0]
             for host in host_ls:
-                if minion_short_name == host['host']:
+                if minion_short_name == host['hostname']:
                     logger.error("minion_id already deployed: %s", minion_id)
                     PP.pl_red("Minion '{}' is already deployed".format(minion_id))
                     return 6

@@ -336,14 +336,14 @@ class DeployTest(SaltMockTestCase):
 
     def test_check_deploy_prerequesites_day2_without_minion(self):
         self.fs.create_file(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
-        CephOrchMock.host_ls_result = [{'host': 'node1.test.com'}]
+        CephOrchMock.host_ls_result = [{'hostname': 'node1.test.com'}]
         self.assertEqual(CephSaltExecutor.check_deploy_prerequesites(None), 5)
         CephOrchMock.host_ls_result = []
         self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
 
     def test_check_deploy_prerequesites_day2_with_minion_deployed(self):
         self.fs.create_file(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
-        CephOrchMock.host_ls_result = [{'host': 'node1'}]
+        CephOrchMock.host_ls_result = [{'hostname': 'node1'}]
         self.assertEqual(CephSaltExecutor.check_deploy_prerequesites('node1.test.com'), 6)
         CephOrchMock.host_ls_result = []
         self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
