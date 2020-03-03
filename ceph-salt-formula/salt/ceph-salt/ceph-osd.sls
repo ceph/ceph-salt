@@ -10,6 +10,7 @@
 deploy ceph osds ({{ loop.index }}/{{ dg_list | length }}):
   cmd.run:
     - name: |
+        ceph orch device ls --refresh
         echo '{{ dg_spec }}' | ceph orch osd create -i -
     - failhard: True
 
