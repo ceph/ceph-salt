@@ -8,6 +8,8 @@ class PrettyPrinter:
     Helper class to pretty print
     """
 
+    _colors_enabled = True
+
     class Colors:
         """
         Color enum
@@ -17,10 +19,16 @@ class PrettyPrinter:
         ENDC = '\x1B[0m'
 
     @classmethod
+    def disable_colors(cls):
+        cls._colors_enabled = False
+
+    @classmethod
     def _format(cls, color, text):
         """
         Generic pretty print string formatter
         """
+        if not cls._colors_enabled:
+            color = ''
         return u"{}{}{}".format(color, text, cls.Colors.ENDC)
 
     @staticmethod

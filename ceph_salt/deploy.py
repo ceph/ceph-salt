@@ -12,10 +12,12 @@ from typing import Dict, List
 
 import yaml
 
-from .exceptions import MinionDoesNotExistInConfiguration
+from .exceptions import MinionDoesNotExistInConfiguration, ValidationException
 from .salt_event import EventListener, SaltEventProcessor
 from .salt_utils import SaltClient, GrainsManager
 from .terminal_utils import PrettyPrinter as PP
+from .validate.config import validate_config
+from .validate.salt_master import check_salt_master_status
 
 
 # pylint: disable=C0103
@@ -1190,19 +1192,15 @@ class TerminalRenderer(Renderer):
 class CephSaltExecutor:
     def __init__(self, interactive, minion_id):
         self.minion_id = minion_id
-        self.model = CephSaltModel(self.minion_id)
-        if interactive:
-            self.renderer = CursesRenderer(self.model)
-        else:
-            self.renderer = TerminalRenderer(self.model)
-        self.controller = CephSaltController(self.model, self.renderer)
-        self.event_proc = SaltEventProcessor(self.model.minions_names())
-        self.event_proc.add_listener(self.controller)
-
-        self.executor = CephSaltExecutorThread(self.controller, self.minion_id)
+        self.interactive = interactive
+        self.model = None
+        self.renderer = None
+        self.controller = None
+        self.event_proc = None
+        self.executor = None
 
     @staticmethod
-    def check_deploy_prerequesites(minion_id):
+    def check_formula():
         # verify that deployment can run
         PP.println("Checking if ceph-salt formula is available...")
         result = SaltClient.local_cmd('ceph-salt:member', 'state.sls_exists', ['ceph-salt'],
@@ -1214,7 +1212,7 @@ class CephSaltExecutor:
             if not result:
                 logger.warning('failed to restart salt-master process')
                 PP.pl_red('Failed to restart salt-master service, please restart it manually')
-                return 1
+                return 3
 
         # checking ceph-salt again after salt-master restart
         result = SaltClient.local_cmd('ceph-salt:member', 'state.sls_exists', ['ceph-salt'],
@@ -1223,7 +1221,7 @@ class CephSaltExecutor:
             logger.error("ceph-salt formula still not found")
             PP.pl_red("Could not find ceph-salt formula. Please check if ceph-salt-formula package"
                       " is installed")
-            return 2
+            return 4
 
         PP.println("Syncing minions with the master...")
         result = SaltClient.local_cmd('ceph-salt:member', 'saltutil.sync_all', tgt_type='grain')
@@ -1233,8 +1231,11 @@ class CephSaltExecutor:
                 PP.pl_red("Sync failed, please run: "
                           "\"salt -G 'ceph-salt:member' saltutil.sync_all\" manually and fix "
                           "the problems reported")
-                return 3
+                return 5
+        return 0
 
+    @staticmethod
+    def check_deployment(minion_id):
         PP.println("Checking if there is an existing deployment...")
         result = SaltClient.local().cmd('ceph-salt:member', 'ceph_orch.configured',
                                         tgt_type='grain')
@@ -1250,13 +1251,13 @@ class CephSaltExecutor:
             logger.error("cluster not deployed and minion_id provided")
             PP.pl_red("Cluster is not deployed yet, please apply the deployment to "
                       "all minions at the same time: \"ceph-salt deploy\"")
-            return 4
+            return 6
         # day 2, but minion_id not specified
         if deployed and minion_id is None:
             logger.error("cluster already deployed and minion_id not provided")
             PP.pl_red("Cluster is already deployed, please apply the deployment to a "
                       "single minion at a time: \"ceph-salt deploy <minion_id>\"")
-            return 5
+            return 7
         # day 2, but minion_id already deployed
         if deployed and minion_id is not None:
             minion_short_name = minion_id.split('.', 1)[0]
@@ -1264,14 +1265,57 @@ class CephSaltExecutor:
                 if minion_short_name == host['hostname']:
                     logger.error("minion_id already deployed: %s", minion_id)
                     PP.pl_red("Minion '{}' is already deployed".format(minion_id))
-                    return 6
+                    return 8
+        return 0
+
+    @staticmethod
+    def check_deploy_prerequesites(minion_id):
+        # check salt master is configured
+        try:
+            check_salt_master_status()
+        except ValidationException as e:
+            logger.error(e)
+            PP.pl_red(e)
+            return 1
+
+        # check config is valid
+        error_msg = validate_config()
+        if error_msg:
+            logger.error(error_msg)
+            PP.pl_red(error_msg)
+            return 2
+
+        # check formula
+        retcode = CephSaltExecutor.check_formula()
+        if retcode > 0:
+            return retcode
+
+        # check deployment
+        retcode = CephSaltExecutor.check_deployment(minion_id)
+        if retcode > 0:
+            return retcode
+
         PP.println("Ready for deployment!")
         return 0
 
     def run(self):
+        # validate
         retcode = self.check_deploy_prerequesites(self.minion_id)
         if retcode > 0:
             return retcode
+
+        # init
+        self.model = CephSaltModel(self.minion_id)
+        if self.interactive:
+            self.renderer = CursesRenderer(self.model)
+        else:
+            self.renderer = TerminalRenderer(self.model)
+        self.controller = CephSaltController(self.model, self.renderer)
+        self.event_proc = SaltEventProcessor(self.model.minions_names())
+        self.event_proc.add_listener(self.controller)
+        self.executor = CephSaltExecutorThread(self.controller, self.minion_id)
+
+        # start
         self.event_proc.start()
         self.executor.start()
         self.renderer.run()

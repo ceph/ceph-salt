@@ -12,6 +12,7 @@ from .core import CephNodeManager, SshKeyManager
 from .exceptions import CephSaltException, PillarFileNotPureYaml
 from .salt_utils import PillarManager
 from .terminal_utils import PrettyPrinter as PP
+from .validate.config import validate_config
 from .validate.salt_master import check_salt_master_status, CephSaltPillarNotConfigured
 
 
@@ -812,6 +813,18 @@ base:
     - ceph-salt
 """)
     return False
+
+
+def run_status():
+    if not check_config_prerequesites():
+        return False
+    error_msg = validate_config()
+    if error_msg:
+        logger.info(error_msg)
+        PP.pl_red(error_msg)
+        return False
+    PP.pl_green("OK")
+    return True
 
 
 def run_config_shell():
