@@ -1,20 +1,24 @@
 {% import 'macros.yml' as macros %}
 
 {% if pillar['ceph-salt']['minions'].get('mgr', {}) | length > 1 %}
-{% set mgr_update_args = [] %}
+{% set add_mgr_args = [] %}
 {% for minion in pillar['ceph-salt']['minions']['mgr'] %}
 {% if minion != grains['host'] %}
-{% if mgr_update_args.append(minion) %}{% endif %}
+{% if add_mgr_args.append(minion) %}{% endif %}
 {% endif %}
 {% endfor %}
 
 {{ macros.begin_stage('Deployment of Ceph MGRs') }}
 
-deploy remaining mgrs:
+{% for add_mgr_arg in add_mgr_args %}
+
+deploy remaining mgr {{ add_mgr_arg }}:
   cmd.run:
     - name: |
-        ceph orch apply mgr {{ mgr_update_args | length }} {{ mgr_update_args | join(' ') }}
+        ceph orch daemon add mgr {{ add_mgr_arg }}
     - failhard: True
+
+{% endfor %}
 
 {{ macros.end_stage('Deployment of Ceph MGRs') }}
 
