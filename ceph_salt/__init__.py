@@ -7,7 +7,7 @@ import time
 import click
 import pkg_resources
 
-from .config_shell import run_config_cmdline, run_config_shell
+from .config_shell import run_config_cmdline, run_config_shell, run_status
 from .exceptions import CephSaltException
 from .terminal_utils import check_root_privileges, PrettyPrinter as PP
 from .deploy import CephSaltExecutor
@@ -84,6 +84,19 @@ def config_shell(config_args):
     else:
         if not run_config_shell():
             sys.exit(1)
+
+
+@cli.command(name='status')
+@click.option('-n', '--no-color', is_flag=True, default=False,
+              help='Ouput without colors')
+def status(no_color):
+    """
+    Check ceph-salt status
+    """
+    if no_color:
+        PP.disable_colors()
+    if not run_status():
+        sys.exit(1)
 
 
 @cli.command(name='deploy')

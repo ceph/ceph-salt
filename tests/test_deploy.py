@@ -12,6 +12,7 @@ from ceph_salt.deploy import CephSaltController, TerminalRenderer, CephSaltModel
 from ceph_salt.exceptions import MinionDoesNotExistInConfiguration
 from ceph_salt.salt_utils import GrainsManager
 from ceph_salt.salt_event import CephSaltEvent
+from ceph_salt.salt_utils import PillarManager
 
 from . import SaltMockTestCase, ServiceMock, SaltUtilMock, CephOrchMock
 
@@ -79,6 +80,10 @@ class DeployTest(SaltMockTestCase):
         GrainsManager.set_grain('node2.ceph.com', 'ceph-salt', {'member': True,
                                                                 'roles': ['mgr'],
                                                                 'execution': {}})
+
+    def tearDown(self):
+        super(DeployTest, self).tearDown()
+        PillarManager.reload()
 
     def test_minion_does_not_exist(self):
         with pytest.raises(MinionDoesNotExistInConfiguration):
@@ -309,41 +314,41 @@ class DeployTest(SaltMockTestCase):
         self.assertEqual(step.failure['state'],
                          'file_|-/etc/chrony.conf_|-/etc/chrony.conf_|-managed')
 
-    def test_check_deploy_prerequesites_formula_exists(self):
+    def test_check_formula_ok(self):
         self.fs.create_file(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
-        self.assertEqual(CephSaltExecutor.check_deploy_prerequesites(None), 0)
+        self.assertEqual(CephSaltExecutor.check_formula(), 0)
         self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
 
-    def test_check_deploy_prerequesites_formula_exists1(self):
+    def test_check_formula_exists1(self):
         ServiceMock.restart_result = False
-        self.assertEqual(CephSaltExecutor.check_deploy_prerequesites(None), 1)
+        self.assertEqual(CephSaltExecutor.check_formula(), 3)
         ServiceMock.restart_result = True
 
-    def test_check_deploy_prerequesites_formula_exists2(self):
-        self.assertEqual(CephSaltExecutor.check_deploy_prerequesites(None), 2)
+    def test_check_formula_exists2(self):
+        self.assertEqual(CephSaltExecutor.check_formula(), 4)
 
-    def test_check_deploy_prerequesites_formula_exists3(self):
+    def test_check_formula_exists3(self):
         SaltUtilMock.sync_all_result = False
         self.fs.create_file(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
-        self.assertEqual(CephSaltExecutor.check_deploy_prerequesites(None), 3)
+        self.assertEqual(CephSaltExecutor.check_formula(), 5)
         SaltUtilMock.sync_all_result = True
         self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
 
-    def test_check_deploy_prerequesites_day1_with_minion(self):
+    def test_check_deployment_day1_with_minion(self):
         self.fs.create_file(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
-        self.assertEqual(CephSaltExecutor.check_deploy_prerequesites('node1.test.com'), 4)
+        self.assertEqual(CephSaltExecutor.check_deployment('node1.test.com'), 6)
         self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
 
-    def test_check_deploy_prerequesites_day2_without_minion(self):
+    def test_check_deployment_day2_without_minion(self):
         self.fs.create_file(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
         CephOrchMock.host_ls_result = [{'hostname': 'node1.test.com'}]
-        self.assertEqual(CephSaltExecutor.check_deploy_prerequesites(None), 5)
+        self.assertEqual(CephSaltExecutor.check_deployment(None), 7)
         CephOrchMock.host_ls_result = []
         self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
 
-    def test_check_deploy_prerequesites_day2_with_minion_deployed(self):
+    def test_check_deployment_day2_with_minion_deployed(self):
         self.fs.create_file(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
         CephOrchMock.host_ls_result = [{'hostname': 'node1'}]
-        self.assertEqual(CephSaltExecutor.check_deploy_prerequesites('node1.test.com'), 6)
+        self.assertEqual(CephSaltExecutor.check_deployment('node1.test.com'), 8)
         CephOrchMock.host_ls_result = []
         self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
