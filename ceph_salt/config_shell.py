@@ -1,6 +1,7 @@
 # pylint: disable=arguments-differ
 import logging
 import fnmatch
+import json
 
 
 from pyparsing import alphanums, OneOrMore, Optional, Regex, Suppress, Word
@@ -8,9 +9,9 @@ from pyparsing import alphanums, OneOrMore, Optional, Regex, Suppress, Word
 import configshell_fb as configshell
 from configshell_fb.shell import locatedExpr
 
-from .core import CephNodeManager, SshKeyManager
+from .core import CephNodeManager, SshKeyManager, CephNode
 from .exceptions import CephSaltException, PillarFileNotPureYaml
-from .salt_utils import PillarManager
+from .salt_utils import GrainsManager, PillarManager, SaltClient
 from .terminal_utils import PrettyPrinter as PP
 from .validate.config import validate_config
 from .validate.salt_master import check_salt_master_status, CephSaltPillarNotConfigured
@@ -849,4 +850,49 @@ def run_config_cmdline(cmdline):
     generate_config_shell_tree(shell)
     logger.info("running command: %s", cmdline)
     shell.run_cmdline(cmdline)
+    return True
+
+
+def run_export(pretty):
+    config = PillarManager.get('ceph-salt')
+    if pretty:
+        PP.println(json.dumps(config, indent=4, sort_keys=True))
+    else:
+        PP.println(json.dumps(config))
+    return True
+
+
+def _get_salt_minions_by_host():
+    salt_minions_by_host = {}
+    minions = SaltClient.caller().cmd('minion.list')['minions']
+    for minion_id in minions:
+        short_name = minion_id.split('.', 1)[0]
+        salt_minions_by_host[short_name] = minion_id
+    return salt_minions_by_host
+
+
+def run_import(config_file):
+    with open(config_file) as json_file:
+        config = json.load(json_file)
+    salt_minions_by_host = _get_salt_minions_by_host()
+    minions_config = config.get('minions', {})
+    # Validate
+    for host in minions_config.get('all', []):
+        if host not in salt_minions_by_host:
+            PP.pl_red("Cannot find host '{}'".format(host))
+            return False
+    # Update pillar
+    PillarManager.set('ceph-salt', config)
+    # Update grains
+    minions = GrainsManager.filter_by('ceph-salt', 'member')
+    if minions:
+        GrainsManager.del_grain(minions, 'ceph-salt')
+    for host in minions_config.get('all', []):
+        node = CephNode(salt_minions_by_host[host])
+        if host in minions_config.get('mon', []):
+            node.add_role('mon')
+        if host in minions_config.get('mgr', []):
+            node.add_role('mgr')
+        node.save()
+    PP.pl_green('Configuration imported.')
     return True

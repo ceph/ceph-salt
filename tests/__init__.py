@@ -3,6 +3,7 @@ import fnmatch
 import logging
 import logging.config
 from collections import defaultdict
+import json
 import pytest
 
 import yaml
@@ -280,6 +281,10 @@ class SaltMockTestCase(TestCase):
     def assertInSysOut(self, text):
         out, _ = self.capsys.readouterr()
         self.assertIn(text, out)
+
+    def assertJsonInSysOut(self, value):
+        out, _ = self.capsys.readouterr()
+        self.assertEqual(value, json.loads(out))
 
     def assertGrains(self, target, key, value):
         self.assertIn(target, self.local_client.grains)
