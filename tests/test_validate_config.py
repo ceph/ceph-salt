@@ -6,17 +6,26 @@ from . import SaltMockTestCase
 
 class ValidateConfigTest(SaltMockTestCase):
 
+    def setUp(self):
+        super(ValidateConfigTest, self).setUp()
+        ValidateConfigTest.create_valid_config()
+
     def tearDown(self):
         super(ValidateConfigTest, self).tearDown()
         PillarManager.reload()
 
     def test_no_boostrap_minion(self):
+        PillarManager.reset('ceph-salt:bootstrap_minion')
         self.assertEqual(validate_config(), "At least one minion must be both 'Mgr' and 'Mon'")
 
+    def test_no_ceph_container_image_path(self):
+        PillarManager.reset('ceph-salt:container:images:ceph')
+        self.assertEqual(validate_config(), "No Ceph container image path specified in config")
+
     def test_valid(self):
-        ValidateConfigTest.create_valid_config()
         self.assertEqual(validate_config(), None)
 
     @classmethod
     def create_valid_config(cls):
         PillarManager.set('ceph-salt:bootstrap_minion', 'node1')
+        PillarManager.set('ceph-salt:container:images:ceph', 'docker.io/ceph/daemon-base:latest')

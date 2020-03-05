@@ -302,7 +302,8 @@ CEPH_SALT_OPTIONS = {
                 'options': {
                     'ceph': {
                         'help': 'Full path of Ceph container image',
-                        'default': "docker.io/ceph/daemon-base:latest",
+                        'default_text': 'no image path',
+                        'required': True,
                         'handler': PillarHandler('ceph-salt:container:images:ceph')
                     },
                 }
@@ -522,7 +523,10 @@ class OptionNode(configshell.ConfigNode):
                     return '***', None
                 return value, val_type
             if 'default_text' in self.option_dict:
-                return self.option_dict['default_text'], None
+                val_type = None
+                if self.option_dict.get('required', False):
+                    val_type = False
+                return self.option_dict['default_text'], val_type
             if 'default' in self.option_dict:
                 return self.option_dict['default'], None
             raise Exception("No default value found for {}".format(self.option_name))
