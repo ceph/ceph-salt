@@ -35,9 +35,7 @@ wait for other minions:
 run cephadm bootstrap:
   cmd.run:
     - name: |
-{%- if 'container' in pillar['ceph-salt'] and 'ceph' in pillar['ceph-salt']['container']['images'] %}
         CEPHADM_IMAGE={{ pillar['ceph-salt']['container']['images']['ceph'] }} \
-{%- endif %}
         cephadm --verbose bootstrap --mon-ip {{ grains['fqdn_ip4'][0] }} \
 {%- if dg_list | length == 1 -%}
                 --config /root/ceph.conf \
@@ -46,6 +44,7 @@ run cephadm bootstrap:
                 --output-keyring /etc/ceph/ceph.client.admin.keyring \
                 --output-config /etc/ceph/ceph.conf \
                 --skip-prepare-host \
+                --skip-pull \
                 --skip-ssh > /var/log/ceph/cephadm.log 2>&1
     - creates:
       - /etc/ceph/ceph.conf
