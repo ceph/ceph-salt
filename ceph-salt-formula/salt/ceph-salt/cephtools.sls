@@ -16,13 +16,11 @@ install cephadm:
 {{ macros.end_step('Install cephadm and other packages') }}
 
 {{ macros.begin_step('Download ceph container image') }}
-{% if 'container' in pillar['ceph-salt'] and 'ceph' in pillar['ceph-salt']['container']['images'] %}
 download ceph container image:
   cmd.run:
     - name: |
         podman pull {{ pillar['ceph-salt']['container']['images']['ceph'] }}
     - failhard: True
-{% endif %}
 {{ macros.end_step('Download ceph container image') }}
 
 {{ macros.end_stage('Ceph tools') }}
