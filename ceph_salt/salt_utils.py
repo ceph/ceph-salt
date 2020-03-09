@@ -228,7 +228,7 @@ class PillarManager:
             return {}
         with open(full_path, 'r') as file:
             try:
-                data = yaml.load(file)
+                data = yaml.full_load(file)
                 if data is None:
                     data = {}
             except yaml.error.YAMLError:
