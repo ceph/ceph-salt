@@ -300,5 +300,5 @@ class SaltMockTestCase(TestCase):
     def assertYamlEqual(self, file_path, _dict):
         data = None
         with open(file_path, 'r') as file:
-            data = yaml.load(file)
+            data = yaml.full_load(file)
         self.assertDictEqual(data, _dict)
