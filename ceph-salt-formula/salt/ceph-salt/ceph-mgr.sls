@@ -13,7 +13,7 @@
 deploy remaining mgrs:
   cmd.run:
     - name: |
-        ceph orch apply mgr {{ mgr_update_args | length }} {{ mgr_update_args | join(' ') }}
+        ceph orch apply mgr {{ mgr_update_args | join(',') }}
     - failhard: True
 
 {{ macros.end_stage('Deployment of Ceph MGRs') }}
