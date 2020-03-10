@@ -273,6 +273,12 @@ CEPH_SALT_OPTIONS = {
                         ====================================
                         ''',
                 'options': {
+                    'Admin': {
+                        'type': 'minions',
+                        'default': [],
+                        'handler': RoleHandler('admin'),
+                        'help': 'List of minions with Admin role'
+                    },
                     'Mon': {
                         'type': 'minions',
                         'default': [],

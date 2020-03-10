@@ -18,6 +18,10 @@ class ValidateConfigTest(SaltMockTestCase):
         PillarManager.reset('ceph-salt:bootstrap_minion')
         self.assertEqual(validate_config(), "At least one minion must be both 'Mgr' and 'Mon'")
 
+    def test_boostrap_minion_is_not_admin(self):
+        PillarManager.set('ceph-salt:minions:admin', [])
+        self.assertEqual(validate_config(), "Bootstrap minion must be 'Admin'")
+
     def test_no_ceph_container_image_path(self):
         PillarManager.reset('ceph-salt:container:images:ceph')
         self.assertEqual(validate_config(), "No Ceph container image path specified in config")
@@ -27,5 +31,6 @@ class ValidateConfigTest(SaltMockTestCase):
 
     @classmethod
     def create_valid_config(cls):
-        PillarManager.set('ceph-salt:bootstrap_minion', 'node1')
+        PillarManager.set('ceph-salt:bootstrap_minion', 'node1.ceph.com')
+        PillarManager.set('ceph-salt:minions:admin', 'node1')
         PillarManager.set('ceph-salt:container:images:ceph', 'docker.io/ceph/daemon-base:latest')

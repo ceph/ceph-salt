@@ -77,6 +77,9 @@ class CephNodeManager:
                            if 'mon' in n.roles})
         PillarManager.set('ceph-salt:minions:mgr',
                           [n.short_name for n in cls._ceph_salt_nodes.values() if 'mgr' in n.roles])
+        PillarManager.set('ceph-salt:minions:admin',
+                          [n.short_name for n in cls._ceph_salt_nodes.values()
+                           if 'admin' in n.roles])
 
         # choose the the main Mon
         minions = [n.minion_id for n in cls._ceph_salt_nodes.values()
