@@ -19,7 +19,7 @@ install cephadm:
 download ceph container image:
   cmd.run:
     - name: |
-        podman pull {{ pillar['ceph-salt']['container']['images']['ceph'] }}
+        cephadm --image {{ pillar['ceph-salt']['container']['images']['ceph'] }} pull
     - failhard: True
 {{ macros.end_step('Download ceph container image') }}
 
