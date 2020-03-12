@@ -68,6 +68,34 @@ class ConfigShellTest(SaltMockTestCase):
         self.shell.run_cmdline('/Cluster/Roles/Mgr rm node1.ceph.com')
         self.shell.run_cmdline('/Cluster/Minions rm node1.ceph.com')
 
+    def test_cluster_roles_admin(self):
+        self.shell.run_cmdline('/Cluster/Minions add node1.ceph.com')
+        self.clearSysOut()
+
+        self.shell.run_cmdline('/Cluster/Roles/Admin add node1.ceph.com')
+        self.assertInSysOut('1 minion added.')
+        self.assertGrains('node1.ceph.com', 'ceph-salt', {'member': True,
+                                                          'roles': ['admin'],
+                                                          'execution': {}})
+        self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1'])
+        self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), ['node1'])
+        self.assertEqual(PillarManager.get('ceph-salt:minions:mgr'), [])
+        self.assertEqual(PillarManager.get('ceph-salt:minions:mon'), {})
+        self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), None)
+
+        self.shell.run_cmdline('/Cluster/Roles/Admin rm node1.ceph.com')
+        self.assertInSysOut('1 minion removed.')
+        self.assertGrains('node1.ceph.com', 'ceph-salt', {'member': True,
+                                                          'roles': [],
+                                                          'execution': {}})
+        self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1'])
+        self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), [])
+        self.assertEqual(PillarManager.get('ceph-salt:minions:mgr'), [])
+        self.assertEqual(PillarManager.get('ceph-salt:minions:mon'), {})
+        self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), None)
+
+        self.shell.run_cmdline('/Cluster/Minions rm node1.ceph.com')
+
     def test_cluster_roles_mgr(self):
         self.shell.run_cmdline('/Cluster/Minions add node1.ceph.com')
         self.clearSysOut()
@@ -78,6 +106,7 @@ class ConfigShellTest(SaltMockTestCase):
                                                           'roles': ['mgr'],
                                                           'execution': {}})
         self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1'])
+        self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), [])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mgr'), ['node1'])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mon'), {})
         self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), None)
@@ -88,6 +117,7 @@ class ConfigShellTest(SaltMockTestCase):
                                                           'roles': [],
                                                           'execution': {}})
         self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1'])
+        self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), [])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mgr'), [])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mon'), {})
         self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), None)
@@ -108,6 +138,7 @@ class ConfigShellTest(SaltMockTestCase):
                                         'roles': ['mgr', 'mon'],
                                         'execution': {}})
         self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1', 'node2'])
+        self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), [])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mgr'), ['node1', 'node2'])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mon'), {'node2': '10.20.39.202'})
         self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), 'node2.ceph.com')
@@ -118,6 +149,7 @@ class ConfigShellTest(SaltMockTestCase):
                                                           'roles': ['mgr'],
                                                           'execution': {}})
         self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1', 'node2'])
+        self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), [])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mgr'), ['node1', 'node2'])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mon'), {})
         self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), None)
@@ -214,6 +246,7 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertJsonInSysOut({
             'minions': {
                 'all': ['node1', 'node2'],
+                'admin': [],
                 'mgr': ['node1'],
                 'mon': {'node2': '10.20.39.202'}
             },
@@ -231,6 +264,7 @@ class ConfigShellTest(SaltMockTestCase):
         self.fs.create_file('/config.json', contents=json.dumps({
             'minions': {
                 'all': ['node1', 'node2'],
+                'admin': [],
                 'mgr': ['node1'],
                 'mon': {'node2': '10.20.39.202'}
             },
@@ -248,6 +282,7 @@ class ConfigShellTest(SaltMockTestCase):
                                         'roles': ['mon'],
                                         'execution': {}})
         self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1', 'node2'])
+        self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), [])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mgr'), ['node1'])
         self.assertEqual(PillarManager.get('ceph-salt:minions:mon'), {'node2': '10.20.39.202'})
         self.assertIsNone(PillarManager.get('ceph-salt:bootstrap_minion'))
@@ -264,6 +299,7 @@ class ConfigShellTest(SaltMockTestCase):
         self.fs.create_file('/config.json', contents=json.dumps({
             'minions': {
                 'all': ['node1', 'node2', 'node9'],
+                'admin': [],
                 'mgr': ['node1'],
                 'mon': {'node2': '10.20.39.202'}
             }}))

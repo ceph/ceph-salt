@@ -8,7 +8,7 @@ install cephadm:
   pkg.installed:
     - pkgs:
         - cephadm
-{% if 'mon' in grains['ceph-salt']['roles'] %}
+{% if 'admin' in grains['ceph-salt']['roles'] %}
         - ceph-common
     - failhard: True
 {% endif %}
