@@ -847,7 +847,7 @@ def run_config_shell():
         try:
             shell.run_interactive()
             break
-        except CephSaltException as ex:
+        except (configshell.ExecutionError, CephSaltException) as ex:
             logger.exception(ex)
             PP.pl_red(ex)
     return True
