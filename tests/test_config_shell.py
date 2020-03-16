@@ -168,6 +168,10 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertFlagOption('/Deployment/Bootstrap',
                               'ceph-salt:deploy:bootstrap')
 
+    def test_deployment_bootstrap_ceph_conf(self):
+        self.assertConfigOption('/Deployment/Bootstrap_Ceph_Conf',
+                                'ceph-salt:bootstrap_ceph_conf')
+
     def test_deployment_dashboard_password(self):
         self.assertValueOption('/Deployment/Dashboard/password',
                                'ceph-salt:dashboard:password',
@@ -308,6 +312,33 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertInSysOut("Cannot find host 'node9'")
 
         self.fs.remove('/config.json')
+
+    def assertConfigOption(self, path, pillar_key):
+        self.shell.run_cmdline('{} add section1'.format(path))
+        self.assertInSysOut('Section added.')
+
+        sec_path = '{}/{}'.format(path, 'section1')
+        sec_pillar_key = '{}:{}'.format(pillar_key, 'section1')
+
+        self.shell.run_cmdline('{} set my option1 = 2'.format(sec_path))
+        self.assertInSysOut('Parameter set.')
+        self.assertEqual(PillarManager.get(sec_pillar_key), {'my option1': '2'})
+
+        self.shell.run_cmdline('{} set my option2 = 3'.format(sec_path))
+        self.assertInSysOut('Parameter set.')
+        self.assertEqual(PillarManager.get(sec_pillar_key), {'my option1': '2', 'my option2': '3'})
+
+        self.shell.run_cmdline('{} remove my option1'.format(sec_path))
+        self.assertInSysOut('Parameter removed.')
+        self.assertEqual(PillarManager.get(sec_pillar_key), {'my option2': '3'})
+
+        self.shell.run_cmdline('{} reset'.format(sec_path))
+        self.assertInSysOut('Section reset.')
+        self.assertEqual(PillarManager.get(sec_pillar_key), {})
+
+        self.shell.run_cmdline('{} reset'.format(path))
+        self.assertInSysOut('Config reset.')
+        self.assertEqual(PillarManager.get(pillar_key), {})
 
     def assertFlagOption(self, path, pillar_key, reset_supported=True):
         self.shell.run_cmdline('{} enable'.format(path))
