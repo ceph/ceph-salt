@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [15.1.1] - 2020-03-18
+### Added
+- Add "Admin" role (#121)
+- Support config export and import (#90)
+- Add "status" command (#112)
+- Automatically set chooseleaf type if needed (#105)
+### Fixed
+- Use `cephadm pull` instead of `podman pull` (#122)
+- Handle execution errors (#126)
+- Fix error when deploying additional mgrs (#119)
+- Bump PyYAML dependency (#117)
+- No default value for Ceph container image path (#115)
+- Work around timing issue in cephadm device list (#109)
+- Renamed "host" field to "hostname" (#111)
+
 ## [15.1.0] - 2020-02-17
 ### Added
 - System update and reboot during deployment (#11)
@@ -18,7 +33,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename calls to Ceph Orchestrator Apply (#80)
 - Rename calls to Ceph Orchestrator (#73)
 - Explicitly install podman (#72)
-
 
 ## [15.0.2] - 2020-01-29
 ### Added
@@ -59,7 +73,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal README.
 - The CHANGELOG file.
 
-[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.1.0...HEAD
+[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.1.1...HEAD
+[15.1.1]: https://github.com/ceph/ceph-salt/releases/tag/v15.1.1
 [15.1.0]: https://github.com/ceph/ceph-salt/releases/tag/v15.1.0
 [15.0.2]: https://github.com/ceph/ceph-salt/releases/tag/v15.0.2
 [15.0.1]: https://github.com/ceph/ceph-salt/releases/tag/v15.0.1

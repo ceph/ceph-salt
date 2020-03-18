@@ -21,7 +21,7 @@
 %endif
 
 Name:           ceph-salt
-Version:        15.1.0
+Version:        15.1.1
 Release:        1%{?dist}
 Summary:        CLI tool to deploy Ceph clusters
 License:        MIT
