@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support config export and import (#90)
 - Add "status" command (#112)
 - Automatically set chooseleaf type if needed (#105)
+- Improve error handling when calling salt commands (#89)
+- Rename ceph-bootstrap to ceph-salt (#93)
 ### Fixed
 - Use `cephadm pull` instead of `podman pull` (#122)
 - Handle execution errors (#126)
@@ -21,6 +23,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - No default value for Ceph container image path (#115)
 - Work around timing issue in cephadm device list (#109)
 - Renamed "host" field to "hostname" (#111)
+- Use "ceph orch daemon add mon" to add remaining MONs (#108)
+- Tell ceph orch the right number of mgrs (#106)
+- Add `--skip-prepare-host` to `cephadm bootstrap` (#98)
+- Fix salt job return event processing (#95)
+- Check os_family before executing zypper command (#92)
+- Eliminate implicit dependency on which (#85)
+### Removed
+- Migrate ceph-bootstrap-qa to sesdev (#88)
 
 ## [15.1.0] - 2020-02-17
 ### Added
