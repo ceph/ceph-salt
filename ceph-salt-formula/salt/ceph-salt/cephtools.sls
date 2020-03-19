@@ -13,6 +13,16 @@ install cephadm:
     - failhard: True
 {% endif %}
 
+{% if grains['id'] == pillar['ceph-salt']['bootstrap_minion'] %}
+/var/log/ceph:
+  file.directory:
+    - user: ceph
+    - group: ceph
+    - mode: '0770'
+    - makedirs: True
+    - failhard: True
+{% endif %}
+
 {{ macros.end_step('Install cephadm and other packages') }}
 
 {{ macros.begin_step('Download ceph container image') }}
