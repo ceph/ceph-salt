@@ -1,3 +1,38 @@
+# FIXME: work around bsc#1167218 - remove this when that bug is fixed!
+work around podman/runc bug, step 1:
+  file.line:
+    - name: /usr/lib/systemd/system/salt-minion.service
+    - match: '^Type=notify'
+    - mode: replace
+    - content: '#Type=notify'
+
+# FIXME: work around bsc#1167218 - remove this when that bug is fixed!
+work around podman/runc bug, step 2:
+  file.line:
+    - name: /usr/lib/systemd/system/salt-minion.service
+    - match: '^NotifyAccess=all'
+    - mode: replace
+    - content: '#NotifyAccess=all'
+
+# FIXME: work around bsc#1167218 - remove this when that bug is fixed!
+restart salt-minion:
+  cmd.run:
+    - name: 'salt-call service.restart salt-minion'
+    - failhard: True
+
+# FIXME: work around bsc#1167218 - remove this when that bug is fixed!
+wait for salt-minion:
+  loop.until_no_eval:
+    - name: saltutil.runner
+    - expected:
+        - my_minion
+    - args:
+        - manage.up
+    - kwargs:
+        tgt: my_minion
+    - period: 3
+    - init_wait: 3
+
 reset provisioned:
   grains.present:
     - name: ceph-salt:execution:provisioned
