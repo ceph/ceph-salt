@@ -11,7 +11,7 @@ deploy ceph osds ({{ loop.index }}/{{ dg_list | length }}):
   cmd.run:
     - name: |
         ceph orch device ls --refresh
-        echo '{{ dg_spec }}' | ceph orch osd create -i -
+        echo '{{ dg_spec }}' | ceph orch apply osd -i -
     - failhard: True
 
 {{ macros.end_step('Deploying OSD groups ' + (loop.index | string) + '/' + (dg_list | length | string)) }}
