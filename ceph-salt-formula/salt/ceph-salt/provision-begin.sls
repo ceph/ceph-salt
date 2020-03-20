@@ -1,7 +1,11 @@
+{% set minion_service_file = "/usr/lib/systemd/system/salt-minion.service" %}
+
+{% if salt['file.file_exists'](minion_service_file) %}
+
 # FIXME: work around bsc#1167218 - remove this when that bug is fixed!
 work around podman/runc bug, step 1:
   file.line:
-    - name: /usr/lib/systemd/system/salt-minion.service
+    - name: {{ minion_service_file }}
     - match: '^Type=notify'
     - mode: replace
     - content: '#Type=notify'
@@ -9,7 +13,7 @@ work around podman/runc bug, step 1:
 # FIXME: work around bsc#1167218 - remove this when that bug is fixed!
 work around podman/runc bug, step 2:
   file.line:
-    - name: /usr/lib/systemd/system/salt-minion.service
+    - name: {{ minion_service_file }}
     - match: '^NotifyAccess=all'
     - mode: replace
     - content: '#NotifyAccess=all'
@@ -32,6 +36,8 @@ wait for salt-minion:
         tgt: my_minion
     - period: 3
     - init_wait: 3
+
+{% endif %}  # salt['file.file_exists'](minion_service_file)
 
 reset provisioned:
   grains.present:
