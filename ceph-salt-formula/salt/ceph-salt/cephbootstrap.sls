@@ -46,6 +46,8 @@ run cephadm bootstrap:
                 --skip-prepare-host \
                 --skip-pull \
                 --skip-ssh > /var/log/ceph/cephadm.log 2>&1
+    - env:
+      - NOTIFY_SOCKET: ''
     - creates:
       - /etc/ceph/ceph.conf
       - /etc/ceph/ceph.client.admin.keyring
