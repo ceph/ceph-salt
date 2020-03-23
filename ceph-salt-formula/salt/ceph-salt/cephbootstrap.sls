@@ -13,13 +13,6 @@ osd crush chooseleaf for single-node cluster:
 {{ macros.begin_stage('Ceph bootstrap') }}
 
 {% if grains['id'] == pillar['ceph-salt']['bootstrap_minion'] %}
-/var/log/ceph:
-  file.directory:
-    - user: ceph
-    - group: ceph
-    - mode: '0770'
-    - makedirs: True
-    - failhard: True
 
 {{ macros.begin_step('Wait for other minions') }}
 wait for other minions:

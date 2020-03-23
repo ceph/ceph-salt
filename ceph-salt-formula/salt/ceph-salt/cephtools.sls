@@ -10,6 +10,16 @@ install cephadm:
         - cephadm
 {% if 'admin' in grains['ceph-salt']['roles'] %}
         - ceph-common
+{% endif %}
+    - failhard: True
+
+{% if grains['id'] == pillar['ceph-salt']['bootstrap_minion'] %}
+/var/log/ceph:
+  file.directory:
+    - user: ceph
+    - group: ceph
+    - mode: '0770'
+    - makedirs: True
     - failhard: True
 {% endif %}
 
