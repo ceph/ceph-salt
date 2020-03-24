@@ -6,6 +6,8 @@ include:
     - .software
     - .apparmor
     - .time
+    - .time-server
+    - .time-slave
     - .cephtools
     - .provision-end
 {% if pillar['ceph-salt'].get('deploy', {'bootstrap': True}).get('bootstrap', True) %}

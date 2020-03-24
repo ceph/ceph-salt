@@ -33,18 +33,10 @@ service_reload:
 
 {{ macros.end_step('Configure chrony service') }}
 
-{{ macros.begin_step('Start chrony service') }}
-start chronyd:
-  service.running:
-    - name: chronyd
-    - enable: True
-    - failhard: True
-{{ macros.end_step('Start chrony service') }}
+{{ macros.end_stage('Setting up time synchronization') }}
 
 {% endif %}
 
 prevent empty file:
   test.nop
-
-{{ macros.end_stage('Setting up time synchronization') }}
 
