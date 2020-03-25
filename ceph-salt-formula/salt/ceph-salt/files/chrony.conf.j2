@@ -11,10 +11,10 @@ manual
 {%- if salt['network.ip_in_subnet'](fqdn_ip, subnet) %}
 allow {{ subnet }}
 {%- endif %}
-{%- endfor %}  # subnet in salt['network.subnets']()
-{%- else %}    # grains['fqdn'] == time_server
+{%- endfor %}  {# subnet in salt['network.subnets']() #}
+{%- else %}    {# grains['fqdn'] == time_server #}
 server {{ time_server }} iburst
-{%- endif %}   # grains['fqdn'] == time_server
+{%- endif %}   {# grains['fqdn'] == time_server #}
 
 driftfile /var/lib/chrony/drift
 makestep 0.1 3
