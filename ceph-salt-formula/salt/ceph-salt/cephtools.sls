@@ -25,6 +25,16 @@ install cephadm:
 
 {{ macros.end_step('Install cephadm and other packages') }}
 
+{{ macros.begin_step('Run "cephadm check-host"') }}
+
+have cephadm check the host:
+  cmd.run:
+    - name: |
+        cephadm check-host
+    - failhard: True
+
+{{ macros.end_step('Run "cephadm check-host"') }}
+
 {{ macros.begin_step('Download ceph container image') }}
 download ceph container image:
   cmd.run:
