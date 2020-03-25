@@ -12,14 +12,14 @@ install required packages:
 
 {% if pillar['ceph-salt'].get('updates', {}).get('enabled', True) %}
 
-{{ macros.begin_step('Updating all packages') }}
+{{ macros.begin_step('Update all packages') }}
 
 update packages:
   module.run:
     - name: pkg.upgrade
     - failhard: True
 
-{{ macros.end_step('Updating all packages') }}
+{{ macros.end_step('Update all packages') }}
 
 {% else %}
 

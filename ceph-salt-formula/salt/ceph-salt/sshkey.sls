@@ -1,6 +1,6 @@
 {% import 'macros.yml' as macros %}
 
-{{ macros.begin_stage('Setting up SSH keys') }}
+{{ macros.begin_stage('Distribute SSH keys') }}
 
 # make sure .ssh is present with the right permissions
 /home/root/.ssh:
@@ -40,4 +40,4 @@ install ssh key:
       - name: {{ pillar['ceph-salt']['ssh']['public_key'] }}
       - failhard: True
 
-{{ macros.end_stage('Setting up SSH keys') }}
+{{ macros.end_stage('Distribute SSH keys') }}

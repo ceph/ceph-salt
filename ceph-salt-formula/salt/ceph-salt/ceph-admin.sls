@@ -2,7 +2,7 @@
 
 {% if pillar['ceph-salt']['minions']['admin'] | length > 1 %}
 
-{{ macros.begin_stage('Copying ceph.conf and keyring to other Admin nodes') }}
+{{ macros.begin_stage('Ensure ceph.conf and keyring are present on all Admin nodes') }}
 
 copy ceph.conf and keyring to other admin nodes:
   cmd.run:
@@ -15,6 +15,6 @@ copy ceph.conf and keyring to other admin nodes:
 {%- endfor %}
     - failhard: True
 
-{{ macros.end_stage('Copying ceph.conf and keyring to other Admin nodes') }}
+{{ macros.end_stage('Ensure ceph.conf and keyring are present on all Admin nodes') }}
 
 {% endif %}

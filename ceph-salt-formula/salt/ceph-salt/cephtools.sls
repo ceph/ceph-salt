@@ -1,6 +1,6 @@
 {% import 'macros.yml' as macros %}
 
-{{ macros.begin_stage('Ceph tools') }}
+{{ macros.begin_stage('Prepare to bootstrap the Ceph cluster') }}
 
 {{ macros.begin_step('Install cephadm and other packages') }}
 
@@ -43,4 +43,4 @@ download ceph container image:
     - failhard: True
 {{ macros.end_step('Download ceph container image') }}
 
-{{ macros.end_stage('Ceph tools') }}
+{{ macros.end_stage('Prepare to bootstrap the Ceph cluster') }}

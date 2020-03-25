@@ -8,7 +8,7 @@
 {% endif %}
 {% endfor %}
 
-{{ macros.begin_stage('Deployment of Ceph MONs') }}
+{{ macros.begin_stage('Deploy post-bootstrap Ceph MONs') }}
 
 {% for add_mon_arg in add_mon_args %}
 
@@ -20,6 +20,6 @@ deploy remaining mon {{ add_mon_arg }}:
 
 {% endfor %}
 
-{{ macros.end_stage('Deployment of Ceph MONs') }}
+{{ macros.end_stage('Deploy post-bootstrap Ceph MONs') }}
 
 {% endif %}
