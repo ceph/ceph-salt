@@ -369,6 +369,12 @@ CEPH_SALT_OPTIONS = {
                 'handler': PillarHandler('ceph-salt:deploy:osd'),
                 'default': False
             },
+            'Bootstrap_Ceph_Conf': {
+                'type': 'conf',
+                'help': 'Bootstrap Ceph configuration',
+                'default': [],
+                'handler': PillarHandler('ceph-salt:bootstrap_ceph_conf')
+            },
             'Dashboard': {
                 'type': 'group',
                 'help': 'Dashboard settings',
@@ -655,6 +661,124 @@ class ListOptionNode(OptionNode):
             PP.pl_red('Value not found.')
 
 
+class ConfElementNode(configshell.ConfigNode):
+    def __init__(self, key, value, parent):
+        configshell.ConfigNode.__init__(self, key, parent)
+        self.value = value
+
+    def summary(self):
+        return self.value, None
+
+
+class ConfSectionNode(OptionNode):
+    def __init__(self, option_name, option_dict, parent):
+        super(ConfSectionNode, self).__init__(option_name, option_dict, parent)
+        value_dict, _ = self._find_value()
+        self.value = dict(value_dict)
+        for parameter, value in self.value.items():
+            ConfElementNode(parameter, value, self)
+
+    def _list_commands(self):
+        return ['set', 'remove']
+
+    def summary(self):
+        return '', None
+
+    @staticmethod
+    def _normalize(text):
+        text = text.strip()
+        if text.startswith('"') and text.endswith('"'):
+            text = text[1:-1]
+        return text.strip()
+
+    def ui_command_set(self, expr):
+        """
+        Expression has "<key> = <value>" format.
+
+        Example: set osd crush chooseleaf type = 0
+        """
+        separator_count = expr.count('=')
+        if separator_count != 1:
+            PP.pl_red("Invalid format, try 'set <key> = <value>'.")
+            return
+        expr = self._normalize(expr)
+        parameter, value = [self._normalize(s) for s in expr.split('=')]
+        child = None
+        if parameter in self.value:
+            child = self.get_child(parameter)
+        self.value[parameter] = value
+        self.option_dict['handler'].save(self.value)
+        if child:
+            child.value = value
+        else:
+            ConfElementNode(parameter, value, self)
+        PP.pl_green('Parameter set.')
+
+    def ui_command_remove(self, parameter):
+        parameter = self._normalize(parameter)
+        if parameter in self.value:
+            self.value.pop(parameter)
+            self.option_dict['handler'].save(self.value)
+            self.remove_child(self.get_child(parameter))
+            PP.pl_green('Parameter removed.')
+        else:
+            PP.pl_red('Parameter not found.')
+
+    def ui_command_reset(self):
+        for key in self.value.keys():
+            self.remove_child(self.get_child(key))
+        self.value = {}
+        self.option_dict['handler'].save(self.value)
+        PP.pl_green('Section reset.')
+
+
+class ConfOptionNode(OptionNode):
+    def __init__(self, option_name, option_dict, parent):
+        super(ConfOptionNode, self).__init__(option_name, option_dict, parent)
+        value_dict, _ = self._find_value()
+        self.value = dict(value_dict)
+        for section in self.value.keys():
+            self.add_child(section)
+
+    def add_child(self, section):
+        handler: PillarHandler = self.option_dict['handler']
+        ConfSectionNode(section, {
+            'handler': PillarHandler('{}:{}'.format(handler.pillar_path, section)),
+            'default': {}
+        }, self)
+
+    def _list_commands(self):
+        return ['add', 'remove']
+
+    def summary(self):
+        return '', None
+
+    def ui_command_add(self, section):
+        if section not in self.value:
+            self.value[section] = {}
+            self.option_dict['handler'].save(self.value)
+            self.add_child(section)
+            PP.pl_green('Section added.')
+        else:
+            PP.pl_red('Section already exists.')
+
+    def ui_command_remove(self, section):
+        if section in self.value:
+            self.value.pop(section)
+            self.option_dict['handler'].save(self.value)
+            self.remove_child(self.get_child(section))
+            PP.pl_green('Section removed.')
+        else:
+            PP.pl_red('Section not found.')
+
+    def ui_command_reset(self):
+        for key in self.value.keys():
+            self.remove_child(self.get_child(key))
+        self.value = {}
+        self.option_dict['handler'].save(self.value)
+        PP.pl_green('Config reset.')
+
+
 class MinionOptionNode(configshell.ConfigNode):
     def __init__(self, minion, handler, parent):
         configshell.ConfigNode.__init__(self, minion, parent)
@@ -759,6 +883,8 @@ def _generate_option_node(option_name, option_dict, parent):
         FlagOptionNode(option_name, option_dict, parent)
     elif option_dict.get('type', None) == 'list':
         ListOptionNode(option_name, option_dict, parent)
+    elif option_dict.get('type', None) == 'conf':
+        ConfOptionNode(option_name, option_dict, parent)
     elif option_dict.get('type', None) == 'minions':
         MinionsOptionNode(option_name, option_dict, parent)
     else:

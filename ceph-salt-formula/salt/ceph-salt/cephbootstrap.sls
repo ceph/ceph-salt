@@ -1,18 +1,22 @@
 {% import 'macros.yml' as macros %}
 
-{% set dg_list = pillar['ceph-salt'].get('storage', {'drive_groups': []}).get('drive_groups', []) %}
-
-{% if dg_list | length == 1 %}
-osd crush chooseleaf for single-node cluster:
-  cmd.run:
-    - name: |
-        echo -en "[global]\n        osd crush chooseleaf type = 0\n" > /root/ceph.conf
-    - failhard: True
-{% endif %}
-
 {{ macros.begin_stage('Ceph bootstrap') }}
 
 {% if grains['id'] == pillar['ceph-salt']['bootstrap_minion'] %}
+
+{% set bootstrap_ceph_conf = pillar['ceph-salt'].get('bootstrap_ceph_conf', {}) %}
+
+create bootstrap ceph conf:
+  cmd.run:
+    - name: |
+        echo -en "" > /tmp/bootstrap-ceph.conf
+{% for section, settings in bootstrap_ceph_conf.items() %}
+        echo -en "[{{ section }}]\n" >> /tmp/bootstrap-ceph.conf
+{% for setting, value in settings.items() %}
+        echo -en "        {{ setting }} = {{ value }}\n" >> /tmp/bootstrap-ceph.conf
+{% endfor %}
+{% endfor %}
+    - failhard: True
 
 {{ macros.begin_step('Wait for other minions') }}
 wait for other minions:
@@ -30,9 +34,7 @@ run cephadm bootstrap:
     - name: |
         CEPHADM_IMAGE={{ pillar['ceph-salt']['container']['images']['ceph'] }} \
         cephadm --verbose bootstrap --mon-ip {{ grains['fqdn_ip4'][0] }} \
-{%- if dg_list | length == 1 -%}
-                --config /root/ceph.conf \
-{%- endif %}
+                --config /tmp/bootstrap-ceph.conf \
                 --initial-dashboard-user {{ dashboard_username }} \
                 --output-keyring /etc/ceph/ceph.client.admin.keyring \
                 --output-config /etc/ceph/ceph.conf \
