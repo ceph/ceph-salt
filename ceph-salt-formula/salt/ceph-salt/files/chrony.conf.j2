@@ -1,23 +1,20 @@
-{% set time_server = pillar['ceph-salt']['time_server']['server_host'] %}
-
-{% if grains['fqdn'] == time_server %}
-{% for server in pillar['ceph-salt']['time_server'].get('external_time_servers', []) %}
+{%- set time_server = pillar['ceph-salt']['time_server']['server_host'] %}
+{%- if grains['fqdn'] == time_server %}
+{%- for server in pillar['ceph-salt']['time_server'].get('external_time_servers', []) %}
 pool {{ server }} iburst
-{% endfor %}
+{%- endfor %}
 
 local stratum 10
 manual
-{% set fqdn_ip = grains['fqdn_ip4'] %}
-{% for subnet in salt['network.subnets']() %}
-{% if salt['network.ip_in_subnet'](fqdn_ip, subnet) %}
+{%- set fqdn_ip = grains['fqdn_ip4'] %}
+{%- for subnet in salt['network.subnets']() %}
+{%- if salt['network.ip_in_subnet'](fqdn_ip, subnet) %}
 allow {{ subnet }}
-{% endif %}
-{% endfor %}
-
-{% else %}
-
+{%- endif %}
+{%- endfor %}  # subnet in salt['network.subnets']()
+{%- else %}    # grains['fqdn'] == time_server
 server {{ time_server }} iburst
-{% endif %}
+{%- endif %}   # grains['fqdn'] == time_server
 
 driftfile /var/lib/chrony/drift
 makestep 0.1 3
