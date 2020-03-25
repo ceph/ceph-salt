@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [15.2.0] - 2020-03-25
+### Added
+- Support bootstrap ceph config (#129)
+- Run "cephadm check-host" on all minions (#137)
+### Fixed
+- Improve descriptions of stages and steps (#144)
+- Do not omit bootstrap MGR from "ceph orch apply mgr" (#136)
+- Use new OSD creation syntax (#133)
+- Work around podman/runc bug (#134)
+
 ## [15.1.1] - 2020-03-18
 ### Added
 - Add "Admin" role (#121)
@@ -83,7 +93,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal README.
 - The CHANGELOG file.
 
-[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.1.1...HEAD
+[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.0...HEAD
+[15.2.0]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.0
 [15.1.1]: https://github.com/ceph/ceph-salt/releases/tag/v15.1.1
 [15.1.0]: https://github.com/ceph/ceph-salt/releases/tag/v15.1.0
 [15.0.2]: https://github.com/ceph/ceph-salt/releases/tag/v15.0.2
