@@ -1,6 +1,6 @@
 {% import 'macros.yml' as macros %}
 
-{{ macros.begin_stage('Ceph bootstrap') }}
+{{ macros.begin_stage('Bootstrap the Ceph cluster') }}
 
 {% if grains['id'] == pillar['ceph-salt']['bootstrap_minion'] %}
 
@@ -25,7 +25,7 @@ wait for other minions:
     - failhard: True
 {{ macros.end_step('Wait for other minions') }}
 
-{{ macros.begin_step('Run cephadm bootstrap') }}
+{{ macros.begin_step('Run "cephadm bootstrap"') }}
 
 {% set dashboard_username = pillar['ceph-salt'].get('dashboard', {'username': 'admin'}).get('username', 'admin') %}
 
@@ -48,7 +48,7 @@ run cephadm bootstrap:
       - /etc/ceph/ceph.client.admin.keyring
     - failhard: True
 
-{{ macros.end_step('Run cephadm bootstrap') }}
+{{ macros.end_step('Run "cephadm bootstrap"') }}
 
 {% set dashboard_password = pillar['ceph-salt'].get('dashboard', {'password': None}).get('password', None) %}
 {% if dashboard_password %}
@@ -61,7 +61,7 @@ set ceph-dashboard password:
     - failhard: True
 {% endif %}
 
-{{ macros.begin_step('Configure SSH orchestrator') }}
+{{ macros.begin_step('Configure cephadm MGR module') }}
 
 configure ssh orchestrator:
   cmd.run:
@@ -78,8 +78,8 @@ configure ssh orchestrator:
       - cmd: run cephadm bootstrap
     - failhard: True
 
-{{ macros.end_step('Configure SSH orchestrator') }}
+{{ macros.end_step('Configure cephadm MGR module') }}
 
 {% endif %}
 
-{{ macros.end_stage('Ceph bootstrap') }}
+{{ macros.end_stage('Bootstrap the Ceph cluster') }}

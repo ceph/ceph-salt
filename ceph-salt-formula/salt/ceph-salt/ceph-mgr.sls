@@ -6,7 +6,7 @@
 {% if mgr_update_args.append(minion) %}{% endif %}
 {% endfor %}
 
-{{ macros.begin_stage('Deployment of Ceph MGRs') }}
+{{ macros.begin_stage('Deploy post-bootstrap Ceph MGRs') }}
 
 deploy remaining mgrs:
   cmd.run:
@@ -14,6 +14,6 @@ deploy remaining mgrs:
         ceph orch apply mgr {{ mgr_update_args | join(',') }}
     - failhard: True
 
-{{ macros.end_stage('Deployment of Ceph MGRs') }}
+{{ macros.end_stage('Deploy post-bootstrap Ceph MGRs') }}
 
 {% endif %}

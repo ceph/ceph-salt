@@ -2,7 +2,7 @@
 
 {% import 'macros.yml' as macros %}
 
-{{ macros.begin_stage('Setting up time synchronization') }}
+{{ macros.begin_stage('Prepare cluster for time synchronization') }}
 
 {{ macros.begin_step('Install chrony package') }}
 install chrony:
@@ -46,5 +46,5 @@ start chronyd:
 prevent empty file:
   test.nop
 
-{{ macros.end_stage('Setting up time synchronization') }}
+{{ macros.end_stage('Prepare cluster for time synchronization') }}
 
