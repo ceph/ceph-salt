@@ -18,9 +18,6 @@ include:
 {% if pillar['ceph-salt'].get('deploy', {'mgr': False}).get('mgr', False) %}
     - .ceph-mgr
 {% endif %}
-{% if pillar['ceph-salt'].get('deploy', {'osd': False}).get('osd', False) %}
-    - .ceph-osd
-{% endif %}
 {% endif %}
 {% endif %}
 

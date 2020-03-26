@@ -363,12 +363,6 @@ CEPH_SALT_OPTIONS = {
                 'handler': PillarHandler('ceph-salt:deploy:mgr'),
                 'default': False
             },
-            'OSD': {
-                'type': 'flag',
-                'help': 'Deploy all Ceph OSDs',
-                'handler': PillarHandler('ceph-salt:deploy:osd'),
-                'default': False
-            },
             'Bootstrap_Ceph_Conf': {
                 'type': 'conf',
                 'help': 'Bootstrap Ceph configuration',
@@ -390,21 +384,6 @@ CEPH_SALT_OPTIONS = {
                         'handler': PillarHandler('ceph-salt:dashboard:username')
                     }
                 }
-            }
-        }
-    },
-    'Storage': {
-        'help': '''
-                Storage Configuration Options
-                =====================================
-                Options for configuring storage disks used by OSDs
-                ''',
-        'options': {
-            'Drive_Groups': {
-                'type': 'list',
-                'default': [],
-                'help': 'List of drive groups specifications to be used in OSD deployment',
-                'handler': PillarHandler('ceph-salt:storage:drive_groups')
             }
         }
     },
