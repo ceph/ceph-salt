@@ -35,11 +35,14 @@ have cephadm check the host:
 
 {{ macros.end_step('Run "cephadm check-host"') }}
 
+{% set image = pillar['ceph-salt']['container']['images']['ceph'] %}
+
 {{ macros.begin_step('Download ceph container image') }}
 download ceph container image:
   cmd.run:
     - name: |
-        cephadm --image {{ pillar['ceph-salt']['container']['images']['ceph'] }} pull
+        cephadm --image {{ image }} pull
+    - unless: podman image exists {{ image }}
     - failhard: True
 {{ macros.end_step('Download ceph container image') }}
 
