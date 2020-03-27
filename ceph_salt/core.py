@@ -72,23 +72,9 @@ class CephNodeManager:
     def save_in_pillar(cls):
         minions = [n.short_name for n in cls._ceph_salt_nodes.values()]
         PillarManager.set('ceph-salt:minions:all', minions)
-        PillarManager.set('ceph-salt:minions:mon',
-                          {n.short_name: n.public_ip for n in cls._ceph_salt_nodes.values()
-                           if 'mon' in n.roles})
-        PillarManager.set('ceph-salt:minions:mgr',
-                          [n.short_name for n in cls._ceph_salt_nodes.values() if 'mgr' in n.roles])
         PillarManager.set('ceph-salt:minions:admin',
                           [n.short_name for n in cls._ceph_salt_nodes.values()
                            if 'admin' in n.roles])
-
-        # choose the the main Mon
-        minions = [n.minion_id for n in cls._ceph_salt_nodes.values()
-                   if all(r in n.roles for r in ['mon', 'mgr'])]
-        minions.sort()
-        if minions:  # i.e., it has at least one
-            PillarManager.set('ceph-salt:bootstrap_minion', minions[0])
-        else:
-            PillarManager.reset('ceph-salt:bootstrap_minion')
 
     @classmethod
     def ceph_salt_nodes(cls):

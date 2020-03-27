@@ -14,7 +14,7 @@ import yaml
 
 from .exceptions import MinionDoesNotExistInConfiguration, ValidationException
 from .salt_event import EventListener, SaltEventProcessor
-from .salt_utils import SaltClient, GrainsManager
+from .salt_utils import SaltClient, GrainsManager, CephOrch
 from .terminal_utils import PrettyPrinter as PP
 from .validate.config import validate_config
 from .validate.salt_master import check_salt_master_status
@@ -1235,17 +1235,10 @@ class CephSaltExecutor:
         return 0
 
     @staticmethod
-    def check_deployment(minion_id):
+    def check_deployment(minion_id, host_ls):
         PP.println("Checking if there is an existing deployment...")
-        result = SaltClient.local().cmd('ceph-salt:member', 'ceph_orch.configured',
-                                        tgt_type='grain')
-        deployed = False
-        host_ls = []
-        for minion, value in result.items():
-            if value:
-                host_ls = SaltClient.local_cmd(minion, 'ceph_orch.host_ls')[minion]
-                deployed = len(host_ls) > 0
-                break
+        deployed = len(host_ls) > 0
+
         # day 1, but minion_id specified
         if minion_id is not None and not deployed:
             logger.error("cluster not deployed and minion_id provided")
@@ -1278,8 +1271,10 @@ class CephSaltExecutor:
             PP.pl_red(e)
             return 1
 
+        host_ls = CephOrch.host_ls()
+
         # check config is valid
-        error_msg = validate_config()
+        error_msg = validate_config(host_ls)
         if error_msg:
             logger.error(error_msg)
             PP.pl_red(error_msg)
@@ -1291,7 +1286,7 @@ class CephSaltExecutor:
             return retcode
 
         # check deployment
-        retcode = CephSaltExecutor.check_deployment(minion_id)
+        retcode = CephSaltExecutor.check_deployment(minion_id, host_ls)
         if retcode > 0:
             return retcode
 

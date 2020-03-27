@@ -12,12 +12,6 @@ include:
     - .cephbootstrap
 {% if grains['id'] == pillar['ceph-salt']['bootstrap_minion'] %}
     - .ceph-admin
-{% if pillar['ceph-salt'].get('deploy', {'mon': False}).get('mon', False) %}
-    - .ceph-mon
-{% endif %}
-{% if pillar['ceph-salt'].get('deploy', {'mgr': False}).get('mgr', False) %}
-    - .ceph-mgr
-{% endif %}
 {% endif %}
 {% endif %}
 

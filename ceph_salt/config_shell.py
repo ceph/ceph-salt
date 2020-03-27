@@ -10,8 +10,8 @@ import configshell_fb as configshell
 from configshell_fb.shell import locatedExpr
 
 from .core import CephNodeManager, SshKeyManager, CephNode
-from .exceptions import CephSaltException, PillarFileNotPureYaml
-from .salt_utils import GrainsManager, PillarManager, SaltClient
+from .exceptions import CephSaltException, MinionDoesNotExistInConfiguration, PillarFileNotPureYaml
+from .salt_utils import GrainsManager, PillarManager, SaltClient, CephOrch
 from .terminal_utils import PrettyPrinter as PP
 from .validate.config import validate_config
 from .validate.salt_master import check_salt_master_status, CephSaltPillarNotConfigured
@@ -61,17 +61,19 @@ class PillarHandler(OptionHandler):
         return False
 
 
+class MinionPillarHandler(PillarHandler):
+    def save(self, value):
+        if value not in self.possible_values():
+            raise MinionDoesNotExistInConfiguration(value)
+        super().save(value)
+
+    def possible_values(self):
+        return [n.minion_id for n in CephNodeManager.ceph_salt_nodes().values()]
+
+
 class RolesGroupHandler(OptionHandler):
     def value(self):
-        minions = set()
-        idx = 0
-        for idx, node in enumerate(CephNodeManager.ceph_salt_nodes().values()):
-            if node.roles:
-                minions.add(node.minion_id)
-        count = len(minions)
-        bootstrap_minion = PillarManager.get('ceph-salt:bootstrap_minion')
-        return 'Bootstrap minion: {}, Minions w/ roles: {}'.format(bootstrap_minion, count), \
-               bootstrap_minion is not None and count == idx + 1
+        return '', None
 
 
 class RoleElementHandler(OptionHandler):
@@ -130,7 +132,7 @@ class CephSaltNodeHandler(OptionHandler):
 
     def value(self):
         if not self.ceph_salt_node.roles:
-            return 'no roles', False
+            return 'no roles', None
         return ", ".join(self.ceph_salt_node.roles), None
 
 
@@ -279,18 +281,6 @@ CEPH_SALT_OPTIONS = {
                         'handler': RoleHandler('admin'),
                         'help': 'List of minions with Admin role'
                     },
-                    'Mon': {
-                        'type': 'minions',
-                        'default': [],
-                        'handler': RoleHandler('mon'),
-                        'help': 'List of minions with Ceph Monitor role'
-                    },
-                    'Mgr': {
-                        'type': 'minions',
-                        'default': [],
-                        'handler': RoleHandler('mgr'),
-                        'help': 'List of minions with Ceph Manager role'
-                    },
                 }
             },
         }
@@ -347,21 +337,16 @@ CEPH_SALT_OPTIONS = {
         'options': {
             'Bootstrap': {
                 'type': 'flag',
-                'help': 'Run "cephadm bootstrap" on one of the Mon machines',
+                'help': 'Run "cephadm bootstrap" on Bootstrap Minion',
                 'handler': PillarHandler('ceph-salt:deploy:bootstrap'),
                 'default': True
             },
-            'Mon': {
-                'type': 'flag',
-                'help': 'Deploy all Ceph Monitors',
-                'handler': PillarHandler('ceph-salt:deploy:mon'),
-                'default': False
-            },
-            'Mgr': {
-                'type': 'flag',
-                'help': 'Deploy all Ceph Managers',
-                'handler': PillarHandler('ceph-salt:deploy:mgr'),
-                'default': False
+            'Bootstrap_Minion': {
+                'help': 'Cluster\'s first Mon and Mgr',
+                'handler': MinionPillarHandler('ceph-salt:bootstrap_minion'),
+                'required': True,
+                'default_text': 'No bootstrap minion set',
+                'default': None
             },
             'Bootstrap_Ceph_Conf': {
                 'type': 'conf',
@@ -931,16 +916,38 @@ base:
     return False
 
 
+def count_hosts(host_ls):
+    all_nodes = PillarManager.get('ceph-salt:minions:all')
+    deployed = []
+    not_managed = []
+    for host in host_ls:
+        if host['hostname'] in all_nodes:
+            deployed.append(host)
+        else:
+            not_managed.append(host)
+    return (len(all_nodes), len(deployed), len(not_managed))
+
+
 def run_status():
     if not check_config_prerequesites():
         return False
-    error_msg = validate_config()
+    status = {}
+    result = True
+    host_ls = CephOrch.host_ls()
+    ceph_salt_nodes, deployed_nodes, not_managed_nodes = count_hosts(host_ls)
+    status['hosts'] = '{}/{} deployed'.format(deployed_nodes, ceph_salt_nodes)
+    if not_managed_nodes:
+        status['hosts'] += ' ({} hosts not managed by cephsalt)'.format(not_managed_nodes)
+    error_msg = validate_config(host_ls)
     if error_msg:
+        result = False
         logger.info(error_msg)
-        PP.pl_red(error_msg)
-        return False
-    PP.pl_green("OK")
-    return True
+        status['config'] = PP.red(error_msg)
+    else:
+        status['config'] = PP.green("OK")
+    for k, v in status.items():
+        PP.println('{}{}'.format('{}: '.format(k).ljust(8), v))
+    return result
 
 
 def run_config_shell():
@@ -1004,10 +1011,8 @@ def run_import(config_file):
         GrainsManager.del_grain(minions, 'ceph-salt')
     for host in minions_config.get('all', []):
         node = CephNode(salt_minions_by_host[host])
-        if host in minions_config.get('mon', []):
-            node.add_role('mon')
-        if host in minions_config.get('mgr', []):
-            node.add_role('mgr')
+        if host in minions_config.get('admin', []):
+            node.add_role('admin')
         node.save()
     PP.pl_green('Configuration imported.')
     return True
