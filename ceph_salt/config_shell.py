@@ -82,9 +82,10 @@ class RoleElementHandler(OptionHandler):
         self.role = role
 
     def value(self):
-        if not self.ceph_salt_node.roles - {self.role}:
+        roles = CephNodeManager.all_roles(self.ceph_salt_node)
+        if not roles - {self.role}:
             return 'no other roles', None
-        return "other roles: {}".format(", ".join(self.ceph_salt_node.roles - {self.role})), None
+        return "other roles: {}".format(", ".join(roles - {self.role})), None
 
 
 class RoleHandler(OptionHandler):
@@ -131,9 +132,10 @@ class CephSaltNodeHandler(OptionHandler):
         self.ceph_salt_node = ceph_salt_node
 
     def value(self):
-        if not self.ceph_salt_node.roles:
+        roles = CephNodeManager.all_roles(self.ceph_salt_node)
+        if not roles:
             return 'no roles', None
-        return ", ".join(self.ceph_salt_node.roles), None
+        return ", ".join(roles), None
 
 
 class CephSaltNodesHandler(OptionHandler):
@@ -220,6 +222,37 @@ class SshPublicKeyHandler(PillarHandler):
             return str(ex), False
 
 
+class FlagGroupPillarHandler(OptionHandler):
+    def __init__(self, pillar_path, default):
+        self.pillar_path = pillar_path
+        self.default = default
+
+    def commands_map(self):
+        return {
+            'enable': self.enable,
+            'disable': self.disable,
+            'reset': self.reset
+        }
+
+    def enable(self):
+        PillarManager.set(self.pillar_path, True)
+        PP.pl_green('Enabled.')
+
+    def disable(self):
+        PillarManager.set(self.pillar_path, False)
+        PP.pl_green('Disabled.')
+
+    def reset(self):
+        PillarManager.reset(self.pillar_path)
+        PP.pl_green('Value reset.')
+
+    def value(self):
+        val = PillarManager.get(self.pillar_path)
+        if val is None:
+            val = self.default
+        return ("enabled", True) if val else ("disabled", True)
+
+
 class TimeServerGroupHandler(OptionHandler):
     def commands_map(self):
         return {
@@ -253,7 +286,7 @@ class TimeServerHandler(PillarHandler):
 
 
 CEPH_SALT_OPTIONS = {
-    'Cluster': {
+    'Ceph_Cluster': {
         'help': '''
                 Cluster Options Configuration
                 ====================================
@@ -280,6 +313,13 @@ CEPH_SALT_OPTIONS = {
                         'default': [],
                         'handler': RoleHandler('admin'),
                         'help': 'List of minions with Admin role'
+                    },
+                    'Bootstrap': {
+                        'help': 'Cluster\'s first Mon and Mgr',
+                        'handler': MinionPillarHandler('ceph-salt:bootstrap_minion'),
+                        'required': True,
+                        'default_text': 'no minion',
+                        'default': None
                     },
                 }
             },
@@ -328,27 +368,15 @@ CEPH_SALT_OPTIONS = {
             }
         }
     },
-    'Deployment': {
+    'Cephadm_Bootstrap': {
         'help': '''
-                Deployment Options Configuration
+                Cluster Bootstrap Options Configuration
                 =========================================
-                Options to control the deployment of Ceph and other services
+                Options to control the Ceph cluster bootstrap
                 ''',
+        'handler': FlagGroupPillarHandler('ceph-salt:bootstrap_enabled', True),
         'options': {
-            'Bootstrap': {
-                'type': 'flag',
-                'help': 'Run "cephadm bootstrap" on Bootstrap Minion',
-                'handler': PillarHandler('ceph-salt:deploy:bootstrap'),
-                'default': True
-            },
-            'Bootstrap_Minion': {
-                'help': 'Cluster\'s first Mon and Mgr',
-                'handler': MinionPillarHandler('ceph-salt:bootstrap_minion'),
-                'required': True,
-                'default_text': 'No bootstrap minion set',
-                'default': None
-            },
-            'Bootstrap_Ceph_Conf': {
+            'Ceph_Conf': {
                 'type': 'conf',
                 'help': 'Bootstrap Ceph configuration',
                 'default': [],

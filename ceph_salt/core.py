@@ -1,3 +1,4 @@
+import copy
 import logging
 import base64
 import hashlib
@@ -94,8 +95,9 @@ class CephNodeManager:
     @classmethod
     def remove_node(cls, minion_id):
         cls._load()
-        if cls._ceph_salt_nodes[minion_id].roles:
-            raise CephNodeHasRolesException(minion_id, cls._ceph_salt_nodes[minion_id].roles)
+        roles = cls.all_roles(cls._ceph_salt_nodes[minion_id])
+        if roles:
+            raise CephNodeHasRolesException(minion_id, sorted(roles))
         del cls._ceph_salt_nodes[minion_id]
         GrainsManager.del_grain(minion_id, CEPH_SALT_GRAIN_KEY)
         cls.save_in_pillar()
@@ -103,6 +105,14 @@ class CephNodeManager:
     @classmethod
     def list_all_minions(cls):
         return SaltClient.caller().cmd('minion.list')['minions']
+
+    @staticmethod
+    def all_roles(ceph_salt_node):
+        roles = copy.deepcopy(ceph_salt_node.roles)
+        bootstrap_minion = PillarManager.get('ceph-salt:bootstrap_minion')
+        if ceph_salt_node.minion_id == bootstrap_minion:
+            roles.add('bootstrap')
+        return roles
 
 
 class SshKeyManager:
