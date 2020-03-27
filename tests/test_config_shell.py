@@ -190,10 +190,6 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertFlagOption('/Deployment/Mon',
                               'ceph-salt:deploy:mon')
 
-    def test_deployment_osd(self):
-        self.assertFlagOption('/Deployment/OSD',
-                              'ceph-salt:deploy:osd')
-
     def test_ssh(self):
         self.shell.run_cmdline('/SSH generate')
         self.assertInSysOut('Key pair generated.')
@@ -209,11 +205,6 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertValueOption('/SSH/Public_Key',
                                'ceph-salt:ssh:public_key',
                                'mypublickey')
-
-    def test_storage_drive_groups(self):
-        self.assertListOption('/Storage/Drive_Groups',
-                              'ceph-salt:storage:drive_groups',
-                              ['value1', 'value2'])
 
     def test_time_server(self):
         self.assertFlagOption('/Time_Server',
