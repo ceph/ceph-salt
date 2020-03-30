@@ -16,21 +16,29 @@ class ValidateConfigTest(SaltMockTestCase):
 
     def test_no_boostrap_minion(self):
         PillarManager.reset('ceph-salt:bootstrap_minion')
-        self.assertEqual(validate_config(), "At least one minion must be both 'Mgr' and 'Mon'")
+        self.assertEqual(validate_config([]), "No bootstrap minion specified in config")
+        self.assertEqual(validate_config([{'hostname': 'node1'}]), None)
 
     def test_boostrap_minion_is_not_admin(self):
         PillarManager.set('ceph-salt:minions:admin', [])
-        self.assertEqual(validate_config(), "Bootstrap minion must be 'Admin'")
+        self.assertEqual(validate_config([]), "Bootstrap minion must be 'Admin'")
+        self.assertEqual(validate_config([{'hostname': 'node1'}]), None)
+
+    def test_admin_not_cluster_minion(self):
+        PillarManager.set('ceph-salt:bootstrap_minion', 'node3.ceph.com')
+        PillarManager.set('ceph-salt:minions:admin', ['node3'])
+        self.assertEqual(validate_config([]), "One or more Admin nodes are not cluster minions")
 
     def test_no_ceph_container_image_path(self):
         PillarManager.reset('ceph-salt:container:images:ceph')
-        self.assertEqual(validate_config(), "No Ceph container image path specified in config")
+        self.assertEqual(validate_config([]), "No Ceph container image path specified in config")
 
     def test_valid(self):
-        self.assertEqual(validate_config(), None)
+        self.assertEqual(validate_config([]), None)
 
     @classmethod
     def create_valid_config(cls):
         PillarManager.set('ceph-salt:bootstrap_minion', 'node1.ceph.com')
-        PillarManager.set('ceph-salt:minions:admin', 'node1')
+        PillarManager.set('ceph-salt:minions:all', ['node1', 'node2'])
+        PillarManager.set('ceph-salt:minions:admin', ['node1'])
         PillarManager.set('ceph-salt:container:images:ceph', 'docker.io/ceph/daemon-base:latest')

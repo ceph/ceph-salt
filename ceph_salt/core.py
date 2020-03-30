@@ -1,3 +1,4 @@
+import copy
 import logging
 import base64
 import hashlib
@@ -72,23 +73,9 @@ class CephNodeManager:
     def save_in_pillar(cls):
         minions = [n.short_name for n in cls._ceph_salt_nodes.values()]
         PillarManager.set('ceph-salt:minions:all', minions)
-        PillarManager.set('ceph-salt:minions:mon',
-                          {n.short_name: n.public_ip for n in cls._ceph_salt_nodes.values()
-                           if 'mon' in n.roles})
-        PillarManager.set('ceph-salt:minions:mgr',
-                          [n.short_name for n in cls._ceph_salt_nodes.values() if 'mgr' in n.roles])
         PillarManager.set('ceph-salt:minions:admin',
                           [n.short_name for n in cls._ceph_salt_nodes.values()
                            if 'admin' in n.roles])
-
-        # choose the the main Mon
-        minions = [n.minion_id for n in cls._ceph_salt_nodes.values()
-                   if all(r in n.roles for r in ['mon', 'mgr'])]
-        minions.sort()
-        if minions:  # i.e., it has at least one
-            PillarManager.set('ceph-salt:bootstrap_minion', minions[0])
-        else:
-            PillarManager.reset('ceph-salt:bootstrap_minion')
 
     @classmethod
     def ceph_salt_nodes(cls):
@@ -108,8 +95,9 @@ class CephNodeManager:
     @classmethod
     def remove_node(cls, minion_id):
         cls._load()
-        if cls._ceph_salt_nodes[minion_id].roles:
-            raise CephNodeHasRolesException(minion_id, cls._ceph_salt_nodes[minion_id].roles)
+        roles = cls.all_roles(cls._ceph_salt_nodes[minion_id])
+        if roles:
+            raise CephNodeHasRolesException(minion_id, sorted(roles))
         del cls._ceph_salt_nodes[minion_id]
         GrainsManager.del_grain(minion_id, CEPH_SALT_GRAIN_KEY)
         cls.save_in_pillar()
@@ -117,6 +105,14 @@ class CephNodeManager:
     @classmethod
     def list_all_minions(cls):
         return SaltClient.caller().cmd('minion.list')['minions']
+
+    @staticmethod
+    def all_roles(ceph_salt_node):
+        roles = copy.deepcopy(ceph_salt_node.roles)
+        bootstrap_minion = PillarManager.get('ceph-salt:bootstrap_minion')
+        if ceph_salt_node.minion_id == bootstrap_minion:
+            roles.add('bootstrap')
+        return roles
 
 
 class SshKeyManager:

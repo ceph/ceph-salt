@@ -8,16 +8,10 @@ include:
     - .time
     - .cephtools
     - .provision-end
-{% if pillar['ceph-salt'].get('deploy', {'bootstrap': True}).get('bootstrap', True) %}
+{% if pillar['ceph-salt'].get('bootstrap_enabled', True) %}
     - .cephbootstrap
 {% if grains['id'] == pillar['ceph-salt']['bootstrap_minion'] %}
     - .ceph-admin
-{% if pillar['ceph-salt'].get('deploy', {'mon': False}).get('mon', False) %}
-    - .ceph-mon
-{% endif %}
-{% if pillar['ceph-salt'].get('deploy', {'mgr': False}).get('mgr', False) %}
-    - .ceph-mgr
-{% endif %}
 {% endif %}
 {% endif %}
 
