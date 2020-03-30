@@ -57,15 +57,17 @@ autocomplete and glob expressions
 /Cluster/Minions add *
 ```
 
-Next step is to specify which minions should be used to store the ceph-mons and
-mgrs. ceph-salt will choose one of these minions to run
-`cephadm bootstrap`. These minions will also be the entry points for the
-administrator to run ceph orchestrator commands, as we will install and
-configure the ceph client tool on these nodes
+Then we must specify which minions will have "ceph.conf" and "keyring" installed
+```
+/Ceph_Cluster/Roles/Admin add *
+```
+
+Next step is to specify which minion should be used to store the ceph-mons and
+mgrs. ceph-salt will choose this minion to run
+`cephadm bootstrap`. 
 
 ```
-/Cluster/Roles/Mon add node1*
-/Cluster/Roles/Mgr add node1*
+/Cluster/Roles/Bootstrap set node1*
 ```
 
 Now we need to set the SSH key pair to be used by the ssh orchestrator the SSH
