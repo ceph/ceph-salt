@@ -11,7 +11,7 @@
     - makedirs: True
     - failhard: True
 
-{% if 'mgr' in grains['ceph-salt']['roles'] %}
+{% if 'admin' in grains['ceph-salt']['roles'] %}
 # private key
 /root/.ssh/id_rsa:
   file.managed:
