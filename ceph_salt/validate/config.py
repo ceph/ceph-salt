@@ -14,6 +14,11 @@ def validate_config(host_ls):
         bootstrap_minion_short_name = bootstrap_minion.split('.', 1)[0]
         if bootstrap_minion_short_name not in admin_nodes:
             return "Bootstrap minion must be 'Admin'"
+    bootstrap_mon_ip = PillarManager.get('ceph-salt:bootstrap_mon_ip')
+    if not bootstrap_mon_ip:
+        return "No bootstrap Mon IP specified in config"
+    if bootstrap_mon_ip in ['127.0.0.1', '::1']:
+        return 'Mon IP cannot be the loopback interface IP'
     all_nodes = PillarManager.get('ceph-salt:minions:all')
     for admin_node in admin_nodes:
         if admin_node not in all_nodes:

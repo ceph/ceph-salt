@@ -24,6 +24,14 @@ class ValidateConfigTest(SaltMockTestCase):
         self.assertEqual(validate_config([]), "Bootstrap minion must be 'Admin'")
         self.assertEqual(validate_config([{'hostname': 'node1'}]), None)
 
+    def test_no_bootstrap_mon_ip(self):
+        PillarManager.reset('ceph-salt:bootstrap_mon_ip')
+        self.assertEqual(validate_config([]), "No bootstrap Mon IP specified in config")
+
+    def test_loopback_bootstrap_mon_ip(self):
+        PillarManager.set('ceph-salt:bootstrap_mon_ip', '127.0.0.1')
+        self.assertEqual(validate_config([]), "Mon IP cannot be the loopback interface IP")
+
     def test_admin_not_cluster_minion(self):
         PillarManager.set('ceph-salt:bootstrap_minion', 'node3.ceph.com')
         PillarManager.set('ceph-salt:minions:admin', ['node3'])
@@ -39,6 +47,7 @@ class ValidateConfigTest(SaltMockTestCase):
     @classmethod
     def create_valid_config(cls):
         PillarManager.set('ceph-salt:bootstrap_minion', 'node1.ceph.com')
+        PillarManager.set('ceph-salt:bootstrap_mon_ip', '10.20.188.201')
         PillarManager.set('ceph-salt:minions:all', ['node1', 'node2'])
         PillarManager.set('ceph-salt:minions:admin', ['node1'])
         PillarManager.set('ceph-salt:container:images:ceph', 'docker.io/ceph/daemon-base:latest')

@@ -8,12 +8,6 @@ class CephNodeHasRolesException(CephSaltException):
             "Cannot remove host '{}' because it has roles defined: {}".format(minion_id, roles))
 
 
-class CephNodeFqdnResolvesToLoopbackException(CephSaltException):
-    def __init__(self, minion_id):
-        super(CephNodeFqdnResolvesToLoopbackException, self).__init__(
-            "Host '{}' FQDN resolves to the loopback interface IP address".format(minion_id))
-
-
 class SaltCallException(CephSaltException):
     def __init__(self, target, func, ret):
         super(SaltCallException, self).__init__(
