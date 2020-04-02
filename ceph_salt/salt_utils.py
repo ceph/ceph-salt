@@ -301,6 +301,6 @@ class CephOrch:
         result = SaltClient.local().cmd('ceph-salt:member', 'ceph_orch.configured',
                                         tgt_type='grain')
         for minion, value in result.items():
-            if value:
+            if value is True:
                 return SaltClient.local_cmd(minion, 'ceph_orch.host_ls')[minion]
         return []
