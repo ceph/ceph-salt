@@ -33,7 +33,7 @@ run cephadm bootstrap:
   cmd.run:
     - name: |
         CEPHADM_IMAGE={{ pillar['ceph-salt']['container']['images']['ceph'] }} \
-        cephadm --verbose bootstrap --mon-ip {{ grains['fqdn_ip4'][0] }} \
+        cephadm --verbose bootstrap --mon-ip {{ pillar['ceph-salt']['bootstrap_mon_ip'] }} \
                 --config /tmp/bootstrap-ceph.conf \
                 --initial-dashboard-user {{ dashboard_username }} \
                 --output-keyring /etc/ceph/ceph.client.admin.keyring \

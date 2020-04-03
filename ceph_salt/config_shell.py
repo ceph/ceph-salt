@@ -61,10 +61,15 @@ class PillarHandler(OptionHandler):
         return False
 
 
-class MinionPillarHandler(PillarHandler):
+class BootstrapMinionHandler(PillarHandler):
+    def __init__(self):
+        super().__init__('ceph-salt:bootstrap_minion')
+
     def save(self, value):
         if value not in self.possible_values():
             raise MinionDoesNotExistInConfiguration(value)
+        node = CephNodeManager.ceph_salt_nodes()[value]
+        PillarManager.set('ceph-salt:bootstrap_mon_ip', node.public_ip)
         super().save(value)
 
     def possible_values(self):
@@ -316,7 +321,7 @@ CEPH_SALT_OPTIONS = {
                     },
                     'Bootstrap': {
                         'help': 'Cluster\'s first Mon and Mgr',
-                        'handler': MinionPillarHandler('ceph-salt:bootstrap_minion'),
+                        'handler': BootstrapMinionHandler(),
                         'required': True,
                         'default_text': 'no minion',
                         'default': None
@@ -397,7 +402,12 @@ CEPH_SALT_OPTIONS = {
                         'handler': PillarHandler('ceph-salt:dashboard:username')
                     }
                 }
-            }
+            },
+            'Mon_IP': {
+                'help': 'Bootstrap Mon IP',
+                'default': None,
+                'handler': PillarHandler('ceph-salt:bootstrap_mon_ip')
+            },
         }
     },
     'SSH': {
