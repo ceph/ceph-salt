@@ -243,15 +243,15 @@ class ConfigShellTest(SaltMockTestCase):
         sec_path = '{}/{}'.format(path, 'section1')
         sec_pillar_key = '{}:{}'.format(pillar_key, 'section1')
 
-        self.shell.run_cmdline('{} set my option1 = 2'.format(sec_path))
+        self.shell.run_cmdline('{} set "my option1" 2'.format(sec_path))
         self.assertInSysOut('Parameter set.')
         self.assertEqual(PillarManager.get(sec_pillar_key), {'my option1': '2'})
 
-        self.shell.run_cmdline('{} set my option2 = 3'.format(sec_path))
+        self.shell.run_cmdline('{} set "my option2" 3'.format(sec_path))
         self.assertInSysOut('Parameter set.')
         self.assertEqual(PillarManager.get(sec_pillar_key), {'my option1': '2', 'my option2': '3'})
 
-        self.shell.run_cmdline('{} remove my option1'.format(sec_path))
+        self.shell.run_cmdline('{} remove "my option1"'.format(sec_path))
         self.assertInSysOut('Parameter removed.')
         self.assertEqual(PillarManager.get(sec_pillar_key), {'my option2': '3'})
 
