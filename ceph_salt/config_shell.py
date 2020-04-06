@@ -89,8 +89,8 @@ class RoleElementHandler(OptionHandler):
     def value(self):
         roles = CephNodeManager.all_roles(self.ceph_salt_node)
         if not roles - {self.role}:
-            return 'no other roles', None
-        return "other roles: {}".format(", ".join(roles - {self.role})), None
+            return 'No other roles', None
+        return "Other roles: {}".format(", ".join(roles - {self.role})), None
 
 
 class RoleHandler(OptionHandler):
@@ -291,7 +291,7 @@ class TimeServerHandler(PillarHandler):
 
 
 CEPH_SALT_OPTIONS = {
-    'Ceph_Cluster': {
+    'ceph_cluster': {
         'help': '''
                 Cluster Options Configuration
                 ====================================
@@ -299,13 +299,13 @@ CEPH_SALT_OPTIONS = {
                 membership, roles, etc...
                 ''',
         'options': {
-            'Minions': {
+            'minions': {
                 'help': 'The list of salt minions that are used to deploy Ceph',
                 'default': [],
                 'type': 'minions',
                 'handler': CephSaltNodesHandler()
             },
-            'Roles': {
+            'roles': {
                 'type': 'group',
                 'handler': RolesGroupHandler(),
                 'help': '''
@@ -313,13 +313,13 @@ CEPH_SALT_OPTIONS = {
                         ====================================
                         ''',
                 'options': {
-                    'Admin': {
+                    'admin': {
                         'type': 'minions',
                         'default': [],
                         'handler': RoleHandler('admin'),
                         'help': 'List of minions with Admin role'
                     },
-                    'Bootstrap': {
+                    'bootstrap': {
                         'help': 'Cluster\'s first Mon and Mgr',
                         'handler': BootstrapMinionHandler(),
                         'required': True,
@@ -330,7 +330,7 @@ CEPH_SALT_OPTIONS = {
             },
         }
     },
-    'Containers': {
+    'containers': {
         'help': '''
                 Container Options Configuration
                 ====================================
@@ -338,7 +338,7 @@ CEPH_SALT_OPTIONS = {
                 for deployment.
                 ''',
         'options': {
-            'Images': {
+            'images': {
                 'type': 'group',
                 'help': "Container images paths",
                 'options': {
@@ -352,20 +352,20 @@ CEPH_SALT_OPTIONS = {
             },
         }
     },
-    'System_Update': {
+    'system_update': {
         'help': '''
                 System Update Options Configuration
                 =========================================
                 Options to control system updates
                 ''',
         'options': {
-            'Packages': {
+            'packages': {
                 'type': 'flag',
                 'help': 'Update all packages',
                 'handler': PillarHandler('ceph-salt:updates:enabled'),
                 'default': True
             },
-            'Reboot': {
+            'reboot': {
                 'type': 'flag',
                 'help': 'Reboot if needed',
                 'handler': PillarHandler('ceph-salt:updates:reboot'),
@@ -373,7 +373,7 @@ CEPH_SALT_OPTIONS = {
             }
         }
     },
-    'Cephadm_Bootstrap': {
+    'cephadm_bootstrap': {
         'help': '''
                 Cluster Bootstrap Options Configuration
                 =========================================
@@ -381,13 +381,13 @@ CEPH_SALT_OPTIONS = {
                 ''',
         'handler': FlagGroupPillarHandler('ceph-salt:bootstrap_enabled', True),
         'options': {
-            'Ceph_Conf': {
+            'ceph_conf': {
                 'type': 'conf',
                 'help': 'Bootstrap Ceph configuration',
                 'default': [],
                 'handler': PillarHandler('ceph-salt:bootstrap_ceph_conf')
             },
-            'Dashboard': {
+            'dashboard': {
                 'type': 'group',
                 'help': 'Dashboard settings',
                 'options': {
@@ -403,14 +403,14 @@ CEPH_SALT_OPTIONS = {
                     }
                 }
             },
-            'Mon_IP': {
+            'mon_ip': {
                 'help': 'Bootstrap Mon IP',
                 'default': None,
                 'handler': PillarHandler('ceph-salt:bootstrap_mon_ip')
             },
         }
     },
-    'SSH': {
+    'ssh': {
         'help': '''
                 SSH Keys configuration
                 ============================
@@ -418,19 +418,19 @@ CEPH_SALT_OPTIONS = {
                 ''',
         'handler': SSHGroupHandler(),
         'options': {
-            'Private_Key': {
+            'private_key': {
                 'default': None,
                 'help': "SSH RSA private key",
                 'handler': SshPrivateKeyHandler()
             },
-            'Public_Key': {
+            'public_key': {
                 'default': None,
                 'help': "SSH RSA public key",
                 'handler': SshPublicKeyHandler()
             },
         }
     },
-    'Time_Server': {
+    'time_server': {
         'help': '''
                 Time Server Deployment Options
                 ==============================
@@ -438,13 +438,13 @@ CEPH_SALT_OPTIONS = {
                 ''',
         'handler': TimeServerGroupHandler(),
         'options': {
-            'External_Servers': {
+            'external_servers': {
                 'type': 'list',
                 'default': [],
                 'help': 'List of external NTP servers',
                 'handler': PillarHandler('ceph-salt:time_server:external_time_servers')
             },
-            'Server_Hostname': {
+            'server_hostname': {
                 'default': None,
                 'help': 'FQDN of the time server node',
                 'handler': TimeServerHandler('ceph-salt:time_server:server_host'),
