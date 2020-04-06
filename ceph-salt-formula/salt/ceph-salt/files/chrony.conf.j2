@@ -7,12 +7,7 @@ pool {{ server }} iburst
 
 local stratum 10
 manual
-{%- set fqdn_ip = grains['fqdn_ip4'] %}
-{%- for subnet in salt['network.subnets']() %}
-{%- if salt['network.ip_in_subnet'](fqdn_ip, subnet) %}
-allow {{ subnet }}
-{%- endif %}
-{%- endfor %}  {# subnet in salt['network.subnets']() #}
+allow {{ pillar['ceph-salt']['time_server']['subnet'] }}
 {%- else %}    {# grains['fqdn'] == time_server #}
 server {{ time_server }} iburst
 {%- endif %}   {# grains['fqdn'] == time_server #}

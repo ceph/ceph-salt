@@ -4,6 +4,7 @@ import base64
 import hashlib
 
 from Cryptodome.PublicKey import RSA
+import salt
 
 from .exceptions import CephNodeHasRolesException
 from .salt_utils import SaltClient, GrainsManager, PillarManager
@@ -22,6 +23,8 @@ class CephNode:
         self.roles = None
         self.execution = {}
         self.public_ip = None
+        self.subnets = None
+        self.public_subnet = None
         self._load()
 
     def _load(self):
@@ -48,6 +51,13 @@ class CephNode:
                     public_ip = addr
                     break
         self.public_ip = public_ip
+        result = SaltClient.local_cmd(self.minion_id, 'network.subnets')
+        self.subnets = result[self.minion_id]
+        if self.public_ip and self.subnets:
+            for subnet in self.subnets:
+                if salt.utils.network.in_subnet(subnet, self.public_ip):
+                    self.public_subnet = subnet
+                    break
 
     def add_role(self, role):
         self.roles.add(role)
@@ -89,6 +99,15 @@ class CephNodeManager:
     def ceph_salt_nodes(cls):
         cls._load()
         return cls._ceph_salt_nodes
+
+    @classmethod
+    def ceph_salt_node_by_hostname(cls, hostname):
+        short_name = hostname.split('.', 1)[0]
+        nodes = cls.ceph_salt_nodes()
+        for node in nodes.values():
+            if node.short_name == short_name:
+                return node
+        return None
 
     @classmethod
     def add_node(cls, minion_id):
