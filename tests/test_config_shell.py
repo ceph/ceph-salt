@@ -38,27 +38,27 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), [])
         self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), None)
 
-        self.shell.run_cmdline('/ceph_cluster/minions rm node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/minions remove node1.ceph.com')
         self.assertInSysOut('1 minion removed.')
         self.assertNotInGrains('node1.ceph.com', 'ceph-salt')
         self.assertEqual(PillarManager.get('ceph-salt:minions:all'), [])
         self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), [])
         self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), None)
 
-    def test_ceph_cluster_minions_rm_with_roles(self):
+    def test_ceph_cluster_minions_remove_with_roles(self):
         self.shell.run_cmdline('/ceph_cluster/minions add node1.ceph.com')
         self.shell.run_cmdline('/ceph_cluster/roles/admin add node1.ceph.com')
         self.shell.run_cmdline('/ceph_cluster/roles/bootstrap set node1.ceph.com')
         self.clearSysOut()
 
-        self.shell.run_cmdline('/ceph_cluster/minions rm node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/minions remove node1.ceph.com')
         self.assertInSysOut("Cannot remove host 'node1.ceph.com' because it has roles defined: "
                             "['admin', 'bootstrap']")
         self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1'])
 
-        self.shell.run_cmdline('/ceph_cluster/roles/admin rm node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/roles/admin remove node1.ceph.com')
         self.shell.run_cmdline('/ceph_cluster/roles/bootstrap reset')
-        self.shell.run_cmdline('/ceph_cluster/minions rm node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/minions remove node1.ceph.com')
 
     def test_ceph_cluster_roles_admin(self):
         self.shell.run_cmdline('/ceph_cluster/minions add node1.ceph.com')
@@ -73,7 +73,7 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), ['node1'])
         self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), None)
 
-        self.shell.run_cmdline('/ceph_cluster/roles/admin rm node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/roles/admin remove node1.ceph.com')
         self.assertInSysOut('1 minion removed.')
         self.assertGrains('node1.ceph.com', 'ceph-salt', {'member': True,
                                                           'roles': [],
@@ -82,7 +82,7 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), [])
         self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), None)
 
-        self.shell.run_cmdline('/ceph_cluster/minions rm node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/minions remove node1.ceph.com')
 
     def test_ceph_cluster_roles_bootstrap(self):
         with pytest.raises(MinionDoesNotExistInConfiguration):
@@ -108,7 +108,7 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), [])
         self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), None)
 
-        self.shell.run_cmdline('/ceph_cluster/minions rm node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/minions remove node1.ceph.com')
 
     def test_containers_images_ceph(self):
         self.assertValueOption('/containers/images/ceph',
@@ -190,9 +190,9 @@ class ConfigShellTest(SaltMockTestCase):
             }})
 
         self.shell.run_cmdline('/time_server/server_hostname reset')
-        self.shell.run_cmdline('/ceph_cluster/roles/admin rm node1.ceph.com')
-        self.shell.run_cmdline('/ceph_cluster/minions rm node2.ceph.com')
-        self.shell.run_cmdline('/ceph_cluster/minions rm node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/roles/admin remove node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/minions remove node2.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/minions remove node1.ceph.com')
 
     def test_import(self):
         self.fs.create_file('/config.json', contents=json.dumps({
@@ -219,9 +219,9 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertEqual(PillarManager.get('ceph-salt:time_server:server_host'), 'server1')
 
         self.shell.run_cmdline('/time_server/server_hostname reset')
-        self.shell.run_cmdline('/ceph_cluster/roles/admin rm node1.ceph.com')
-        self.shell.run_cmdline('/ceph_cluster/minions rm node2.ceph.com')
-        self.shell.run_cmdline('/ceph_cluster/minions rm node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/roles/admin remove node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/minions remove node2.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/minions remove node1.ceph.com')
         self.fs.remove('/config.json')
 
     def test_import_invalid_host(self):
