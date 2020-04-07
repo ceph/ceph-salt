@@ -11,7 +11,12 @@ import configshell_fb as configshell
 from configshell_fb.shell import locatedExpr
 
 from .core import CephNodeManager, SshKeyManager, CephNode
-from .exceptions import CephSaltException, MinionDoesNotExistInConfiguration, PillarFileNotPureYaml
+from .exceptions import (
+    CephSaltException,
+    MinionDoesNotExistInConfiguration,
+    PillarFileNotPureYaml,
+    ParamsException
+)
 from .params_helper import BooleanStringValidator, BooleanStringTransformer
 from .salt_utils import GrainsManager, PillarManager, SaltClient, CephOrch
 from .terminal_utils import PrettyPrinter as PP
@@ -352,6 +357,33 @@ CEPH_SALT_OPTIONS = {
                     },
                 }
             },
+            'registries': {
+                'type': 'list_dict',
+                'default': [],
+                'help': '''
+                        List of custom registries in v2 format.
+                        =======================================
+
+                        Add by specifying B{location}, B{prefix}, and B{insecure}. e.g.,
+
+                          add location=172.17.0.1:5000/docker.io prefix=docker.io insecure=true
+                        ''',
+                'params_spec': {
+                    'location': {
+                        'required': True
+                    },
+                    'prefix': {},
+                    'insecure': {
+                        'validator': BooleanStringValidator,
+                        'transformer': BooleanStringTransformer
+                    },
+                    'blocked': {
+                        'validator': BooleanStringValidator,
+                        'transformer': BooleanStringTransformer
+                    }
+                },
+                'handler': PillarHandler('ceph-salt:container:registries')
+            }
         }
     },
     'system_update': {
@@ -707,12 +739,13 @@ class ListDictOptionNode(OptionNode):
         assert required_params  # at least one parameter is required
         missing_params = required_params - set(kwargs.keys())
         if missing_params:
-            raise Exception('Required parameter(s) `{}` are missing.'.format(
+            raise ParamsException('Required parameter(s) are missing: {}.'.format(
                 ', '.join(missing_params)))
         # check if there are any unknown parameters
         unknown_params = set(kwargs.keys()) - all_params
         if unknown_params:
-            raise Exception('Unknown parameter(s): `{}`.'.format(', '.join(unknown_params)))
+            raise ParamsException(
+                'Unknown parameter(s): {}.'.format(', '.join(unknown_params)))
 
     def _format_params(self, kwargs):
         """Validate and format input parameters."""
@@ -723,7 +756,7 @@ class ListDictOptionNode(OptionNode):
             # validate the input value
             validator = spec[k].get('validator')
             if validator and not validator.validate(v):
-                raise Exception("Invalid value {} for {}".format(v, k))
+                raise ParamsException("Invalid value for parameter {}: {}.".format(k, v))
             # transform to native type from str
             transformer = spec[k].get('transformer')
             value[k] = transformer.transform(v) if transformer else v
@@ -735,9 +768,9 @@ class ListDictOptionNode(OptionNode):
             ListElementNode(str(len(self.value)), self, new_item)
             self.value.append(new_item)
             self.option_dict['handler'].save(self.value)
-            PP.pl_green('Value added.')
+            PP.pl_green('Item added.')
         else:
-            PP.pl_red('Value already exists.')
+            PP.pl_red('Item already exists.')
 
     def ui_command_remove(self, **kwargs):
         remove_item = self._format_params(kwargs)
@@ -752,14 +785,15 @@ class ListDictOptionNode(OptionNode):
             return False
         new_value = list(itertools.filterfalse(__match, self.value))
 
-        if len(new_value) != len(self.value):
+        remove_count = len(self.value) - len(new_value)
+        if remove_count > 0:
             self._remove_all_children()
             self.value = new_value
             self._add_children(self.value)
             self.option_dict['handler'].save(self.value)
-            PP.pl_green('Value removed.')
+            PP.pl_green('{} item(s) removed.'.format(remove_count))
         else:
-            PP.pl_red('Value not found.')
+            PP.pl_red('Item not found.')
 
     def ui_command_reset(self):
         '''
