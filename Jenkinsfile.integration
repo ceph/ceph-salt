@@ -3,6 +3,14 @@
 // base jenkins slave
 def jenkins_slave_base='storage-compute'
 
+def get_ceph_salt_git_branch(change_id) {
+    if (change_id.isEmpty()) {
+        return "master"
+    } else {
+        return "origin/pr-merged/" + String.valueOf(change_id)
+    }
+}
+
 pipeline {
     agent none
 
@@ -17,7 +25,7 @@ pipeline {
             steps {
                 build job: 'sesdev-integration/master', parameters: [
                     // Note: the origin/pr-merged/XXX syntax is possible due to https://github.com/SUSE/sesdev/pull/198
-                    string(name: 'CEPH_SALT_GIT_BRANCH', value: "origin/pr-merged/" + String.valueOf(env.CHANGE_ID)),
+                    string(name: 'CEPH_SALT_GIT_BRANCH', value: get_ceph_salt_git_branch(env.CHANGE_ID)),
                     string(name: 'CUSTOM_JOB_NAME', value: "ceph-salt PR-" + String.valueOf(env.CHANGE_ID)),
                     string(name: 'CUSTOM_JOB_DESC', value: String.valueOf(env.CHANGE_URL))
                 ]
