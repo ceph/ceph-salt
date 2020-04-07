@@ -407,6 +407,17 @@ CEPH_SALT_OPTIONS = {
                 Options to control the Ceph cluster bootstrap
                 ''',
         'options': {
+            'advanced': {
+                'type': 'dict',
+                'help': 'Cephadm bootstrap advanced arguments',
+                'params_spec': {
+                    'fsid': {},
+                    'mon-id': {},
+                    'mgr-id': {}
+                },
+                'default': {},
+                'handler': PillarHandler('ceph-salt:bootstrap_arguments')
+            },
             'ceph_conf': {
                 'type': 'conf',
                 'help': 'Bootstrap Ceph configuration',
@@ -807,7 +818,7 @@ class DictElementNode(configshell.ConfigNode):
         self.value = value
 
     def summary(self):
-        return self.value, None
+        return self.value or ' ', None
 
 
 class DictNode(OptionNode):
@@ -825,9 +836,12 @@ class DictNode(OptionNode):
         return '', None
 
     def ui_command_set(self, parameter, value):
-        """
-        Example: set "osd crush chooseleaf type" 0
-        """
+        params_spec = self.option_dict.get('params_spec')
+        if params_spec:
+            if parameter not in params_spec:
+                PP.pl_red("Invalid parameter '{}'. Valid parameters are {}".format(
+                    parameter, list(params_spec.keys())))
+                return
         child = None
         if parameter in self.value:
             child = self.get_child(parameter)
@@ -839,6 +853,15 @@ class DictNode(OptionNode):
             DictElementNode(parameter, value, self)
         PP.pl_green('Parameter set.')
 
+    def ui_complete_set(self, parameters, text, current_param):
+        matching = []
+        params_spec = self.option_dict.get('params_spec')
+        if params_spec:
+            for param in params_spec.keys():
+                if param.startswith(text):
+                    matching.append(param)
+        return matching
+
     def ui_command_remove(self, parameter):
         if parameter in self.value:
             self.value.pop(parameter)
@@ -847,6 +870,14 @@ class DictNode(OptionNode):
             PP.pl_green('Parameter removed.')
         else:
             PP.pl_red('Parameter not found.')
+
+    # pylint: disable=unused-argument
+    def ui_complete_remove(self, parameters, text, current_param):
+        matching = []
+        for param in self.value:
+            if param.startswith(text):
+                matching.append(param)
+        return matching
 
     def ui_command_reset(self):
         for key in self.value.keys():
