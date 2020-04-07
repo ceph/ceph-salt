@@ -910,6 +910,11 @@ class CephSaltConfigShell(configshell.ConfigShell):
         parser = Optional(path) + Optional(command) + Optional(parameters)
         self._parser = parser
 
+    def _parse_cmdline(self, line):
+        parse_results, path, command, pparams, kparams = super()._parse_cmdline(line)
+        # Case insensitive `path`
+        return parse_results, path.lower(), command, pparams, kparams
+
 
 def check_config_prerequesites():
     try:

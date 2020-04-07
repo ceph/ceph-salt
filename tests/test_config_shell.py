@@ -172,6 +172,14 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertFlagOption('/system_update/reboot',
                               'ceph-salt:updates:reboot')
 
+    def test_case_insensitive_path(self):
+        self.shell.run_cmdline('/ceph_cluster/minions add node1.ceph.com')
+        self.assertInSysOut('1 minion added.')
+        self.shell.run_cmdline('/Ceph_Cluster/Minions add node2.ceph.com')
+        self.assertInSysOut('1 minion added.')
+        self.shell.run_cmdline('/ceph_cluster/minions remove node2.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/minions remove node1.ceph.com')
+
     def test_export(self):
         self.shell.run_cmdline('/ceph_cluster/minions add node1.ceph.com')
         self.shell.run_cmdline('/ceph_cluster/minions add node2.ceph.com')
