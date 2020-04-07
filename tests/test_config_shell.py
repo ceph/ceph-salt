@@ -29,7 +29,7 @@ class ConfigShellTest(SaltMockTestCase):
         PillarManager.reload()
 
     def test_ceph_cluster_minions(self):
-        self.shell.run_cmdline('/Ceph_Cluster/Minions add node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/minions add node1.ceph.com')
         self.assertInSysOut('1 minion added.')
         self.assertGrains('node1.ceph.com', 'ceph-salt', {'member': True,
                                                           'roles': [],
@@ -38,7 +38,7 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), [])
         self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), None)
 
-        self.shell.run_cmdline('/Ceph_Cluster/Minions rm node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/minions rm node1.ceph.com')
         self.assertInSysOut('1 minion removed.')
         self.assertNotInGrains('node1.ceph.com', 'ceph-salt')
         self.assertEqual(PillarManager.get('ceph-salt:minions:all'), [])
@@ -46,25 +46,25 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), None)
 
     def test_ceph_cluster_minions_rm_with_roles(self):
-        self.shell.run_cmdline('/Ceph_Cluster/Minions add node1.ceph.com')
-        self.shell.run_cmdline('/Ceph_Cluster/Roles/Admin add node1.ceph.com')
-        self.shell.run_cmdline('/Ceph_Cluster/Roles/Bootstrap set node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/minions add node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/roles/admin add node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/roles/bootstrap set node1.ceph.com')
         self.clearSysOut()
 
-        self.shell.run_cmdline('/Ceph_Cluster/Minions rm node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/minions rm node1.ceph.com')
         self.assertInSysOut("Cannot remove host 'node1.ceph.com' because it has roles defined: "
                             "['admin', 'bootstrap']")
         self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1'])
 
-        self.shell.run_cmdline('/Ceph_Cluster/Roles/Admin rm node1.ceph.com')
-        self.shell.run_cmdline('/Ceph_Cluster/Roles/Bootstrap reset')
-        self.shell.run_cmdline('/Ceph_Cluster/Minions rm node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/roles/admin rm node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/roles/bootstrap reset')
+        self.shell.run_cmdline('/ceph_cluster/minions rm node1.ceph.com')
 
     def test_ceph_cluster_roles_admin(self):
-        self.shell.run_cmdline('/Ceph_Cluster/Minions add node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/minions add node1.ceph.com')
         self.clearSysOut()
 
-        self.shell.run_cmdline('/Ceph_Cluster/Roles/Admin add node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/roles/admin add node1.ceph.com')
         self.assertInSysOut('1 minion added.')
         self.assertGrains('node1.ceph.com', 'ceph-salt', {'member': True,
                                                           'roles': ['admin'],
@@ -73,7 +73,7 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), ['node1'])
         self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), None)
 
-        self.shell.run_cmdline('/Ceph_Cluster/Roles/Admin rm node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/roles/admin rm node1.ceph.com')
         self.assertInSysOut('1 minion removed.')
         self.assertGrains('node1.ceph.com', 'ceph-salt', {'member': True,
                                                           'roles': [],
@@ -82,15 +82,15 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), [])
         self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), None)
 
-        self.shell.run_cmdline('/Ceph_Cluster/Minions rm node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/minions rm node1.ceph.com')
 
     def test_ceph_cluster_roles_bootstrap(self):
         with pytest.raises(MinionDoesNotExistInConfiguration):
-            self.shell.run_cmdline('/Ceph_Cluster/Roles/Bootstrap set node1.ceph.com')
-        self.shell.run_cmdline('/Ceph_Cluster/Minions add node1.ceph.com')
+            self.shell.run_cmdline('/ceph_cluster/roles/bootstrap set node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/minions add node1.ceph.com')
         self.clearSysOut()
 
-        self.shell.run_cmdline('/Ceph_Cluster/Roles/Bootstrap set node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/roles/bootstrap set node1.ceph.com')
         self.assertInSysOut('Value set.')
         self.assertGrains('node1.ceph.com', 'ceph-salt', {'member': True,
                                                           'roles': [],
@@ -99,7 +99,7 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), [])
         self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), 'node1.ceph.com')
 
-        self.shell.run_cmdline('/Ceph_Cluster/Roles/Bootstrap reset')
+        self.shell.run_cmdline('/ceph_cluster/roles/bootstrap reset')
         self.assertInSysOut('Value reset.')
         self.assertGrains('node1.ceph.com', 'ceph-salt', {'member': True,
                                                           'roles': [],
@@ -108,75 +108,75 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), [])
         self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), None)
 
-        self.shell.run_cmdline('/Ceph_Cluster/Minions rm node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/minions rm node1.ceph.com')
 
     def test_containers_images_ceph(self):
-        self.assertValueOption('/Containers/Images/ceph',
+        self.assertValueOption('/containers/images/ceph',
                                'ceph-salt:container:images:ceph',
                                'myvalue')
 
     def test_cephadm_bootstrap(self):
-        self.assertFlagOption('/Cephadm_Bootstrap',
+        self.assertFlagOption('/cephadm_bootstrap',
                               'ceph-salt:bootstrap_enabled')
 
     def test_cephadm_bootstrap_ceph_conf(self):
-        self.assertConfigOption('/Cephadm_Bootstrap/Ceph_Conf',
+        self.assertConfigOption('/cephadm_bootstrap/ceph_conf',
                                 'ceph-salt:bootstrap_ceph_conf')
 
     def test_cephadm_bootstrap_dashboard_password(self):
-        self.assertValueOption('/Cephadm_Bootstrap/Dashboard/password',
+        self.assertValueOption('/cephadm_bootstrap/dashboard/password',
                                'ceph-salt:dashboard:password',
                                'mypassword')
 
     def test_cephadm_bootstrap_dashboard_username(self):
-        self.assertValueOption('/Cephadm_Bootstrap/Dashboard/username',
+        self.assertValueOption('/cephadm_bootstrap/dashboard/username',
                                'ceph-salt:dashboard:username',
                                'myusername')
 
     def test_ssh(self):
-        self.shell.run_cmdline('/SSH generate')
+        self.shell.run_cmdline('/ssh generate')
         self.assertInSysOut('Key pair generated.')
         self.assertNotEqual(PillarManager.get('ceph-salt:ssh:private_key'), None)
         self.assertNotEqual(PillarManager.get('ceph-salt:ssh:public_key'), None)
 
     def test_ssh_private_key(self):
-        self.assertValueOption('/SSH/Private_Key',
+        self.assertValueOption('/ssh/private_key',
                                'ceph-salt:ssh:private_key',
                                'myprivatekey')
 
     def test_ssh_public_key(self):
-        self.assertValueOption('/SSH/Public_Key',
+        self.assertValueOption('/ssh/public_key',
                                'ceph-salt:ssh:public_key',
                                'mypublickey')
 
     def test_time_server(self):
-        self.assertFlagOption('/Time_Server',
+        self.assertFlagOption('/time_server',
                               'ceph-salt:time_server:enabled',
                               False)
 
     def test_time_server_external_servers(self):
-        self.assertListOption('/Time_Server/External_Servers',
+        self.assertListOption('/time_server/external_servers',
                               'ceph-salt:time_server:external_time_servers',
                               ['server1', 'server2'])
 
     def test_time_server_server_hostname(self):
-        self.assertValueOption('/Time_Server/Server_Hostname',
+        self.assertValueOption('/time_server/server_hostname',
                                'ceph-salt:time_server:server_host',
                                'server1')
 
     def test_system_update_packages(self):
-        self.assertFlagOption('/System_Update/Packages',
+        self.assertFlagOption('/system_update/packages',
                               'ceph-salt:updates:enabled')
 
     def test_system_update_reboot(self):
-        self.assertFlagOption('/System_Update/Reboot',
+        self.assertFlagOption('/system_update/reboot',
                               'ceph-salt:updates:reboot')
 
     def test_export(self):
-        self.shell.run_cmdline('/Ceph_Cluster/Minions add node1.ceph.com')
-        self.shell.run_cmdline('/Ceph_Cluster/Minions add node2.ceph.com')
-        self.shell.run_cmdline('/Ceph_Cluster/Roles/Admin add node1.ceph.com')
-        self.shell.run_cmdline('/Time_Server/Server_Hostname set server1')
+        self.shell.run_cmdline('/ceph_cluster/minions add node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/minions add node2.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/roles/admin add node1.ceph.com')
+        self.shell.run_cmdline('/time_server/server_hostname set server1')
         self.clearSysOut()
 
         self.assertTrue(run_export(False))
@@ -189,10 +189,10 @@ class ConfigShellTest(SaltMockTestCase):
                 'server_host': 'server1'
             }})
 
-        self.shell.run_cmdline('/Time_Server/Server_Hostname reset')
-        self.shell.run_cmdline('/Ceph_Cluster/Roles/Admin rm node1.ceph.com')
-        self.shell.run_cmdline('/Ceph_Cluster/Minions rm node2.ceph.com')
-        self.shell.run_cmdline('/Ceph_Cluster/Minions rm node1.ceph.com')
+        self.shell.run_cmdline('/time_server/server_hostname reset')
+        self.shell.run_cmdline('/ceph_cluster/roles/admin rm node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/minions rm node2.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/minions rm node1.ceph.com')
 
     def test_import(self):
         self.fs.create_file('/config.json', contents=json.dumps({
@@ -218,10 +218,10 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertIsNone(PillarManager.get('ceph-salt:bootstrap_minion'))
         self.assertEqual(PillarManager.get('ceph-salt:time_server:server_host'), 'server1')
 
-        self.shell.run_cmdline('/Time_Server/Server_Hostname reset')
-        self.shell.run_cmdline('/Ceph_Cluster/Roles/Admin rm node1.ceph.com')
-        self.shell.run_cmdline('/Ceph_Cluster/Minions rm node2.ceph.com')
-        self.shell.run_cmdline('/Ceph_Cluster/Minions rm node1.ceph.com')
+        self.shell.run_cmdline('/time_server/server_hostname reset')
+        self.shell.run_cmdline('/ceph_cluster/roles/admin rm node1.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/minions rm node2.ceph.com')
+        self.shell.run_cmdline('/ceph_cluster/minions rm node1.ceph.com')
         self.fs.remove('/config.json')
 
     def test_import_invalid_host(self):
