@@ -785,7 +785,7 @@ class MinionsOptionNode(OptionNode):
             MinionOptionNode(value, option_dict['handler'].children_handler(value), self)
 
     def _list_commands(self):
-        return ['add', 'rm']
+        return ['add', 'remove']
 
     def summary(self):
         value_list, val_type = self._find_value()
@@ -818,7 +818,7 @@ class MinionsOptionNode(OptionNode):
         elif not has_errors:
             PP.pl_red('No minions matched "{}".'.format(minion_id))
 
-    def ui_command_rm(self, minion_id):
+    def ui_command_remove(self, minion_id):
         matching = fnmatch.filter(self.value, minion_id)
         counter = 0
         has_errors = False
