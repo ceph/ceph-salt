@@ -4,7 +4,7 @@ import fnmatch
 import json
 
 
-from pyparsing import alphanums, OneOrMore, Optional, Regex, Suppress, Word
+from pyparsing import alphanums, OneOrMore, Optional, Regex, Suppress, Word, QuotedString
 
 import configshell_fb as configshell
 from configshell_fb.shell import locatedExpr
@@ -686,25 +686,10 @@ class ConfSectionNode(OptionNode):
     def summary(self):
         return '', None
 
-    @staticmethod
-    def _normalize(text):
-        text = text.strip()
-        if text.startswith('"') and text.endswith('"'):
-            text = text[1:-1]
-        return text.strip()
-
-    def ui_command_set(self, expr):
+    def ui_command_set(self, parameter, value):
         """
-        Expression has "<key> = <value>" format.
-
-        Example: set osd crush chooseleaf type = 0
+        Example: set "osd crush chooseleaf type" 0
         """
-        separator_count = expr.count('=')
-        if separator_count != 1:
-            PP.pl_red("Invalid format, try 'set <key> = <value>'.")
-            return
-        expr = self._normalize(expr)
-        parameter, value = [self._normalize(s) for s in expr.split('=')]
         child = None
         if parameter in self.value:
             child = self.get_child(parameter)
@@ -717,7 +702,6 @@ class ConfSectionNode(OptionNode):
         PP.pl_green('Parameter set.')
 
     def ui_command_remove(self, parameter):
-        parameter = self._normalize(parameter)
         if parameter in self.value:
             self.value.pop(parameter)
             self.option_dict['handler'].save(self.value)
@@ -913,7 +897,7 @@ class CephSaltConfigShell(configshell.ConfigShell):
             '~/.ceph_salt_config_shell')
         # Grammar of the command line
         command = locatedExpr(Word(alphanums + '_'))('command')
-        var = Word(alphanums + ';,=_\+/.<>()~@:-%[]*{}" ')  # adding '*'
+        var = QuotedString('"') | QuotedString("'") | Word(alphanums + '?;&*$!#,=_\+/.<>()~@:-%[]')
         value = var
         keyword = Word(alphanums + '_\-')
         kparam = locatedExpr(keyword + Suppress('=') + Optional(value, default=''))('kparams*')

@@ -79,6 +79,11 @@ def config_shell(config_args):
     Starts ceph-salt configuration shell
     """
     if config_args:
+        def _quote(text):
+            if ' ' in text:
+                return '"{}"'.format(text)
+            return text
+        config_args = [_quote(config_arg) for config_arg in config_args]
         if not run_config_cmdline(" ".join(config_args)):
             sys.exit(1)
     else:
