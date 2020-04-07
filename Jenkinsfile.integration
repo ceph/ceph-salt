@@ -4,7 +4,7 @@
 def jenkins_slave_base='storage-compute'
 
 def get_ceph_salt_git_branch(change_id) {
-    if (change_id.isEmpty()) {
+    if (!change_id || change_id.isEmpty()) {
         return "master"
     } else {
         return "origin/pr-merged/" + String.valueOf(change_id)
