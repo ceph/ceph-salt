@@ -296,3 +296,14 @@ class ConfigShellTest(SaltMockTestCase):
             self.shell.run_cmdline('{} remove {}'.format(path, value))
             self.assertInSysOut('Value removed.')
         self.assertEqual(PillarManager.get(pillar_key), [])
+
+    def assertListDictOption(self, path, pillar_key, values, check_values):
+        for value in values:
+            self.shell.run_cmdline('{} add {}'.format(path, value))
+            self.assertInSysOut('Value added.')
+        self.assertEqual(PillarManager.get(pillar_key), check_values)
+
+        for value in values:
+            self.shell.run_cmdline('{} remove {}'.format(path, value))
+            self.assertInSysOut('Value removed.')
+        self.assertEqual(PillarManager.get(pillar_key), [])

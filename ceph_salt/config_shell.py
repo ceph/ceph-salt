@@ -1,4 +1,5 @@
 # pylint: disable=arguments-differ
+import itertools
 import logging
 import fnmatch
 import json
@@ -11,6 +12,7 @@ from configshell_fb.shell import locatedExpr
 
 from .core import CephNodeManager, SshKeyManager, CephNode
 from .exceptions import CephSaltException, MinionDoesNotExistInConfiguration, PillarFileNotPureYaml
+from .params_helper import BooleanStringValidator, BooleanStringTransformer
 from .salt_utils import GrainsManager, PillarManager, SaltClient, CephOrch
 from .terminal_utils import PrettyPrinter as PP
 from .validate.config import validate_config
@@ -624,9 +626,22 @@ class FlagOptionNode(OptionNode):
         PP.pl_green('Disabled.')
 
 
+class KeyValueNode(configshell.ConfigNode):
+    def __init__(self, key, value, parent):
+        configshell.ConfigNode.__init__(self, key, parent)
+        self._value = str(value)
+
+    def summary(self):
+        return self._value, None
+
+
 class ListElementNode(configshell.ConfigNode):
-    def __init__(self, value, parent):
+    def __init__(self, value, parent, child_data=None):
         configshell.ConfigNode.__init__(self, value, parent)
+        if child_data is not None:
+            if isinstance(child_data, dict):
+                for k, v in child_data.items():
+                    KeyValueNode(k, v, self)
 
 
 class ListOptionNode(OptionNode):
@@ -661,6 +676,97 @@ class ListOptionNode(OptionNode):
             PP.pl_green('Value removed.')
         else:
             PP.pl_red('Value not found.')
+
+
+class ListDictOptionNode(OptionNode):
+    def __init__(self, option_name, option_dict, parent):
+        super(ListDictOptionNode, self).__init__(option_name, option_dict, parent)
+        value_list, _ = self._find_value()
+        self.value = list(value_list)
+        self._add_children(self.value)
+
+    def _add_children(self, items):
+        for idx, item in enumerate(items):
+            ListElementNode(str(idx), self, item)
+
+    def _remove_all_children(self):
+        for idx in range(len(self.value)):
+            self.remove_child(self.get_child(str(idx)))
+
+    def _list_commands(self):
+        return ['add', 'remove']
+
+    def summary(self):
+        value_list, _ = self._find_value()
+        return str(len(value_list)) if value_list else 'empty', None
+
+    def _precheck_params(self, spec, kwargs):
+        # check required parameters
+        all_params = set(spec.keys())
+        required_params = {k for k, v in spec.items() if v.get('required', False)}
+        assert required_params  # at least one parameter is required
+        missing_params = required_params - set(kwargs.keys())
+        if missing_params:
+            raise Exception('Required parameter(s) `{}` are missing.'.format(
+                ', '.join(missing_params)))
+        # check if there are any unknown parameters
+        unknown_params = set(kwargs.keys()) - all_params
+        if unknown_params:
+            raise Exception('Unknown parameter(s): `{}`.'.format(', '.join(unknown_params)))
+
+    def _format_params(self, kwargs):
+        """Validate and format input parameters."""
+        spec = self.option_dict.get('params_spec')
+        self._precheck_params(spec, kwargs)
+        value = {}
+        for k, v in kwargs.items():
+            # validate the input value
+            validator = spec[k].get('validator')
+            if validator and not validator.validate(v):
+                raise Exception("Invalid value {} for {}".format(v, k))
+            # transform to native type from str
+            transformer = spec[k].get('transformer')
+            value[k] = transformer.transform(v) if transformer else v
+        return value
+
+    def ui_command_add(self, **kwargs):
+        new_item = self._format_params(kwargs)
+        if new_item not in self.value:
+            ListElementNode(str(len(self.value)), self, new_item)
+            self.value.append(new_item)
+            self.option_dict['handler'].save(self.value)
+            PP.pl_green('Value added.')
+        else:
+            PP.pl_red('Value already exists.')
+
+    def ui_command_remove(self, **kwargs):
+        remove_item = self._format_params(kwargs)
+
+        # do not include items that have specified KVs
+        def __match(item):
+            for search_k, search_v in remove_item.items():
+                if item.get(search_k) != search_v:
+                    break
+            else:
+                return True
+            return False
+        new_value = list(itertools.filterfalse(__match, self.value))
+
+        if len(new_value) != len(self.value):
+            self._remove_all_children()
+            self.value = new_value
+            self._add_children(self.value)
+            self.option_dict['handler'].save(self.value)
+            PP.pl_green('Value removed.')
+        else:
+            PP.pl_red('Value not found.')
+
+    def ui_command_reset(self):
+        '''
+        Resets option value to the default
+        '''
+        self._remove_all_children()
+        super(ListDictOptionNode, self).ui_command_reset()
 
 
 class ConfElementNode(configshell.ConfigNode):
@@ -869,6 +975,8 @@ def _generate_option_node(option_name, option_dict, parent):
         FlagOptionNode(option_name, option_dict, parent)
     elif option_dict.get('type', None) == 'list':
         ListOptionNode(option_name, option_dict, parent)
+    elif option_dict.get('type', None) == 'list_dict':
+        ListDictOptionNode(option_name, option_dict, parent)
     elif option_dict.get('type', None) == 'conf':
         ConfOptionNode(option_name, option_dict, parent)
     elif option_dict.get('type', None) == 'minions':
