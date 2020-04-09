@@ -28,3 +28,7 @@ class MinionDoesNotExistInConfiguration(CephSaltException):
     def __init__(self, minion_id):
         super(MinionDoesNotExistInConfiguration, self).__init__(
             "Minion '{}' does not exist in configuration".format(minion_id))
+
+
+class ParamsException(CephSaltException):
+    pass

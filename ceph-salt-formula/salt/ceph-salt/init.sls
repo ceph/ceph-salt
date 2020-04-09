@@ -4,6 +4,7 @@ include:
     - .provision-begin
     - .sshkey
     - .software
+    - .container
     - .apparmor
     - .time
     - .cephtools

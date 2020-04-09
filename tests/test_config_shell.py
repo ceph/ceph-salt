@@ -115,6 +115,24 @@ class ConfigShellTest(SaltMockTestCase):
                                'ceph-salt:container:images:ceph',
                                'myvalue')
 
+    def test_containers_registries(self):
+        self.assertListDictOption('/containers/registries',
+                                  'ceph-salt:container:registries',
+                                  ['location=172.17.0.1:5000 insecure=false',
+                                   ('location=192.168.0.1:8080/docker.io prefix=docker.io'
+                                    ' insecure=1')],
+                                  [
+                                      {
+                                          'location': '172.17.0.1:5000',
+                                          'insecure': False
+                                      },
+                                      {
+                                          'location': '192.168.0.1:8080/docker.io',
+                                          'prefix': 'docker.io',
+                                          'insecure': True
+                                      }
+                                  ])
+
     def test_cephadm_bootstrap(self):
         self.assertFlagOption('/cephadm_bootstrap',
                               'ceph-salt:bootstrap_enabled')
@@ -295,4 +313,15 @@ class ConfigShellTest(SaltMockTestCase):
         for value in values:
             self.shell.run_cmdline('{} remove {}'.format(path, value))
             self.assertInSysOut('Value removed.')
+        self.assertEqual(PillarManager.get(pillar_key), [])
+
+    def assertListDictOption(self, path, pillar_key, values, check_values):
+        for value in values:
+            self.shell.run_cmdline('{} add {}'.format(path, value))
+            self.assertInSysOut('Item added.')
+        self.assertEqual(PillarManager.get(pillar_key), check_values)
+
+        for value in values:
+            self.shell.run_cmdline('{} remove {}'.format(path, value))
+            self.assertInSysOut('item(s) removed.')
         self.assertEqual(PillarManager.get(pillar_key), [])
