@@ -989,7 +989,7 @@ class MinionsOptionNode(OptionNode):
                 matching.append(minion)
         return matching
 
-    def ui_complete_rm(self, parameters, text, current_param):
+    def ui_complete_remove(self, parameters, text, current_param):
         matching = []
         for minion in self.value:
             if minion.startswith(text):
