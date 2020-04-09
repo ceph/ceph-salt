@@ -11,10 +11,10 @@
     - makedirs: True
     - failhard: True
 
-{% if 'admin' in grains['ceph-salt']['roles'] %}
 # private key
-/root/.ssh/id_rsa:
+create ceph-salt-ssh-id_rsa:
   file.managed:
+    - name: /tmp/ceph-salt-ssh-id_rsa
     - user: root
     - group: root
     - mode: '0600'
@@ -22,14 +22,14 @@
     - failhard: True
 
 # public key
-/root/.ssh/id_rsa.pub:
+create ceph-salt-ssh-id_rsa.pub:
   file.managed:
+    - name: /tmp/ceph-salt-ssh-id_rsa.pub
     - user: root
     - group: root
     - mode: '0644'
     - contents_pillar: ceph-salt:ssh:public_key
     - failhard: True
-{% endif %}
 
 # add public key to authorized_keys
 install ssh key:

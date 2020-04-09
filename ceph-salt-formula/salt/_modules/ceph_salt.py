@@ -2,7 +2,8 @@
 import json
 
 def get_remote_grain(host, grain):
-    ret = __salt__['cmd.run_all']("ssh -o StrictHostKeyChecking=no root@{} "
+    ret = __salt__['cmd.run_all']("ssh -o StrictHostKeyChecking=no "
+                                  "-i /tmp/ceph-salt-ssh-id_rsa root@{} "
                                   "'salt-call grains.get --out=json --out-indent=-1 {}'".format(
                                       host, grain))
     if ret['retcode'] != 0:
@@ -10,5 +11,6 @@ def get_remote_grain(host, grain):
     return json.loads(ret['stdout'])['local']
 
 def set_remote_grain(host, grain, value):
-    return __salt__['cmd.run_all']("ssh -o StrictHostKeyChecking=no root@{} "
-                                  "'salt-call grains.set {} {}'".format(host, grain, value))
+    return __salt__['cmd.run_all']("ssh -o StrictHostKeyChecking=no "
+                                   "-i /tmp/ceph-salt-ssh-id_rsa root@{} "
+                                   "'salt-call grains.set {} {}'".format(host, grain, value))

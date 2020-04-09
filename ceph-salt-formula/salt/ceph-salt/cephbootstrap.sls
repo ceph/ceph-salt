@@ -22,6 +22,7 @@ create bootstrap ceph conf:
 wait for other minions:
   ceph_salt.wait_for_grain:
     - grain: ceph-salt:execution:provisioned
+    - hosts: {{ pillar['ceph-salt']['minions']['all'] }}
     - failhard: True
 {{ macros.end_step('Wait for other minions') }}
 
@@ -66,19 +67,32 @@ set ceph-dashboard password:
 configure ssh orchestrator:
   cmd.run:
     - name: |
-        ceph config-key set mgr/cephadm/ssh_identity_key -i ~/.ssh/id_rsa
-        ceph config-key set mgr/cephadm/ssh_identity_pub -i ~/.ssh/id_rsa.pub
+        ceph config-key set mgr/cephadm/ssh_identity_key -i /tmp/ceph-salt-ssh-id_rsa
+        ceph config-key set mgr/cephadm/ssh_identity_pub -i /tmp/ceph-salt-ssh-id_rsa.pub
         ceph mgr module enable cephadm && \
-        ceph orch set backend cephadm && \
-{% for minion in pillar['ceph-salt']['minions']['all'] %}
-        ceph orch host add {{ minion }} && \
-{% endfor %}
-        true
+        ceph orch set backend cephadm
     - onchanges:
       - cmd: run cephadm bootstrap
     - failhard: True
 
 {{ macros.end_step('Configure cephadm MGR module') }}
+
+set bootstrapped:
+  grains.present:
+    - name: ceph-salt:execution:bootstrapped
+    - value: True
+
+{% else %}
+
+{% set bootstrap_host = pillar['ceph-salt']['bootstrap_minion'].split('.', 1)[0] %}
+
+{{ macros.begin_step('Wait for bootstrap minion') }}
+wait for bootstrap minion:
+  ceph_salt.wait_for_grain:
+    - grain: ceph-salt:execution:bootstrapped
+    - hosts: {{ [bootstrap_host] }}
+    - failhard: True
+{{ macros.end_step('Wait for bootstrap minion') }}
 
 {% endif %}
 
