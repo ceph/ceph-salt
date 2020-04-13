@@ -39,7 +39,15 @@ class CephNode:
             self.execution = result[self.minion_id]['execution']
 
         result = GrainsManager.get_grain(self.minion_id, 'fqdn_ip4')
-        self.public_ip = result[self.minion_id][0]
+        public_ip = result[self.minion_id][0]
+        if public_ip == '127.0.0.1':
+            logger.debug('fqdn_ipv4 grain is 127.0.0.1, falling back to ipv4 grain')
+            result = GrainsManager.get_grain(self.minion_id, 'ipv4')
+            for addr in result[self.minion_id]:
+                if addr != '127.0.0.1':
+                    public_ip = addr
+                    break
+        self.public_ip = public_ip
 
     def add_role(self, role):
         self.roles.add(role)
