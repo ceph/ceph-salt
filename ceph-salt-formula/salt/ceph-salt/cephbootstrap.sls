@@ -38,6 +38,7 @@ run cephadm bootstrap:
                 --initial-dashboard-user {{ dashboard_username }} \
                 --output-keyring /etc/ceph/ceph.client.admin.keyring \
                 --output-config /etc/ceph/ceph.conf \
+                --skip-monitoring-stack \
                 --skip-prepare-host \
                 --skip-pull \
                 --skip-ssh > /var/log/ceph/cephadm.log 2>&1
