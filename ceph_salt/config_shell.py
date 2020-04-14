@@ -293,8 +293,32 @@ class TimeServerGroupHandler(OptionHandler):
 
 
 class TimeServerHandler(PillarHandler):
+    def __init__(self):
+        super().__init__('ceph-salt:time_server:server_host')
+
+    def save(self, value):
+        node = CephNodeManager.ceph_salt_node_by_hostname(value)
+        if node:
+            PillarManager.set('ceph-salt:time_server:subnet', node.public_subnet)
+        else:
+            PillarManager.reset('ceph-salt:time_server:subnet')
+        super().save(value)
+
     def possible_values(self):
         return [n.minion_id for n in CephNodeManager.ceph_salt_nodes().values()]
+
+
+class TimeSubnetHandler(PillarHandler):
+    def __init__(self):
+        super().__init__('ceph-salt:time_server:subnet')
+
+    def possible_values(self):
+        time_server_host = PillarManager.get('ceph-salt:time_server:server_host')
+        if time_server_host:
+            node = CephNodeManager.ceph_salt_node_by_hostname(time_server_host)
+            if node and node.subnets:
+                return node.subnets
+        return []
 
 
 CEPH_SALT_OPTIONS = {
@@ -481,7 +505,13 @@ CEPH_SALT_OPTIONS = {
             'server_hostname': {
                 'default': None,
                 'help': 'FQDN of the time server node',
-                'handler': TimeServerHandler('ceph-salt:time_server:server_host'),
+                'handler': TimeServerHandler(),
+                'required': True
+            },
+            'subnet': {
+                'default': None,
+                'help': 'Subnet of the time server',
+                'handler': TimeSubnetHandler(),
                 'required': True
             },
         }

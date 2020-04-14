@@ -32,6 +32,14 @@ class ValidateConfigTest(SaltMockTestCase):
         PillarManager.set('ceph-salt:bootstrap_mon_ip', '127.0.0.1')
         self.assertEqual(validate_config([]), "Mon IP cannot be the loopback interface IP")
 
+    def test_no_time_server_host(self):
+        PillarManager.reset('ceph-salt:time_server:server_host')
+        self.assertEqual(validate_config([]), "No time server host specified in config")
+
+    def test_no_time_server_subnet(self):
+        PillarManager.reset('ceph-salt:time_server:subnet')
+        self.assertEqual(validate_config([]), "No time server subnet specified in config")
+
     def test_admin_not_cluster_minion(self):
         PillarManager.set('ceph-salt:bootstrap_minion', 'node3.ceph.com')
         PillarManager.set('ceph-salt:minions:admin', ['node3'])
@@ -48,6 +56,8 @@ class ValidateConfigTest(SaltMockTestCase):
     def create_valid_config(cls):
         PillarManager.set('ceph-salt:bootstrap_minion', 'node1.ceph.com')
         PillarManager.set('ceph-salt:bootstrap_mon_ip', '10.20.188.201')
+        PillarManager.set('ceph-salt:time_server:server_host', 'node1.ceph.com')
+        PillarManager.set('ceph-salt:time_server:subnet', '10.20.188.0/24')
         PillarManager.set('ceph-salt:minions:all', ['node1', 'node2'])
         PillarManager.set('ceph-salt:minions:admin', ['node1'])
         PillarManager.set('ceph-salt:container:images:ceph', 'docker.io/ceph/daemon-base:latest')

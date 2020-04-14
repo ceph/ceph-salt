@@ -178,9 +178,19 @@ class ConfigShellTest(SaltMockTestCase):
                               ['server1', 'server2'])
 
     def test_time_server_server_hostname(self):
+        self.shell.run_cmdline('/ceph_cluster/minions add node1.ceph.com')
+        self.clearSysOut()
+
         self.assertValueOption('/time_server/server_hostname',
                                'ceph-salt:time_server:server_host',
-                               'server1')
+                               'node1.ceph.com')
+
+        self.shell.run_cmdline('/ceph_cluster/minions remove node1.ceph.com')
+
+    def test_time_server_subnet(self):
+        self.assertValueOption('/time_server/subnet',
+                               'ceph-salt:time_server:subnet',
+                               '10.20.188.0/24')
 
     def test_system_update_packages(self):
         self.assertFlagOption('/system_update/packages',
@@ -194,7 +204,8 @@ class ConfigShellTest(SaltMockTestCase):
         self.shell.run_cmdline('/ceph_cluster/minions add node1.ceph.com')
         self.shell.run_cmdline('/ceph_cluster/minions add node2.ceph.com')
         self.shell.run_cmdline('/ceph_cluster/roles/admin add node1.ceph.com')
-        self.shell.run_cmdline('/time_server/server_hostname set server1')
+        self.shell.run_cmdline('/time_server/server_hostname set node1.ceph.com')
+        self.shell.run_cmdline('/time_server/subnet set 10.20.188.0/24')
         self.clearSysOut()
 
         self.assertTrue(run_export(False))
@@ -204,9 +215,11 @@ class ConfigShellTest(SaltMockTestCase):
                 'admin': ['node1']
             },
             'time_server': {
-                'server_host': 'server1'
+                'server_host': 'node1.ceph.com',
+                'subnet': '10.20.188.0/24'
             }})
 
+        self.shell.run_cmdline('/time_server/subnet reset')
         self.shell.run_cmdline('/time_server/server_hostname reset')
         self.shell.run_cmdline('/ceph_cluster/roles/admin remove node1.ceph.com')
         self.shell.run_cmdline('/ceph_cluster/minions remove node2.ceph.com')
@@ -219,7 +232,8 @@ class ConfigShellTest(SaltMockTestCase):
                 'admin': ['node1']
             },
             'time_server': {
-                'server_host': 'server1'
+                'server_host': 'node1.ceph.com',
+                'subnet': '10.20.188.0/24'
             }}))
         self.assertTrue(run_import("/config.json"))
         self.assertInSysOut('Configuration imported.')
@@ -234,12 +248,15 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1', 'node2'])
         self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), ['node1'])
         self.assertIsNone(PillarManager.get('ceph-salt:bootstrap_minion'))
-        self.assertEqual(PillarManager.get('ceph-salt:time_server:server_host'), 'server1')
+        self.assertEqual(PillarManager.get('ceph-salt:time_server:server_host'), 'node1.ceph.com')
+        self.assertEqual(PillarManager.get('ceph-salt:time_server:subnet'), '10.20.188.0/24')
 
+        self.shell.run_cmdline('/time_server/subnet reset')
         self.shell.run_cmdline('/time_server/server_hostname reset')
         self.shell.run_cmdline('/ceph_cluster/roles/admin remove node1.ceph.com')
         self.shell.run_cmdline('/ceph_cluster/minions remove node2.ceph.com')
         self.shell.run_cmdline('/ceph_cluster/minions remove node1.ceph.com')
+
         self.fs.remove('/config.json')
 
     def test_import_invalid_host(self):

@@ -138,6 +138,14 @@ class CephOrchMock:
         return cls.host_ls_result
 
 
+class NetworkMock:
+    subnets_result = []
+
+    @classmethod
+    def subnets(cls):
+        return cls.subnets_result
+
+
 class SaltLocalClientMock:
 
     def __init__(self):
@@ -174,6 +182,8 @@ class SaltLocalClientMock:
                 result[tgt] = getattr(ServiceMock, func)(*args)
             elif mod == 'ceph_orch':
                 result[tgt] = getattr(CephOrchMock, func)(*args)
+            elif mod == 'network':
+                result[tgt] = getattr(NetworkMock, func)(*args)
             else:
                 raise NotImplementedError()
 
