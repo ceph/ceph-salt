@@ -1,8 +1,8 @@
 {% import 'macros.yml' as macros %}
 
-{{ macros.begin_stage('Bootstrap the Ceph cluster') }}
-
 {% if grains['id'] == pillar['ceph-salt']['bootstrap_minion'] %}
+
+{{ macros.begin_stage('Bootstrap the Ceph cluster') }}
 
 {% set bootstrap_ceph_conf = pillar['ceph-salt'].get('bootstrap_ceph_conf', {}) %}
 
@@ -77,23 +77,6 @@ configure ssh orchestrator:
 
 {{ macros.end_step('Configure cephadm MGR module') }}
 
-set bootstrapped:
-  grains.present:
-    - name: ceph-salt:execution:bootstrapped
-    - value: True
-
-{% else %}
-
-{% set bootstrap_host = pillar['ceph-salt']['bootstrap_minion'].split('.', 1)[0] %}
-
-{{ macros.begin_step('Wait for bootstrap minion') }}
-wait for bootstrap minion:
-  ceph_salt.wait_for_grain:
-    - grain: ceph-salt:execution:bootstrapped
-    - hosts: {{ [bootstrap_host] }}
-    - failhard: True
-{{ macros.end_step('Wait for bootstrap minion') }}
+{{ macros.end_stage('Bootstrap the Ceph cluster') }}
 
 {% endif %}
-
-{{ macros.end_stage('Bootstrap the Ceph cluster') }}

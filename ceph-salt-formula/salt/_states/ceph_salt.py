@@ -51,7 +51,7 @@ def reboot_if_needed(name):
     return ret
 
 
-def wait_for_grain(name, grain, hosts, timeout=600):
+def wait_for_grain(name, grain, hosts, timeout=1800):
     ret = {'name': name, 'changes': {}, 'comment': '', 'result': False}
     completed_counter = 0
     starttime = time.time()
@@ -71,8 +71,6 @@ def wait_for_grain(name, grain, hosts, timeout=600):
             grain_value = __salt__['ceph_salt.get_remote_grain'](host, grain)
             if grain_value:
                 completed_counter += 1
-        logger.info("Waiting for grain '%s' (%s/%s)", grain,
-                                                      completed_counter,
-                                                      len(hosts))
+        logger.info("Waiting for grain '%s' (%s/%s)", grain, completed_counter, len(hosts))
     ret['result'] = True
     return ret
