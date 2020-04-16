@@ -9,12 +9,10 @@ include:
     - .time
     - .cephtools
     - .provision-end
-{% if pillar['ceph-salt'].get('bootstrap_enabled', True) %}
     - .cephbootstrap
     - .find-admin-host
     - .cephorch
     - .ceph-admin
-{% endif %}
     - .cleanup
 
 {% else %}

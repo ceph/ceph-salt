@@ -234,37 +234,6 @@ class SshPublicKeyHandler(PillarHandler):
             return str(ex), False
 
 
-class FlagGroupPillarHandler(OptionHandler):
-    def __init__(self, pillar_path, default):
-        self.pillar_path = pillar_path
-        self.default = default
-
-    def commands_map(self):
-        return {
-            'enable': self.enable,
-            'disable': self.disable,
-            'reset': self.reset
-        }
-
-    def enable(self):
-        PillarManager.set(self.pillar_path, True)
-        PP.pl_green('Enabled.')
-
-    def disable(self):
-        PillarManager.set(self.pillar_path, False)
-        PP.pl_green('Disabled.')
-
-    def reset(self):
-        PillarManager.reset(self.pillar_path)
-        PP.pl_green('Value reset.')
-
-    def value(self):
-        val = PillarManager.get(self.pillar_path)
-        if val is None:
-            val = self.default
-        return ("enabled", True) if val else ("disabled", True)
-
-
 class TimeServerGroupHandler(OptionHandler):
     def commands_map(self):
         return {
@@ -437,7 +406,6 @@ CEPH_SALT_OPTIONS = {
                 =========================================
                 Options to control the Ceph cluster bootstrap
                 ''',
-        'handler': FlagGroupPillarHandler('ceph-salt:bootstrap_enabled', True),
         'options': {
             'ceph_conf': {
                 'type': 'conf',

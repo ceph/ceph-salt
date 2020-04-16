@@ -133,10 +133,6 @@ class ConfigShellTest(SaltMockTestCase):
                                       }
                                   ])
 
-    def test_cephadm_bootstrap(self):
-        self.assertFlagOption('/cephadm_bootstrap',
-                              'ceph-salt:bootstrap_enabled')
-
     def test_cephadm_bootstrap_ceph_conf(self):
         self.assertConfigOption('/cephadm_bootstrap/ceph_conf',
                                 'ceph-salt:bootstrap_ceph_conf')
