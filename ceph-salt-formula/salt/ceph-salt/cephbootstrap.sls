@@ -1,8 +1,8 @@
 {% import 'macros.yml' as macros %}
 
-{{ macros.begin_stage('Bootstrap the Ceph cluster') }}
-
 {% if grains['id'] == pillar['ceph-salt']['bootstrap_minion'] %}
+
+{{ macros.begin_stage('Bootstrap the Ceph cluster') }}
 
 {% set bootstrap_ceph_conf = pillar['ceph-salt'].get('bootstrap_ceph_conf', {}) %}
 
@@ -22,6 +22,7 @@ create bootstrap ceph conf:
 wait for other minions:
   ceph_salt.wait_for_grain:
     - grain: ceph-salt:execution:provisioned
+    - hosts: {{ pillar['ceph-salt']['minions']['all'] }}
     - failhard: True
 {{ macros.end_step('Wait for other minions') }}
 
@@ -67,20 +68,16 @@ set ceph-dashboard password:
 configure ssh orchestrator:
   cmd.run:
     - name: |
-        ceph config-key set mgr/cephadm/ssh_identity_key -i ~/.ssh/id_rsa
-        ceph config-key set mgr/cephadm/ssh_identity_pub -i ~/.ssh/id_rsa.pub
+        ceph config-key set mgr/cephadm/ssh_identity_key -i /tmp/ceph-salt-ssh-id_rsa
+        ceph config-key set mgr/cephadm/ssh_identity_pub -i /tmp/ceph-salt-ssh-id_rsa.pub
         ceph mgr module enable cephadm && \
-        ceph orch set backend cephadm && \
-{% for minion in pillar['ceph-salt']['minions']['all'] %}
-        ceph orch host add {{ minion }} && \
-{% endfor %}
-        true
+        ceph orch set backend cephadm
     - onchanges:
       - cmd: run cephadm bootstrap
     - failhard: True
 
 {{ macros.end_step('Configure cephadm MGR module') }}
 
-{% endif %}
-
 {{ macros.end_stage('Bootstrap the Ceph cluster') }}
+
+{% endif %}

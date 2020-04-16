@@ -1,20 +1,11 @@
 {% import 'macros.yml' as macros %}
 
-{% if pillar['ceph-salt']['minions']['admin'] | length > 1 %}
+{% if 'admin' in grains['ceph-salt']['roles'] %}
 
-{{ macros.begin_stage('Ensure ceph.conf and keyring are present on all Admin nodes') }}
-
-copy ceph.conf and keyring to other admin nodes:
-  cmd.run:
-    - name: |
-{%- for minion in pillar['ceph-salt']['minions']['admin'] %}
-{%- if minion != grains['host'] %}
-        scp -o "StrictHostKeyChecking=no" /etc/ceph/ceph.conf root@{{ minion }}:/etc/ceph/
-        scp -o "StrictHostKeyChecking=no" /etc/ceph/ceph.client.admin.keyring root@{{ minion }}:/etc/ceph/
-{%- endif %}
-{%- endfor %}
+{{ macros.begin_stage('Ensure ceph.conf and keyring are present') }}
+copy ceph.conf and keyring from an admin node:
+  ceph_orch.copy_ceph_conf_and_keyring:
     - failhard: True
-
-{{ macros.end_stage('Ensure ceph.conf and keyring are present on all Admin nodes') }}
+{{ macros.end_stage('Ensure ceph.conf and keyring are present') }}
 
 {% endif %}

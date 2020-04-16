@@ -11,10 +11,11 @@ include:
     - .provision-end
 {% if pillar['ceph-salt'].get('bootstrap_enabled', True) %}
     - .cephbootstrap
-{% if grains['id'] == pillar['ceph-salt']['bootstrap_minion'] %}
+    - .find-admin-host
+    - .cephorch
     - .ceph-admin
 {% endif %}
-{% endif %}
+    - .cleanup
 
 {% else %}
 

@@ -51,20 +51,19 @@ def reboot_if_needed(name):
     return ret
 
 
-def wait_for_grain(name, grain, timeout=600):
+def wait_for_grain(name, grain, hosts, timeout=1800):
     ret = {'name': name, 'changes': {}, 'comment': '', 'result': False}
-    all_minions = __pillar__['ceph-salt']['minions']['all']
     completed_counter = 0
     starttime = time.time()
     timelimit = starttime + timeout
-    while completed_counter < len(all_minions):
+    while completed_counter < len(hosts):
         is_timedout = time.time() > timelimit
         if is_timedout:
             ret['comment'] = 'Timeout value reached.'
             return ret
         time.sleep(5)
         completed_counter = 0
-        for host in all_minions:
+        for host in hosts:
             grain_value = __salt__['ceph_salt.get_remote_grain'](host, 'ceph-salt:execution:failed')
             if grain_value:
                 ret['comment'] = 'One or more minions failed.'
@@ -72,8 +71,6 @@ def wait_for_grain(name, grain, timeout=600):
             grain_value = __salt__['ceph_salt.get_remote_grain'](host, grain)
             if grain_value:
                 completed_counter += 1
-        logger.info("Waiting for grain '%s' (%s/%s)", grain,
-                                                      completed_counter,
-                                                      len(all_minions))
+        logger.info("Waiting for grain '%s' (%s/%s)", grain, completed_counter, len(hosts))
     ret['result'] = True
     return ret
