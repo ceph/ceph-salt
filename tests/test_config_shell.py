@@ -291,7 +291,7 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertEqual(PillarManager.get(sec_pillar_key), {'my option2': '3'})
 
         self.shell.run_cmdline('{} reset'.format(sec_path))
-        self.assertInSysOut('Section reset.')
+        self.assertInSysOut('Parameters reset.')
         self.assertEqual(PillarManager.get(sec_pillar_key), {})
 
         self.shell.run_cmdline('{} reset'.format(path))
