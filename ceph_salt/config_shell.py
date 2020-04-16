@@ -833,7 +833,7 @@ class ListDictOptionNode(OptionNode):
         super(ListDictOptionNode, self).ui_command_reset()
 
 
-class ConfElementNode(configshell.ConfigNode):
+class DictElementNode(configshell.ConfigNode):
     def __init__(self, key, value, parent):
         configshell.ConfigNode.__init__(self, key, parent)
         self.value = value
@@ -842,13 +842,13 @@ class ConfElementNode(configshell.ConfigNode):
         return self.value, None
 
 
-class ConfSectionNode(OptionNode):
+class DictNode(OptionNode):
     def __init__(self, option_name, option_dict, parent):
-        super(ConfSectionNode, self).__init__(option_name, option_dict, parent)
+        super(DictNode, self).__init__(option_name, option_dict, parent)
         value_dict, _ = self._find_value()
         self.value = dict(value_dict)
         for parameter, value in self.value.items():
-            ConfElementNode(parameter, value, self)
+            DictElementNode(parameter, value, self)
 
     def _list_commands(self):
         return ['set', 'remove']
@@ -868,7 +868,7 @@ class ConfSectionNode(OptionNode):
         if child:
             child.value = value
         else:
-            ConfElementNode(parameter, value, self)
+            DictElementNode(parameter, value, self)
         PP.pl_green('Parameter set.')
 
     def ui_command_remove(self, parameter):
@@ -885,7 +885,7 @@ class ConfSectionNode(OptionNode):
             self.remove_child(self.get_child(key))
         self.value = {}
         self.option_dict['handler'].save(self.value)
-        PP.pl_green('Section reset.')
+        PP.pl_green('Parameters reset.')
 
 
 class ConfOptionNode(OptionNode):
@@ -898,7 +898,7 @@ class ConfOptionNode(OptionNode):
 
     def add_child(self, section):
         handler: PillarHandler = self.option_dict['handler']
-        ConfSectionNode(section, {
+        DictNode(section, {
             'handler': PillarHandler('{}:{}'.format(handler.pillar_path, section)),
             'default': {}
         }, self)
@@ -1041,6 +1041,8 @@ def _generate_option_node(option_name, option_dict, parent):
         ListOptionNode(option_name, option_dict, parent)
     elif option_dict.get('type', None) == 'list_dict':
         ListDictOptionNode(option_name, option_dict, parent)
+    elif option_dict.get('type', None) == 'dict':
+        DictNode(option_name, option_dict, parent)
     elif option_dict.get('type', None) == 'conf':
         ConfOptionNode(option_name, option_dict, parent)
     elif option_dict.get('type', None) == 'minions':
