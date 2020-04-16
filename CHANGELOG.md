@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [15.2.1] - 2020-04-16
+### Added
+- Support adding new hosts after initial deployment (#175)
+- Skip monitoring stack on bootstrap (#179)
+- Allow explicit set chrony subnet (#165)
+- Avoid 127.0.0.1 as a nodes public_ip (#174)
+- Allow users to configure custom registries (#113)
+- Rename minions "rm" command to "remove" (#167)
+- Use lowercase on config nodes (#166)
+- Support quoted string values (#162)
+- Support salt 3000 (#159)
+- Allow explicit set bootstrap Mon IP (#156)
+### Removed
+- OSDs are no longer deployed by `ceph-salt` (#146)
+- Additional MONs and MGRs are no longer deployed by `ceph-salt` (#151)
+### Fixed
+- Install private/public keys on admin nodes (#155)
+- Fix "status" error when ceph_orch salt module is not available (#157)
+
 ## [15.2.0] - 2020-03-25
 ### Added
 - Support bootstrap ceph config (#129)
@@ -93,7 +112,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal README.
 - The CHANGELOG file.
 
-[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.0...HEAD
+[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.1...HEAD
+[15.2.1]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.1
 [15.2.0]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.0
 [15.1.1]: https://github.com/ceph/ceph-salt/releases/tag/v15.1.1
 [15.1.0]: https://github.com/ceph/ceph-salt/releases/tag/v15.1.0
