@@ -46,12 +46,12 @@ Requires:       python3-configshell-fb >= 1.1
 Requires:       python3-pycryptodomex >= 3.4.6
 Requires:       python3-PyYAML >= 5.1.2
 Requires:       python3-setuptools
-Requires:       python3-salt >= 2019.2.0
+Requires:       python3-salt >= 3000
 Requires:       python3-curses
 %endif
 
 Requires:       ceph-salt-formula
-Requires:       salt-master >= 2019.2.0
+Requires:       salt-master >= 3000
 Requires:       procps
 
 
