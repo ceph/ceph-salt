@@ -5,7 +5,7 @@ import threading
 
 import salt.config
 import salt.utils.event
-from tornado.ioloop import IOLoop
+from salt.ext.tornado.ioloop import IOLoop
 
 # pylint: disable=C0103
 logger = logging.getLogger(__name__)
