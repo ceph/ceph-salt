@@ -81,7 +81,7 @@ We also need to set which minion to use as the time server and add an
 external NTP server hostname to sync the time:
 
 ```
-/Time_Server/Server_Hostname set <fwdn of the admin node>
+/Time_Server/Server_Hostname set <fqdn of the admin node>
 /Time_Server/External_Servers add 0.pt.pool.ntp.org
 ```
 
