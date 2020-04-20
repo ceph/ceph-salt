@@ -1114,6 +1114,8 @@ base:
 
 def count_hosts(host_ls):
     all_nodes = PillarManager.get('ceph-salt:minions:all')
+    if all_nodes is None:
+        all_nodes = []
     deployed = []
     not_managed = []
     for host in host_ls:
