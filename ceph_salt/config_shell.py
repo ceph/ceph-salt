@@ -1131,7 +1131,7 @@ def run_status():
     result = True
     host_ls = CephOrch.host_ls()
     ceph_salt_nodes, deployed_nodes, not_managed_nodes = count_hosts(host_ls)
-    status['hosts'] = '{}/{} deployed'.format(deployed_nodes, ceph_salt_nodes)
+    status['hosts'] = '{}/{} managed by cephadm'.format(deployed_nodes, ceph_salt_nodes)
     if not_managed_nodes:
         status['hosts'] += ' ({} hosts not managed by cephsalt)'.format(not_managed_nodes)
     error_msg = validate_config(host_ls)

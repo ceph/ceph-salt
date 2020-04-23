@@ -10,7 +10,7 @@ import pkg_resources
 from .config_shell import run_config_cmdline, run_config_shell, run_status, run_export, run_import
 from .exceptions import CephSaltException
 from .terminal_utils import check_root_privileges, PrettyPrinter as PP
-from .deploy import CephSaltExecutor
+from .apply import CephSaltExecutor
 
 
 logger = logging.getLogger(__name__)
@@ -76,7 +76,7 @@ def cli(log_level, log_file):
 @click.argument('config_args', nargs=-1, type=click.UNPROCESSED, required=False)
 def config_shell(config_args):
     """
-    Starts ceph-salt configuration shell
+    Start ceph-salt configuration shell
     """
     if config_args:
         def _quote(text):
@@ -109,7 +109,7 @@ def status(no_color):
               help='Pretty-prints JSON ouput')
 def export_config(pretty):
     """
-    Export ceph-bootstrap configuration
+    Export configuration
     """
     if not run_export(pretty):
         sys.exit(1)
@@ -119,19 +119,19 @@ def export_config(pretty):
 @click.argument('config_file', required=True)
 def import_config(config_file):
     """
-    Import ceph-bootstrap configuration
+    Import configuration
     """
     if not run_import(config_file):
         sys.exit(1)
 
 
-@cli.command(name='deploy')
+@cli.command(name='apply')
 @click.option('-n', '--non-interactive', is_flag=True, default=False,
-              help='Run deploy in non-interactive mode')
+              help='Apply config in non-interactive mode')
 @click.argument('minion_id', required=False)
-def deploy(non_interactive, minion_id):
+def apply(non_interactive, minion_id):
     """
-    Runs ceph-salt formula and shows real-time progress
+    Apply configuration by running ceph-salt formula
     """
     executor = CephSaltExecutor(not non_interactive, minion_id)
     retcode = executor.run()
