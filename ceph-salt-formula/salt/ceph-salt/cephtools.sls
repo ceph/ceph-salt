@@ -2,28 +2,31 @@
 
 {{ macros.begin_stage('Prepare to bootstrap the Ceph cluster') }}
 
-{{ macros.begin_step('Install cephadm and other packages') }}
+{{ macros.begin_step('Install cephadm package') }}
 
 install cephadm:
   pkg.installed:
     - pkgs:
         - cephadm
-{% if 'admin' in grains['ceph-salt']['roles'] %}
-        - ceph-common
-{% endif %}
     - failhard: True
 
-{% if grains['id'] == pillar['ceph-salt']['bootstrap_minion'] %}
 /var/log/ceph:
   file.directory:
-    - user: ceph
-    - group: ceph
+    - user: root
+    - group: root
     - mode: '0770'
     - makedirs: True
     - failhard: True
-{% endif %}
 
-{{ macros.end_step('Install cephadm and other packages') }}
+/etc/ceph/ceph:
+  file.directory:
+    - user: root
+    - group: root
+    - mode: '0770'
+    - makedirs: True
+    - failhard: True
+
+{{ macros.end_step('Install cephadm package') }}
 
 {{ macros.begin_step('Run "cephadm check-host"') }}
 

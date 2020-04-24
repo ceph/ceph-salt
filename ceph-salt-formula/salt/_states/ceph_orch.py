@@ -39,7 +39,8 @@ def add_host(name, host):
     admin_host = __salt__['grains.get']('ceph-salt:execution:admin_host')
     cmd_ret = __salt__['cmd.run_all']("ssh -o StrictHostKeyChecking=no "
                                       "-i /tmp/ceph-salt-ssh-id_rsa root@{} "
-                                      "'ceph orch host add {}'".format(admin_host, host))
+                                      "'cephadm shell -- ceph orch host add {}'".format(
+                                          admin_host, host))
     if cmd_ret['retcode'] == 0:
         ret['result'] = True
     return ret

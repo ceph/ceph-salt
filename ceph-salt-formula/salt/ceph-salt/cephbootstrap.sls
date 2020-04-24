@@ -57,7 +57,7 @@ run cephadm bootstrap:
 set ceph-dashboard password:
   cmd.run:
     - name: |
-        ceph dashboard ac-user-set-password --force-password admin {{ dashboard_password }}
+        cephadm shell -- ceph dashboard ac-user-set-password --force-password admin {{ dashboard_password }}
     - onchanges:
       - cmd: run cephadm bootstrap
     - failhard: True
@@ -68,10 +68,10 @@ set ceph-dashboard password:
 configure ssh orchestrator:
   cmd.run:
     - name: |
-        ceph config-key set mgr/cephadm/ssh_identity_key -i /tmp/ceph-salt-ssh-id_rsa
-        ceph config-key set mgr/cephadm/ssh_identity_pub -i /tmp/ceph-salt-ssh-id_rsa.pub
-        ceph mgr module enable cephadm && \
-        ceph orch set backend cephadm
+        cephadm shell -- ceph config-key set mgr/cephadm/ssh_identity_key -i /tmp/ceph-salt-ssh-id_rsa
+        cephadm shell -- ceph config-key set mgr/cephadm/ssh_identity_pub -i /tmp/ceph-salt-ssh-id_rsa.pub
+        cephadm shell -- ceph mgr module enable cephadm && \
+        cephadm shell -- ceph orch set backend cephadm
     - onchanges:
       - cmd: run cephadm bootstrap
     - failhard: True
