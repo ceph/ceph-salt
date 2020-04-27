@@ -91,11 +91,11 @@ Finally we need to set the Ceph container image path:
 /containers/images/ceph set docker.io/ceph/daemon-base:latest
 ```
 
-Afterwards, run `deploy` to start the `ceph-salt-formula` and execute the
+Afterwards, run `apply` to start the `ceph-salt-formula` and execute the
 deployment:
 
 ```
-ceph-salt deploy
+ceph-salt apply
 ```
 
 [ceph]: https://ceph.io/

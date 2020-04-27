@@ -1201,7 +1201,7 @@ class CephSaltExecutor:
 
     @staticmethod
     def check_formula():
-        # verify that deployment can run
+        # verify that ceph-salt formula is available
         PP.println("Checking if ceph-salt formula is available...")
         result = SaltClient.local_cmd('ceph-salt:member', 'state.sls_exists', ['ceph-salt'],
                                       tgt_type='grain')
@@ -1214,13 +1214,13 @@ class CephSaltExecutor:
                 PP.pl_red('Failed to restart salt-master service, please restart it manually')
                 return 3
 
-        # checking ceph-salt again after salt-master restart
+        # check ceph-salt formula again after salt-master restart
         result = SaltClient.local_cmd('ceph-salt:member', 'state.sls_exists', ['ceph-salt'],
                                       tgt_type='grain')
         if not all(result.values()):
             logger.error("ceph-salt formula still not found")
-            PP.pl_red("Could not find ceph-salt formula. Please check if ceph-salt-formula package"
-                      " is installed")
+            PP.pl_red("Could not find ceph-salt formula. Please check if ceph-salt-formula package "
+                      "is installed")
             return 4
 
         PP.println("Syncing minions with the master...")
@@ -1235,34 +1235,35 @@ class CephSaltExecutor:
         return 0
 
     @staticmethod
-    def check_deployment(minion_id, host_ls):
-        PP.println("Checking if there is an existing deployment...")
+    def check_cluster(minion_id, host_ls):
+        PP.println("Checking if there is an existing Ceph cluster...")
         deployed = len(host_ls) > 0
 
         # day 1, but minion_id specified
         if minion_id is not None and not deployed:
-            logger.error("cluster not deployed and minion_id provided")
-            PP.pl_red("Cluster is not deployed yet, please apply the deployment to "
-                      "all minions at the same time: \"ceph-salt deploy\"")
+            logger.error("ceph cluster not deployed and minion_id provided")
+            PP.pl_red("Ceph cluster is not deployed yet, please apply the config to "
+                      "all minions at the same time to bootstrap a new Ceph cluster: "
+                      "\"ceph-salt apply\"")
             return 6
         # day 2, but minion_id not specified
         if deployed and minion_id is None:
-            logger.error("cluster already deployed and minion_id not provided")
-            PP.pl_red("Cluster is already deployed, please apply the deployment to a "
-                      "single minion at a time: \"ceph-salt deploy <minion_id>\"")
+            logger.error("Ceph cluster already deployed and minion_id not provided")
+            PP.pl_red("Ceph cluster is already deployed, please apply the config to a "
+                      "single minion at a time: \"ceph-salt apply <minion_id>\"")
             return 7
-        # day 2, but minion_id already deployed
+        # day 2, but minion_id already managed by cephadm
         if deployed and minion_id is not None:
             minion_short_name = minion_id.split('.', 1)[0]
             for host in host_ls:
                 if minion_short_name == host['hostname']:
-                    logger.error("minion_id already deployed: %s", minion_id)
-                    PP.pl_red("Minion '{}' is already deployed".format(minion_id))
+                    logger.error("minion_id already managed by cephadm: %s", minion_id)
+                    PP.pl_red("Minion '{}' is already managed by cephadm".format(minion_id))
                     return 8
         return 0
 
     @staticmethod
-    def check_deploy_prerequesites(minion_id):
+    def check_apply_prerequisites(minion_id):
         # check salt master is configured
         try:
             check_salt_master_status()
@@ -1285,17 +1286,17 @@ class CephSaltExecutor:
         if retcode > 0:
             return retcode
 
-        # check deployment
-        retcode = CephSaltExecutor.check_deployment(minion_id, host_ls)
+        # check cluster
+        retcode = CephSaltExecutor.check_cluster(minion_id, host_ls)
         if retcode > 0:
             return retcode
 
-        PP.println("Ready for deployment!")
+        PP.println("Ready to apply config!")
         return 0
 
     def run(self):
         # validate
-        retcode = self.check_deploy_prerequesites(self.minion_id)
+        retcode = self.check_apply_prerequisites(self.minion_id)
         if retcode > 0:
             return retcode
 
