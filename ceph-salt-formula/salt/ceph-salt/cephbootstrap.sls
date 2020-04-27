@@ -42,7 +42,11 @@ run cephadm bootstrap:
                 --skip-monitoring-stack \
                 --skip-prepare-host \
                 --skip-pull \
-                --skip-ssh > /var/log/ceph/cephadm.log 2>&1
+                --skip-ssh \
+{%- for arg, value in pillar['ceph-salt'].get('bootstrap_arguments', {}).items() %}
+                --{{ arg }} {{ value if value is not none else '' }} \
+{%- endfor %}
+                > /var/log/ceph/cephadm.log 2>&1
     - env:
       - NOTIFY_SOCKET: ''
     - creates:

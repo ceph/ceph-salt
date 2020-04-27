@@ -133,6 +133,24 @@ class ConfigShellTest(SaltMockTestCase):
                                       }
                                   ])
 
+    def test_cephadm_advanced_fsid(self):
+        self.assertDictOption('/cephadm_bootstrap/advanced',
+                              'ceph-salt:bootstrap_arguments',
+                              'fsid',
+                              '8726cb9c-75d8-11ea-924c-001a4aab830c')
+
+    def test_cephadm_advanced_mon_id(self):
+        self.assertDictOption('/cephadm_bootstrap/advanced',
+                              'ceph-salt:bootstrap_arguments',
+                              'mon-id',
+                              'a')
+
+    def test_cephadm_advanced_mgr_id(self):
+        self.assertDictOption('/cephadm_bootstrap/advanced',
+                              'ceph-salt:bootstrap_arguments',
+                              'mgr-id',
+                              'y')
+
     def test_cephadm_bootstrap_ceph_conf(self):
         self.assertConfigOption('/cephadm_bootstrap/ceph_conf',
                                 'ceph-salt:bootstrap_ceph_conf')
@@ -316,6 +334,15 @@ class ConfigShellTest(SaltMockTestCase):
         self.shell.run_cmdline('{} reset'.format(path))
         self.assertInSysOut('Value reset.')
         self.assertEqual(PillarManager.get(pillar_key), None)
+
+    def assertDictOption(self, path, pillar_key, parameter, value):
+        self.shell.run_cmdline('{} set "{}" "{}"'.format(path, parameter, value))
+        self.assertInSysOut('Parameter set.')
+        self.assertEqual(PillarManager.get('{}:{}'.format(pillar_key, parameter)), value)
+
+        self.shell.run_cmdline('{} remove {}'.format(path, parameter))
+        self.assertInSysOut('Parameter removed.')
+        self.assertEqual(PillarManager.get('{}:{}'.format(pillar_key, parameter)), None)
 
     def assertListOption(self, path, pillar_key, values):
         for value in values:
