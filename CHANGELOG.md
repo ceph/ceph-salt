@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [15.2.2] - 2020-04-28
+### Added
+- Advanced settings for "cephadm bootstrap" (#170)
+- Rename `ceph-salt deploy` to `ceph-salt apply` (#200)
+- Require Salt >= 3000 (#185)
+### Removed
+- Remove "disable cephadm bootstrap" functionality (#184)
+### Fixed
+- Fix `status` error when no minions are specified (#188)
+
 ## [15.2.1] - 2020-04-16
 ### Added
 - Support adding new hosts after initial deployment (#175)
@@ -112,7 +122,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal README.
 - The CHANGELOG file.
 
-[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.1...HEAD
+[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.2...HEAD
+[15.2.2]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.2
 [15.2.1]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.1
 [15.2.0]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.0
 [15.1.1]: https://github.com/ceph/ceph-salt/releases/tag/v15.1.1
