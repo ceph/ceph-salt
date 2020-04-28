@@ -57,7 +57,7 @@ autocomplete and glob expressions:
 /ceph_cluster/minions add *
 ```
 
-Then we must specify which minions will have "ceph.conf" and "keyring" installed:
+Then we must specify which minions will have "keyring" installed:
 
 ```
 /ceph_cluster/roles/admin add *

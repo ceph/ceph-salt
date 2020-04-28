@@ -45,12 +45,12 @@ def add_host(name, host):
     return ret
 
 
-def copy_ceph_conf_and_keyring(name):
+def copy_keyring(name):
     ret = {'name': name, 'changes': {}, 'comment': '', 'result': False}
     admin_host = __salt__['grains.get']('ceph-salt:execution:admin_host')
     cmd_ret = __salt__['cmd.run_all']("scp -o StrictHostKeyChecking=no "
                                       "-i /tmp/ceph-salt-ssh-id_rsa "
-                                      "root@{}:/etc/ceph/{{ceph.conf,ceph.client.admin.keyring}} "
+                                      "root@{}:/etc/ceph/ceph.client.admin.keyring "
                                       "/etc/ceph/".format(admin_host))
     if cmd_ret['retcode'] == 0:
         ret['result'] = True

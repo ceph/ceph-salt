@@ -38,7 +38,6 @@ run cephadm bootstrap:
                 --config /tmp/bootstrap-ceph.conf \
                 --initial-dashboard-user {{ dashboard_username }} \
                 --output-keyring /etc/ceph/ceph.client.admin.keyring \
-                --output-config /etc/ceph/ceph.conf \
                 --skip-monitoring-stack \
                 --skip-prepare-host \
                 --skip-pull \
@@ -50,7 +49,6 @@ run cephadm bootstrap:
     - env:
       - NOTIFY_SOCKET: ''
     - creates:
-      - /etc/ceph/ceph.conf
       - /etc/ceph/ceph.client.admin.keyring
     - failhard: True
 
