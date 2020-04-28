@@ -6,7 +6,8 @@ include:
     - .software
     - .container
     - .apparmor
-    - .time
+    - .time-prep
+    - .time-sync
     - .cephtools
     - .provision-end
     - .cephbootstrap
