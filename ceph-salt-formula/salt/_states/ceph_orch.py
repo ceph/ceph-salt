@@ -16,6 +16,10 @@ def wait_for_admin_host(name, timeout=1800):
         time.sleep(5)
         admin_hosts = __pillar__['ceph-salt']['minions']['admin']
         for admin_host in admin_hosts:
+            failed = __salt__['ceph_salt.get_remote_grain'](admin_host, 'ceph-salt:execution:failed')
+            if failed:
+                ret['comment'] = 'One or more admin minions failed.'
+                return ret
             provisioned = __salt__['ceph_salt.get_remote_grain'](admin_host,
                                                                 'ceph-salt:execution:provisioned')
             if provisioned:
