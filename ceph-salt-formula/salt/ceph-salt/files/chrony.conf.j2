@@ -1,6 +1,6 @@
 # {% include "ceph-salt/files/managed-header.txt.j2" ignore missing %}
 {%- set time_server = pillar['ceph-salt']['time_server']['server_host'] %}
-{%- if grains['fqdn'] == time_server %}
+{%- if grains['id'] == time_server %}
 {%- for server in pillar['ceph-salt']['time_server'].get('external_time_servers', []) %}
 pool {{ server }} iburst
 {%- endfor %}
@@ -8,9 +8,9 @@ pool {{ server }} iburst
 local stratum 10
 manual
 allow {{ pillar['ceph-salt']['time_server']['subnet'] }}
-{%- else %}    {# grains['fqdn'] == time_server #}
+{%- else %}    {# grains['id'] == time_server #}
 server {{ time_server }} iburst
-{%- endif %}   {# grains['fqdn'] == time_server #}
+{%- endif %}   {# grains['id'] == time_server #}
 
 driftfile /var/lib/chrony/drift
 makestep 0.1 3

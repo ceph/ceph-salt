@@ -13,7 +13,7 @@ ceph-salt:
     public_key: <key_data>
   time_server:
     enabled: True
-    host_server: <fqdn of admin node>
+    host_server: <minion id of admin node>
     external_time_servers:
       - <server1>
       - <server2>
