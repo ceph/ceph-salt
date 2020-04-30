@@ -74,6 +74,10 @@ class DeployTest(SaltMockTestCase):
     def setUp(self):
         super(DeployTest, self).setUp()
         self.salt_env.minions = ['node1.ceph.com', 'node2.ceph.com']
+        GrainsManager.set_grain('node1.ceph.com', 'host', 'node1')
+        GrainsManager.set_grain('node2.ceph.com', 'host', 'node2')
+        GrainsManager.set_grain('node1.ceph.com', 'fqdn_ip4', ['10.20.39.201'])
+        GrainsManager.set_grain('node2.ceph.com', 'fqdn_ip4', ['10.20.39.202'])
         GrainsManager.set_grain('node1.ceph.com', 'ceph-salt', {'member': True,
                                                                 'roles': ['mon'],
                                                                 'execution': {}})
@@ -336,14 +340,22 @@ class DeployTest(SaltMockTestCase):
 
     def test_check_cluster_day1_with_minion(self):
         self.fs.create_file(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
-        self.assertEqual(CephSaltExecutor.check_cluster('node1.test.com', []), 6)
+        self.assertEqual(CephSaltExecutor.check_cluster('node1.ceph.com', []), 6)
         self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
 
     def test_check_cluster_day2_without_minion(self):
         self.fs.create_file(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
-        host_ls_result = [{'hostname': 'node1.test.com'}]
+        host_ls_result = [{'hostname': 'node1.ceph.com'}]
         CephOrchMock.host_ls_result = host_ls_result
         self.assertEqual(CephSaltExecutor.check_cluster(None, host_ls_result), 7)
+        CephOrchMock.host_ls_result = []
+        self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
+
+    def test_check_cluster_day2_with_minion_not_found(self):
+        self.fs.create_file(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
+        host_ls_result = [{'hostname': 'node1'}]
+        CephOrchMock.host_ls_result = host_ls_result
+        self.assertEqual(CephSaltExecutor.check_cluster('node9.ceph.com', host_ls_result), 8)
         CephOrchMock.host_ls_result = []
         self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
 
@@ -351,6 +363,6 @@ class DeployTest(SaltMockTestCase):
         self.fs.create_file(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
         host_ls_result = [{'hostname': 'node1'}]
         CephOrchMock.host_ls_result = host_ls_result
-        self.assertEqual(CephSaltExecutor.check_cluster('node1.test.com', host_ls_result), 8)
+        self.assertEqual(CephSaltExecutor.check_cluster('node1.ceph.com', host_ls_result), 9)
         CephOrchMock.host_ls_result = []
         self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))

@@ -18,7 +18,7 @@ from .exceptions import (
     ParamsException
 )
 from .params_helper import BooleanStringValidator, BooleanStringTransformer
-from .salt_utils import GrainsManager, PillarManager, SaltClient, CephOrch
+from .salt_utils import GrainsManager, PillarManager, CephOrch
 from .terminal_utils import PrettyPrinter as PP
 from .validate.config import validate_config
 from .validate.salt_master import check_salt_master_status, CephSaltPillarNotConfigured
@@ -266,7 +266,7 @@ class TimeServerHandler(PillarHandler):
         super().__init__('ceph-salt:time_server:server_host')
 
     def save(self, value):
-        node = CephNodeManager.ceph_salt_node_by_hostname(value)
+        node = CephNodeManager.ceph_salt_nodes().get(value)
         if node:
             PillarManager.set('ceph-salt:time_server:subnet', node.public_subnet)
         else:
@@ -284,7 +284,7 @@ class TimeSubnetHandler(PillarHandler):
     def possible_values(self):
         time_server_host = PillarManager.get('ceph-salt:time_server:server_host')
         if time_server_host:
-            node = CephNodeManager.ceph_salt_node_by_hostname(time_server_host)
+            node = CephNodeManager.ceph_salt_nodes().get(time_server_host)
             if node and node.subnets:
                 return node.subnets
         return []
@@ -1112,17 +1112,16 @@ base:
 
 
 def count_hosts(host_ls):
-    all_nodes = PillarManager.get('ceph-salt:minions:all')
-    if all_nodes is None:
-        all_nodes = []
+    all_hostnames = [CephNode(minion_id).hostname for minion_id
+                     in PillarManager.get('ceph-salt:minions:all')]
     deployed = []
     not_managed = []
     for host in host_ls:
-        if host['hostname'] in all_nodes:
+        if host['hostname'] in all_hostnames:
             deployed.append(host)
         else:
             not_managed.append(host)
-    return (len(all_nodes), len(deployed), len(not_managed))
+    return (len(all_hostnames), len(deployed), len(not_managed))
 
 
 def run_status():
@@ -1181,24 +1180,15 @@ def run_export(pretty):
     return True
 
 
-def _get_salt_minions_by_host():
-    salt_minions_by_host = {}
-    minions = SaltClient.caller().cmd('minion.list')['minions']
-    for minion_id in minions:
-        short_name = minion_id.split('.', 1)[0]
-        salt_minions_by_host[short_name] = minion_id
-    return salt_minions_by_host
-
-
 def run_import(config_file):
     with open(config_file) as json_file:
         config = json.load(json_file)
-    salt_minions_by_host = _get_salt_minions_by_host()
+    salt_minions = CephNodeManager.list_all_minions()
     minions_config = config.get('minions', {})
     # Validate
-    for host in minions_config.get('all', []):
-        if host not in salt_minions_by_host:
-            PP.pl_red("Cannot find host '{}'".format(host))
+    for minion in minions_config.get('all', []):
+        if minion not in salt_minions:
+            PP.pl_red("Cannot find minion '{}'".format(minion))
             return False
     # Update pillar
     PillarManager.set('ceph-salt', config)
@@ -1206,9 +1196,9 @@ def run_import(config_file):
     minions = GrainsManager.filter_by('ceph-salt', 'member')
     if minions:
         GrainsManager.del_grain(minions, 'ceph-salt')
-    for host in minions_config.get('all', []):
-        node = CephNode(salt_minions_by_host[host])
-        if host in minions_config.get('admin', []):
+    for minion in minions_config.get('all', []):
+        node = CephNode(minion)
+        if minion in minions_config.get('admin', []):
             node.add_role('admin')
         node.save()
     PP.pl_green('Configuration imported.')

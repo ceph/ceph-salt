@@ -42,7 +42,7 @@ class ValidateConfigTest(SaltMockTestCase):
 
     def test_admin_not_cluster_minion(self):
         PillarManager.set('ceph-salt:bootstrap_minion', 'node3.ceph.com')
-        PillarManager.set('ceph-salt:minions:admin', ['node3'])
+        PillarManager.set('ceph-salt:minions:admin', ['node3.ceph.com'])
         self.assertEqual(validate_config([]), "One or more Admin nodes are not cluster minions")
 
     def test_no_ceph_container_image_path(self):
@@ -58,6 +58,6 @@ class ValidateConfigTest(SaltMockTestCase):
         PillarManager.set('ceph-salt:bootstrap_mon_ip', '10.20.188.201')
         PillarManager.set('ceph-salt:time_server:server_host', 'node1.ceph.com')
         PillarManager.set('ceph-salt:time_server:subnet', '10.20.188.0/24')
-        PillarManager.set('ceph-salt:minions:all', ['node1', 'node2'])
-        PillarManager.set('ceph-salt:minions:admin', ['node1'])
+        PillarManager.set('ceph-salt:minions:all', ['node1.ceph.com', 'node2.ceph.com'])
+        PillarManager.set('ceph-salt:minions:admin', ['node1.ceph.com'])
         PillarManager.set('ceph-salt:container:images:ceph', 'docker.io/ceph/daemon-base:latest')

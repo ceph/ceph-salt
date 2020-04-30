@@ -19,7 +19,7 @@ CEPH_SALT_GRAIN_KEY = 'ceph-salt'
 class CephNode:
     def __init__(self, minion_id):
         self.minion_id = minion_id
-        self.short_name = minion_id.split('.', 1)[0]
+        self.hostname = None
         self.roles = None
         self.execution = {}
         self.public_ip = None
@@ -41,6 +41,8 @@ class CephNode:
         if 'execution' in result[self.minion_id]:
             self.execution = result[self.minion_id]['execution']
 
+        result = GrainsManager.get_grain(self.minion_id, 'host')
+        self.hostname = result[self.minion_id]
         result = GrainsManager.get_grain(self.minion_id, 'fqdn_ip4')
         public_ip = result[self.minion_id][0]
         if public_ip == '127.0.0.1':
@@ -89,25 +91,16 @@ class CephNodeManager:
 
     @classmethod
     def save_in_pillar(cls):
-        minions = [n.short_name for n in cls._ceph_salt_nodes.values()]
+        minions = [n.minion_id for n in cls._ceph_salt_nodes.values()]
         PillarManager.set('ceph-salt:minions:all', minions)
         PillarManager.set('ceph-salt:minions:admin',
-                          [n.short_name for n in cls._ceph_salt_nodes.values()
+                          [n.minion_id for n in cls._ceph_salt_nodes.values()
                            if 'admin' in n.roles])
 
     @classmethod
     def ceph_salt_nodes(cls):
         cls._load()
         return cls._ceph_salt_nodes
-
-    @classmethod
-    def ceph_salt_node_by_hostname(cls, hostname):
-        short_name = hostname.split('.', 1)[0]
-        nodes = cls.ceph_salt_nodes()
-        for node in nodes.values():
-            if node.short_name == short_name:
-                return node
-        return None
 
     @classmethod
     def add_node(cls, minion_id):
