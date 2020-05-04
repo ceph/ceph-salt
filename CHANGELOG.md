@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [15.2.3] - 2020-05-04
+### Added
+- Support time server not managed by ceph-salt (#206)
+- Sync clocks to avoid clock skew when MONs start (#202)
+### Fixed
+- Wait for admin should fail if any admin failed (#207)
+- Store minion_id in pillar instead of hostname (#211)
+
 ## [15.2.2] - 2020-04-28
 ### Added
 - Advanced settings for "cephadm bootstrap" (#170)
@@ -122,7 +130,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal README.
 - The CHANGELOG file.
 
-[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.2...HEAD
+[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.3...HEAD
+[15.2.3]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.3
 [15.2.2]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.2
 [15.2.1]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.1
 [15.2.0]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.0
