@@ -4,6 +4,8 @@
 
 {{ macros.begin_step('Configure registries') }}
 
+{% with registries = pillar['ceph-salt'].get('container', {}).get('registries', []) %}
+  {% if registries|length > 0 %}
 /etc/containers/registries.conf:
   file.managed:
     - source:
@@ -14,6 +16,10 @@
     - mode: '0644'
     - backup: minion
     - failhard: True
+    - defaults:
+        registries: {{ registries }}
+  {% endif %}
+{% endwith %}
 
 {{ macros.end_step('Configure registries') }}
 
