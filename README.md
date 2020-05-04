@@ -24,7 +24,8 @@ This repository contains two components:
 
 # Setup
 
-In order to use `ceph-salt`, you need a working Salt cluster.
+In order to use `ceph-salt`, you need a working Salt cluster and minion IDs
+must be resolvable to IP addresses (e.g. `host <minion_id>`).
 
 Now, install `ceph-salt` on your Salt Master from the openSUSE
 repositories:

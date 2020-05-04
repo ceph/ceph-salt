@@ -34,7 +34,7 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertGrains('node1.ceph.com', 'ceph-salt', {'member': True,
                                                           'roles': [],
                                                           'execution': {}})
-        self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1'])
+        self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1.ceph.com'])
         self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), [])
         self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), None)
 
@@ -54,7 +54,7 @@ class ConfigShellTest(SaltMockTestCase):
         self.shell.run_cmdline('/ceph_cluster/minions remove node1.ceph.com')
         self.assertInSysOut("Cannot remove host 'node1.ceph.com' because it has roles defined: "
                             "['admin', 'bootstrap']")
-        self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1'])
+        self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1.ceph.com'])
 
         self.shell.run_cmdline('/ceph_cluster/roles/admin remove node1.ceph.com')
         self.shell.run_cmdline('/ceph_cluster/roles/bootstrap reset')
@@ -69,8 +69,8 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertGrains('node1.ceph.com', 'ceph-salt', {'member': True,
                                                           'roles': ['admin'],
                                                           'execution': {}})
-        self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1'])
-        self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), ['node1'])
+        self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1.ceph.com'])
+        self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), ['node1.ceph.com'])
         self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), None)
 
         self.shell.run_cmdline('/ceph_cluster/roles/admin remove node1.ceph.com')
@@ -78,7 +78,7 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertGrains('node1.ceph.com', 'ceph-salt', {'member': True,
                                                           'roles': [],
                                                           'execution': {}})
-        self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1'])
+        self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1.ceph.com'])
         self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), [])
         self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), None)
 
@@ -95,7 +95,7 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertGrains('node1.ceph.com', 'ceph-salt', {'member': True,
                                                           'roles': [],
                                                           'execution': {}})
-        self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1'])
+        self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1.ceph.com'])
         self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), [])
         self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), 'node1.ceph.com')
 
@@ -104,7 +104,7 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertGrains('node1.ceph.com', 'ceph-salt', {'member': True,
                                                           'roles': [],
                                                           'execution': {}})
-        self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1'])
+        self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1.ceph.com'])
         self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), [])
         self.assertEqual(PillarManager.get('ceph-salt:bootstrap_minion'), None)
 
@@ -225,8 +225,8 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertTrue(run_export(False))
         self.assertJsonInSysOut({
             'minions': {
-                'all': ['node1', 'node2'],
-                'admin': ['node1']
+                'all': ['node1.ceph.com', 'node2.ceph.com'],
+                'admin': ['node1.ceph.com']
             },
             'time_server': {
                 'server_host': 'node1.ceph.com',
@@ -242,8 +242,8 @@ class ConfigShellTest(SaltMockTestCase):
     def test_import(self):
         self.fs.create_file('/config.json', contents=json.dumps({
             'minions': {
-                'all': ['node1', 'node2'],
-                'admin': ['node1']
+                'all': ['node1.ceph.com', 'node2.ceph.com'],
+                'admin': ['node1.ceph.com']
             },
             'time_server': {
                 'server_host': 'node1.ceph.com',
@@ -259,8 +259,9 @@ class ConfigShellTest(SaltMockTestCase):
                           'ceph-salt', {'member': True,
                                         'roles': [],
                                         'execution': {}})
-        self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1', 'node2'])
-        self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), ['node1'])
+        self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1.ceph.com',
+                                                                      'node2.ceph.com'])
+        self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), ['node1.ceph.com'])
         self.assertIsNone(PillarManager.get('ceph-salt:bootstrap_minion'))
         self.assertEqual(PillarManager.get('ceph-salt:time_server:server_host'), 'node1.ceph.com')
         self.assertEqual(PillarManager.get('ceph-salt:time_server:subnet'), '10.20.188.0/24')
@@ -276,12 +277,12 @@ class ConfigShellTest(SaltMockTestCase):
     def test_import_invalid_host(self):
         self.fs.create_file('/config.json', contents=json.dumps({
             'minions': {
-                'all': ['node1', 'node2', 'node9'],
-                'admin': ['node1']
+                'all': ['node1.ceph.com', 'node2.ceph.com', 'node9.ceph.com'],
+                'admin': ['node1.ceph.com']
             }}))
 
         self.assertFalse(run_import("/config.json"))
-        self.assertInSysOut("Cannot find host 'node9'")
+        self.assertInSysOut("Cannot find minion 'node9.ceph.com'")
 
         self.fs.remove('/config.json')
 

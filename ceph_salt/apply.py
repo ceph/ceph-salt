@@ -12,6 +12,7 @@ from typing import Dict, List
 
 import yaml
 
+from .core import CephNode, CephNodeManager
 from .exceptions import MinionDoesNotExistInConfiguration, ValidationException
 from .salt_event import EventListener, SaltEventProcessor
 from .salt_utils import SaltClient, GrainsManager, CephOrch
@@ -1254,12 +1255,17 @@ class CephSaltExecutor:
             return 7
         # day 2, but minion_id already managed by cephadm
         if deployed and minion_id is not None:
-            minion_short_name = minion_id.split('.', 1)[0]
+            salt_minions = CephNodeManager.list_all_minions()
+            if minion_id not in salt_minions:
+                logger.error("cannot find minion: %s", minion_id)
+                PP.pl_red("Cannot find minion '{}'".format(minion_id))
+                return 8
+            node = CephNode(minion_id)
             for host in host_ls:
-                if minion_short_name == host['hostname']:
+                if node.hostname == host['hostname']:
                     logger.error("minion_id already managed by cephadm: %s", minion_id)
                     PP.pl_red("Minion '{}' is already managed by cephadm".format(minion_id))
-                    return 8
+                    return 9
         return 0
 
     @staticmethod
