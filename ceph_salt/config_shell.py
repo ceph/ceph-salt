@@ -483,7 +483,7 @@ CEPH_SALT_OPTIONS = {
             },
             'server_hostname': {
                 'default': None,
-                'help': 'FQDN of the time server node',
+                'help': 'minion id of time server node or hostname of external time server',
                 'handler': TimeServerHandler(),
                 'required': True
             },

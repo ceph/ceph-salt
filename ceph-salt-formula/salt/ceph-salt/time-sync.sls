@@ -1,5 +1,6 @@
 {% if pillar['ceph-salt']['time_server'].get('enabled', True) %}
 {% set time_server = pillar['ceph-salt']['time_server']['server_host'] %}
+{% set time_server_is_minion = time_server in pillar['ceph-salt']['minions']['all'] %}
 
 {% import 'macros.yml' as macros %}
 
@@ -16,7 +17,7 @@
     - backup: minion
     - failhard: True
 
-{% if grains['fqdn'] != time_server %}
+{% if time_server_is_minion and grains['id'] != time_server %}
 
 {{ macros.begin_step('Wait for time server node to signal that it has synced its clock') }}
 wait for time server sync:
@@ -38,7 +39,7 @@ run sync script:
 
 {{ macros.end_step('Force clock sync now') }}
 
-{% if grains['fqdn'] == time_server %}
+{% if grains['id'] == time_server %}
 {{ macros.begin_step('Signal that time server node has synced its clock') }}
 set timeserversynced:
   grains.present:

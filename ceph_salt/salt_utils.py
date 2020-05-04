@@ -255,7 +255,7 @@ class PillarManager:
             cls.logger.debug("Loaded pillar data: %s", cls.pillar_data)
 
     @classmethod
-    def get(cls, key):
+    def get(cls, key, default=None):
         cls._load()
         res = cls._get_dict_value(cls.pillar_data, key)
         if key == 'ceph-salt:ssh:private_key':
@@ -263,6 +263,8 @@ class PillarManager:
             cls.logger.info("Got '%s' from pillar", key)
         else:
             cls.logger.info("Got '%s' from pillar: '%s'", key, res)
+        if res is None and default is not None:
+            res = default
 
         return res
 
