@@ -70,9 +70,9 @@ def failure():
     }
 
 
-class DeployTest(SaltMockTestCase):
+class ApplyTest(SaltMockTestCase):
     def setUp(self):
-        super(DeployTest, self).setUp()
+        super(ApplyTest, self).setUp()
         self.salt_env.minions = ['node1.ceph.com', 'node2.ceph.com']
         GrainsManager.set_grain('node1.ceph.com', 'host', 'node1')
         GrainsManager.set_grain('node2.ceph.com', 'host', 'node2')
@@ -86,7 +86,7 @@ class DeployTest(SaltMockTestCase):
                                                                 'execution': {}})
 
     def tearDown(self):
-        super(DeployTest, self).tearDown()
+        super(ApplyTest, self).tearDown()
         PillarManager.reload()
 
     def test_minion_does_not_exist(self):
