@@ -36,6 +36,15 @@ class ValidateConfigTest(SaltMockTestCase):
         PillarManager.reset('ceph-salt:dashboard:username')
         self.assertEqual(validate_config([]), "No dashboard username specified in config")
 
+    def test_no_dashboard_password(self):
+        PillarManager.reset('ceph-salt:dashboard:password')
+        self.assertEqual(validate_config([]), "No dashboard password specified in config")
+
+    def test_dashboard_password_update_required_not_set(self):
+        PillarManager.reset('ceph-salt:dashboard:password_update_required')
+        self.assertEqual(validate_config([]),
+                         "'ceph-salt:dashboard:password_update_required' must be of type Boolean")
+
     def test_updates_enabled_not_set(self):
         PillarManager.reset('ceph-salt:updates:enabled')
         self.assertEqual(validate_config([]), "'ceph-salt:updates:enabled' must be of type Boolean")
@@ -89,7 +98,9 @@ class ValidateConfigTest(SaltMockTestCase):
 
     @classmethod
     def create_valid_config(cls):
-        PillarManager.set('ceph-salt:dashboard:username', 'admin')
+        PillarManager.set('ceph-salt:dashboard:username', 'admin1')
+        PillarManager.set('ceph-salt:dashboard:password', 'admin2')
+        PillarManager.set('ceph-salt:dashboard:password_update_required', True)
         PillarManager.set('ceph-salt:bootstrap_minion', 'node1.ceph.com')
         PillarManager.set('ceph-salt:bootstrap_mon_ip', '10.20.188.201')
         PillarManager.set('ceph-salt:time_server:enabled', True)
