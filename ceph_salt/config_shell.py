@@ -1113,7 +1113,7 @@ base:
 
 def count_hosts(host_ls):
     all_hostnames = [CephNode(minion_id).hostname for minion_id
-                     in PillarManager.get('ceph-salt:minions:all')]
+                     in PillarManager.get('ceph-salt:minions:all', [])]
     deployed = []
     not_managed = []
     for host in host_ls:
