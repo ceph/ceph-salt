@@ -32,6 +32,23 @@ class ValidateConfigTest(SaltMockTestCase):
         PillarManager.set('ceph-salt:bootstrap_mon_ip', '127.0.0.1')
         self.assertEqual(validate_config([]), "Mon IP cannot be the loopback interface IP")
 
+    def test_no_dashboard_username(self):
+        PillarManager.reset('ceph-salt:dashboard:username')
+        self.assertEqual(validate_config([]), "No dashboard username specified in config")
+
+    def test_updates_enabled_not_set(self):
+        PillarManager.reset('ceph-salt:updates:enabled')
+        self.assertEqual(validate_config([]), "'ceph-salt:updates:enabled' must be of type Boolean")
+
+    def test_updates_reboot_not_set(self):
+        PillarManager.reset('ceph-salt:updates:reboot')
+        self.assertEqual(validate_config([]), "'ceph-salt:updates:reboot' must be of type Boolean")
+
+    def test_time_server_enabled_not_set(self):
+        PillarManager.reset('ceph-salt:time_server:enabled')
+        self.assertEqual(validate_config([]),
+                         "'ceph-salt:time_server:enabled' must be of type Boolean")
+
     def test_no_time_server_host(self):
         PillarManager.reset('ceph-salt:time_server:server_host')
         self.assertEqual(validate_config([]), "No time server host specified in config")
@@ -72,6 +89,7 @@ class ValidateConfigTest(SaltMockTestCase):
 
     @classmethod
     def create_valid_config(cls):
+        PillarManager.set('ceph-salt:dashboard:username', 'admin')
         PillarManager.set('ceph-salt:bootstrap_minion', 'node1.ceph.com')
         PillarManager.set('ceph-salt:bootstrap_mon_ip', '10.20.188.201')
         PillarManager.set('ceph-salt:time_server:enabled', True)
@@ -80,4 +98,6 @@ class ValidateConfigTest(SaltMockTestCase):
         PillarManager.set('ceph-salt:time_server:subnet', '10.20.188.0/24')
         PillarManager.set('ceph-salt:minions:all', ['node1.ceph.com', 'node2.ceph.com'])
         PillarManager.set('ceph-salt:minions:admin', ['node1.ceph.com'])
+        PillarManager.set('ceph-salt:updates:enabled', True)
+        PillarManager.set('ceph-salt:updates:reboot', True)
         PillarManager.set('ceph-salt:container:images:ceph', 'docker.io/ceph/daemon-base:latest')

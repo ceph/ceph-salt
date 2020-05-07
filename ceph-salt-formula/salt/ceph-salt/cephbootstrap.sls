@@ -28,7 +28,7 @@ wait for other minions:
 
 {{ macros.begin_step('Run "cephadm bootstrap"') }}
 
-{% set dashboard_username = pillar['ceph-salt'].get('dashboard', {'username': 'admin'}).get('username', 'admin') %}
+{% set dashboard_username = pillar['ceph-salt']['dashboard']['username'] %}
 
 run cephadm bootstrap:
   cmd.run:

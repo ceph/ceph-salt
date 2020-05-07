@@ -1,4 +1,4 @@
-{% if pillar['ceph-salt']['time_server'].get('enabled', True) %}
+{% if pillar['ceph-salt']['time_server']['enabled'] %}
 
 {% import 'macros.yml' as macros %}
 
@@ -47,4 +47,3 @@ start chronyd:
 
 prevent empty time-prep:
   test.nop
-

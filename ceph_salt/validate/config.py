@@ -14,12 +14,25 @@ def validate_config(host_ls):
             return "No bootstrap minion specified in config"
         if bootstrap_minion not in admin_minions:
             return "Bootstrap minion must be 'Admin'"
+        dashboard_username = PillarManager.get('ceph-salt:dashboard:username')
+        if not dashboard_username:
+            return "No dashboard username specified in config"
         bootstrap_mon_ip = PillarManager.get('ceph-salt:bootstrap_mon_ip')
         if not bootstrap_mon_ip:
             return "No bootstrap Mon IP specified in config"
         if bootstrap_mon_ip in ['127.0.0.1', '::1']:
             return 'Mon IP cannot be the loopback interface IP'
-    time_server_enabled = PillarManager.get('ceph-salt:time_server:enabled', True)
+
+    # system_update
+    if not isinstance(PillarManager.get('ceph-salt:updates:enabled'), bool):
+        return "'ceph-salt:updates:enabled' must be of type Boolean"
+    if not isinstance(PillarManager.get('ceph-salt:updates:reboot'), bool):
+        return "'ceph-salt:updates:reboot' must be of type Boolean"
+
+    # time_server
+    time_server_enabled = PillarManager.get('ceph-salt:time_server:enabled')
+    if not isinstance(time_server_enabled, bool):
+        return "'ceph-salt:time_server:enabled' must be of type Boolean"
     if time_server_enabled:
         time_server_host = PillarManager.get('ceph-salt:time_server:server_host')
         if not time_server_host:
