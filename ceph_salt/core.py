@@ -52,6 +52,9 @@ class CephNode:
                 if addr != '127.0.0.1':
                     public_ip = addr
                     break
+        if public_ip == '127.0.0.1':
+            logger.warning("'%s' public IP is the loopback interface IP ('127.0.0.1')",
+                           self.minion_id)
         self.public_ip = public_ip
         result = SaltClient.local_cmd(self.minion_id, 'network.subnets')
         self.subnets = result[self.minion_id]
