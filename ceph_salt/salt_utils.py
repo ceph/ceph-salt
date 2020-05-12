@@ -258,7 +258,7 @@ class PillarManager:
     def get(cls, key, default=None):
         cls._load()
         res = cls._get_dict_value(cls.pillar_data, key)
-        if key == 'ceph-salt:ssh:private_key':
+        if key in ('ceph-salt:ssh:private_key', 'ceph-salt:dashboard:password'):
             # don't log key value
             cls.logger.info("Got '%s' from pillar", key)
         else:
