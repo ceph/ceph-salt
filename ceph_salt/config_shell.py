@@ -968,6 +968,7 @@ class MinionsOptionNode(OptionNode):
         has_errors = False
         for match in matching:
             if match not in self.value:
+                PP.println('Adding {}...'.format(match))
                 new_value = list(self.value)
                 new_value.append(match)
                 try:
@@ -992,6 +993,7 @@ class MinionsOptionNode(OptionNode):
         counter = 0
         has_errors = False
         for match in matching:
+            PP.println('Removing {}...'.format(match))
             new_value = list(self.value)
             new_value.remove(match)
             try:
