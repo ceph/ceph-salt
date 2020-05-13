@@ -10,7 +10,7 @@ install required packages:
       - podman
     - failhard: True
 
-{% if pillar['ceph-salt'].get('updates', {}).get('enabled', True) %}
+{% if pillar['ceph-salt']['updates']['enabled'] %}
 
 {{ macros.begin_step('Update all packages') }}
 
@@ -30,7 +30,7 @@ updates disabled:
 
 {{ macros.end_stage('Install and update required packages') }}
 
-{% if pillar['ceph-salt'].get('updates', {}).get('reboot', True) %}
+{% if pillar['ceph-salt']['updates']['reboot'] %}
 
 reboot:
    ceph_salt.reboot_if_needed:

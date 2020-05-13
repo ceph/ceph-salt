@@ -1,4 +1,4 @@
-{% if pillar['ceph-salt']['time_server'].get('enabled', True) %}
+{% if pillar['ceph-salt']['time_server']['enabled'] %}
 {% set time_server = pillar['ceph-salt']['time_server']['server_host'] %}
 {% set time_server_is_minion = time_server in pillar['ceph-salt']['minions']['all'] %}
 
@@ -60,4 +60,3 @@ delete clock sync script:
 
 prevent empty time-sync:
   test.nop
-

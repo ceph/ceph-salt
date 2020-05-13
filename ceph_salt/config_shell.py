@@ -40,6 +40,9 @@ class OptionHandler:
     def read_only(self):
         return False
 
+    def default(self):
+        return None
+
     def possible_values(self):
         return []
 
@@ -52,8 +55,9 @@ class OptionHandler:
 
 
 class PillarHandler(OptionHandler):
-    def __init__(self, pillar_path):
+    def __init__(self, pillar_path, default=None):
         self.pillar_path = pillar_path
+        self._default = default
 
     def value(self):
         return PillarManager.get(self.pillar_path), None
@@ -62,10 +66,16 @@ class PillarHandler(OptionHandler):
         PillarManager.set(self.pillar_path, value)
 
     def reset(self):
-        PillarManager.reset(self.pillar_path)
+        if self._default is not None:
+            PillarManager.set(self.pillar_path, self._default)
+        else:
+            PillarManager.reset(self.pillar_path)
 
     def read_only(self):
         return False
+
+    def default(self):
+        return self._default
 
 
 class BootstrapMinionHandler(PillarHandler):
@@ -234,31 +244,42 @@ class SshPublicKeyHandler(PillarHandler):
             return str(ex), False
 
 
-class TimeServerGroupHandler(OptionHandler):
+class FlagGroupHandler(PillarHandler):
+
     def commands_map(self):
         return {
             'enable': self.enable,
-            'disable': self.disable
+            'disable': self.disable,
+            'reset': super().reset
         }
 
     def enable(self):
-        PillarManager.set('ceph-salt:time_server:enabled', True)
+        super().save(True)
         PP.pl_green('Enabled.')
 
     def disable(self):
-        PillarManager.set('ceph-salt:time_server:enabled', False)
+        super().save(False)
         PP.pl_green('Disabled.')
 
     def value(self):
-        val = PillarManager.get('ceph-salt:time_server:enabled')
+        val, _ = super().value()
         if val is None:
-            return "enabled", True
-        if val:  # enabled
-            host = PillarManager.get('ceph-salt:time_server:server_host')
-            if host is None:
-                return "enabled, no server host set", False
+            return None, False
+        return self.enabled_value() if val else ("disabled", True)
 
-        return ("enabled", True) if val else ("disabled", True)
+    def enabled_value(self):
+        return ("enabled", True)
+
+
+class TimeServerGroupHandler(FlagGroupHandler):
+    def __init__(self):
+        super(TimeServerGroupHandler, self).__init__('ceph-salt:time_server:enabled', True)
+
+    def enabled_value(self):
+        host = PillarManager.get('ceph-salt:time_server:server_host')
+        if host is None:
+            return "enabled, no server host set", False
+        return super().enabled_value()
 
 
 class TimeServerHandler(PillarHandler):
@@ -301,7 +322,6 @@ CEPH_SALT_OPTIONS = {
         'options': {
             'minions': {
                 'help': 'The list of salt minions that are used to deploy Ceph',
-                'default': [],
                 'type': 'minions',
                 'handler': CephSaltNodesHandler()
             },
@@ -315,7 +335,6 @@ CEPH_SALT_OPTIONS = {
                 'options': {
                     'admin': {
                         'type': 'minions',
-                        'default': [],
                         'handler': RoleHandler('admin'),
                         'help': 'List of minions with Admin role'
                     },
@@ -323,8 +342,7 @@ CEPH_SALT_OPTIONS = {
                         'help': 'Cluster\'s first Mon and Mgr',
                         'handler': BootstrapMinionHandler(),
                         'required': True,
-                        'default_text': 'no minion',
-                        'default': None
+                        'default_text': 'no minion'
                     },
                 }
             },
@@ -352,7 +370,6 @@ CEPH_SALT_OPTIONS = {
             },
             'registries': {
                 'type': 'list_dict',
-                'default': [],
                 'help': '''
                         List of custom registries in v2 format.
                         =======================================
@@ -389,14 +406,12 @@ CEPH_SALT_OPTIONS = {
             'packages': {
                 'type': 'flag',
                 'help': 'Update all packages',
-                'handler': PillarHandler('ceph-salt:updates:enabled'),
-                'default': True
+                'handler': PillarHandler('ceph-salt:updates:enabled', True)
             },
             'reboot': {
                 'type': 'flag',
                 'help': 'Reboot if needed',
-                'handler': PillarHandler('ceph-salt:updates:reboot'),
-                'default': True
+                'handler': PillarHandler('ceph-salt:updates:reboot', True)
             }
         }
     },
@@ -415,13 +430,11 @@ CEPH_SALT_OPTIONS = {
                     'mon-id': {},
                     'mgr-id': {}
                 },
-                'default': {},
                 'handler': PillarHandler('ceph-salt:bootstrap_arguments')
             },
             'ceph_conf': {
                 'type': 'conf',
                 'help': 'Bootstrap Ceph configuration',
-                'default': [],
                 'handler': PillarHandler('ceph-salt:bootstrap_ceph_conf')
             },
             'dashboard': {
@@ -429,20 +442,17 @@ CEPH_SALT_OPTIONS = {
                 'help': 'Dashboard settings',
                 'options': {
                     'password': {
-                        'default': None,
                         'default_text': 'randomly generated',
                         'sensitive': True,
                         'handler': PillarHandler('ceph-salt:dashboard:password')
                     },
                     'username': {
-                        'default': 'admin',
-                        'handler': PillarHandler('ceph-salt:dashboard:username')
+                        'handler': PillarHandler('ceph-salt:dashboard:username', 'admin')
                     }
                 }
             },
             'mon_ip': {
                 'help': 'Bootstrap Mon IP',
-                'default': None,
                 'handler': PillarHandler('ceph-salt:bootstrap_mon_ip')
             },
         }
@@ -456,12 +466,10 @@ CEPH_SALT_OPTIONS = {
         'handler': SSHGroupHandler(),
         'options': {
             'private_key': {
-                'default': None,
                 'help': "SSH RSA private key",
                 'handler': SshPrivateKeyHandler()
             },
             'public_key': {
-                'default': None,
                 'help': "SSH RSA public key",
                 'handler': SshPublicKeyHandler()
             },
@@ -477,18 +485,15 @@ CEPH_SALT_OPTIONS = {
         'options': {
             'external_servers': {
                 'type': 'list',
-                'default': [],
                 'help': 'List of external NTP servers',
                 'handler': PillarHandler('ceph-salt:time_server:external_time_servers')
             },
             'server_hostname': {
-                'default': None,
                 'help': 'minion id of time server node or hostname of external time server',
                 'handler': TimeServerHandler(),
                 'required': True
             },
             'subnet': {
-                'default': None,
                 'help': 'Subnet of the time server',
                 'handler': TimeSubnetHandler(),
                 'required': True
@@ -585,17 +590,20 @@ class OptionNode(configshell.ConfigNode):
                 if self.option_dict.get('required', False):
                     val_type = False
                 return self.option_dict['default_text'], val_type
-            if 'default' in self.option_dict:
-                return self.option_dict['default'], None
-            raise Exception("No default value found for {}".format(self.option_name))
+            if 'handler' in self.option_dict:
+                return self.option_dict['handler'].default(), None
+            raise Exception("No default text found for {}".format(self.option_name))
         return self.value, None
 
     def summary(self):
         value, val_type = self._find_value()
         if isinstance(value, bool):
             value = 'enabled' if value else 'disabled'
-        if value is None and self.option_dict.get('required', False):
-            return 'not set', False
+        if value is None:
+            val_type = None
+            if self.option_dict.get('required', False):
+                val_type = False
+            return 'not set', val_type
 
         value_str = str(value)
         return value_str, val_type
@@ -689,6 +697,8 @@ class ListOptionNode(OptionNode):
     def __init__(self, option_name, option_dict, parent):
         super(ListOptionNode, self).__init__(option_name, option_dict, parent)
         value_list, _ = self._find_value()
+        if value_list is None:
+            value_list = []
         self.value = list(value_list)
         for value in value_list:
             ListElementNode(value, self)
@@ -723,6 +733,8 @@ class ListDictOptionNode(OptionNode):
     def __init__(self, option_name, option_dict, parent):
         super(ListDictOptionNode, self).__init__(option_name, option_dict, parent)
         value_list, _ = self._find_value()
+        if value_list is None:
+            value_list = []
         self.value = list(value_list)
         self._add_children(self.value)
 
@@ -825,6 +837,8 @@ class DictNode(OptionNode):
     def __init__(self, option_name, option_dict, parent):
         super(DictNode, self).__init__(option_name, option_dict, parent)
         value_dict, _ = self._find_value()
+        if value_dict is None:
+            value_dict = {}
         self.value = dict(value_dict)
         for parameter, value in self.value.items():
             DictElementNode(parameter, value, self)
@@ -884,6 +898,7 @@ class DictNode(OptionNode):
             self.remove_child(self.get_child(key))
         self.value = {}
         self.option_dict['handler'].save(self.value)
+        self.option_dict['handler'].reset()
         PP.pl_green('Parameters reset.')
 
 
@@ -891,6 +906,8 @@ class ConfOptionNode(OptionNode):
     def __init__(self, option_name, option_dict, parent):
         super(ConfOptionNode, self).__init__(option_name, option_dict, parent)
         value_dict, _ = self._find_value()
+        if value_dict is None:
+            value_dict = {}
         self.value = dict(value_dict)
         for section in self.value.keys():
             self.add_child(section)
@@ -898,8 +915,7 @@ class ConfOptionNode(OptionNode):
     def add_child(self, section):
         handler: PillarHandler = self.option_dict['handler']
         DictNode(section, {
-            'handler': PillarHandler('{}:{}'.format(handler.pillar_path, section)),
-            'default': {}
+            'handler': PillarHandler('{}:{}'.format(handler.pillar_path, section))
         }, self)
 
     def _list_commands(self):
@@ -931,6 +947,7 @@ class ConfOptionNode(OptionNode):
             self.remove_child(self.get_child(key))
         self.value = {}
         self.option_dict['handler'].save(self.value)
+        self.option_dict['handler'].reset()
         PP.pl_green('Config reset.')
 
 
@@ -1034,6 +1051,12 @@ def _generate_option_node(option_name, option_dict, parent):
     if 'options' in option_dict:
         raise Exception("Invalid option node {}".format(option_name))
 
+    handler = option_dict.get('handler')
+
+    # persist default values
+    if handler and handler.default() is not None and handler.value()[0] is None:
+        handler.save(handler.default())
+
     if option_dict.get('type', None) == 'flag':
         FlagOptionNode(option_name, option_dict, parent)
     elif option_dict.get('type', None) == 'list':
@@ -1051,8 +1074,13 @@ def _generate_option_node(option_name, option_dict, parent):
 
 
 def _generate_group_node(group_name, group_dict, parent):
-    group_node = GroupNode(group_name, group_dict.get('help', ""), group_dict.get('handler', None),
-                           parent)
+    handler = group_dict.get('handler', None)
+    group_node = GroupNode(group_name, group_dict.get('help', ""), handler, parent)
+
+    # persist default values
+    if handler and handler.default() is not None and handler.value()[0] is None:
+        handler.save(handler.default())
+
     for option_name, option_dict in group_dict['options'].items():
         _generate_option_node(option_name, option_dict, group_node)
 

@@ -163,7 +163,8 @@ class ConfigShellTest(SaltMockTestCase):
     def test_cephadm_bootstrap_dashboard_username(self):
         self.assertValueOption('/cephadm_bootstrap/dashboard/username',
                                'ceph-salt:dashboard:username',
-                               'myusername')
+                               'myusername',
+                               'admin')
 
     def test_ssh(self):
         self.shell.run_cmdline('/ssh generate')
@@ -184,7 +185,7 @@ class ConfigShellTest(SaltMockTestCase):
     def test_time_server(self):
         self.assertFlagOption('/time_server',
                               'ceph-salt:time_server:enabled',
-                              False)
+                              reset_supported=False)
 
     def test_time_server_external_servers(self):
         self.assertListOption('/time_server/external_servers',
@@ -208,11 +209,13 @@ class ConfigShellTest(SaltMockTestCase):
 
     def test_system_update_packages(self):
         self.assertFlagOption('/system_update/packages',
-                              'ceph-salt:updates:enabled')
+                              'ceph-salt:updates:enabled',
+                              True)
 
     def test_system_update_reboot(self):
         self.assertFlagOption('/system_update/reboot',
-                              'ceph-salt:updates:reboot')
+                              'ceph-salt:updates:reboot',
+                              True)
 
     def test_export(self):
         self.shell.run_cmdline('/ceph_cluster/minions add node1.ceph.com')
@@ -224,13 +227,21 @@ class ConfigShellTest(SaltMockTestCase):
 
         self.assertTrue(run_export(False))
         self.assertJsonInSysOut({
+            'dashboard': {
+                'username': 'admin'
+            },
             'minions': {
                 'all': ['node1.ceph.com', 'node2.ceph.com'],
                 'admin': ['node1.ceph.com']
             },
             'time_server': {
+                'enabled': True,
                 'server_host': 'node1.ceph.com',
                 'subnet': '10.20.188.0/24'
+            },
+            'updates': {
+                'enabled': True,
+                'reboot': True
             }})
 
         self.shell.run_cmdline('/time_server/subnet reset')
@@ -307,13 +318,13 @@ class ConfigShellTest(SaltMockTestCase):
 
         self.shell.run_cmdline('{} reset'.format(sec_path))
         self.assertInSysOut('Parameters reset.')
-        self.assertEqual(PillarManager.get(sec_pillar_key), {})
+        self.assertEqual(PillarManager.get(sec_pillar_key), None)
 
         self.shell.run_cmdline('{} reset'.format(path))
         self.assertInSysOut('Config reset.')
-        self.assertEqual(PillarManager.get(pillar_key), {})
+        self.assertEqual(PillarManager.get(pillar_key), None)
 
-    def assertFlagOption(self, path, pillar_key, reset_supported=True):
+    def assertFlagOption(self, path, pillar_key, default=None, reset_supported=True):
         self.shell.run_cmdline('{} enable'.format(path))
         self.assertInSysOut('Enabled.')
         self.assertEqual(PillarManager.get(pillar_key), True)
@@ -325,16 +336,16 @@ class ConfigShellTest(SaltMockTestCase):
         if reset_supported:
             self.shell.run_cmdline('{} reset'.format(path))
             self.assertInSysOut('Value reset.')
-            self.assertEqual(PillarManager.get(pillar_key), None)
+            self.assertEqual(PillarManager.get(pillar_key), default)
 
-    def assertValueOption(self, path, pillar_key, value):
+    def assertValueOption(self, path, pillar_key, value, default=None):
         self.shell.run_cmdline('{} set {}'.format(path, value))
         self.assertInSysOut('Value set.')
         self.assertEqual(PillarManager.get(pillar_key), value)
 
         self.shell.run_cmdline('{} reset'.format(path))
         self.assertInSysOut('Value reset.')
-        self.assertEqual(PillarManager.get(pillar_key), None)
+        self.assertEqual(PillarManager.get(pillar_key), default)
 
     def assertDictOption(self, path, pillar_key, parameter, value):
         self.shell.run_cmdline('{} set "{}" "{}"'.format(path, parameter, value))
