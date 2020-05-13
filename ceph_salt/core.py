@@ -19,50 +19,74 @@ CEPH_SALT_GRAIN_KEY = 'ceph-salt'
 class CephNode:
     def __init__(self, minion_id):
         self.minion_id = minion_id
-        self.hostname = None
-        self.roles = None
-        self.execution = {}
-        self.public_ip = None
-        self.subnets = None
-        self.public_subnet = None
-        self._load()
+        self._hostname = None
+        self._roles = None
+        self._execution = None
+        self._public_ip = None
+        self._subnets = None
+        self._public_subnet = None
 
-    def _load(self):
-        result = GrainsManager.get_grain(self.minion_id, CEPH_SALT_GRAIN_KEY)
-        logger.info("Loading ceph-salt node '%s': result=%s", self.minion_id, result)
-        if result is None or self.minion_id not in result:
-            # not yet a ceph-salt node
-            self.roles = set()
-        elif not isinstance(result[self.minion_id], dict) or 'roles' not in result[self.minion_id]:
-            # not yet a ceph-salt node
-            self.roles = set()
-        else:
-            self.roles = set(result[self.minion_id]['roles'])
-        if 'execution' in result[self.minion_id]:
-            self.execution = result[self.minion_id]['execution']
+    @property
+    def hostname(self):
+        if self._hostname is None:
+            result = GrainsManager.get_grain(self.minion_id, 'host')
+            self._hostname = result[self.minion_id]
+        return self._hostname
 
-        result = GrainsManager.get_grain(self.minion_id, 'host')
-        self.hostname = result[self.minion_id]
-        result = GrainsManager.get_grain(self.minion_id, 'fqdn_ip4')
-        public_ip = result[self.minion_id][0]
-        if public_ip == '127.0.0.1':
-            logger.debug('fqdn_ipv4 grain is 127.0.0.1, falling back to ipv4 grain')
-            result = GrainsManager.get_grain(self.minion_id, 'ipv4')
-            for addr in result[self.minion_id]:
-                if addr != '127.0.0.1':
-                    public_ip = addr
-                    break
-        if public_ip == '127.0.0.1':
-            logger.warning("'%s' public IP is the loopback interface IP ('127.0.0.1')",
-                           self.minion_id)
-        self.public_ip = public_ip
-        result = SaltClient.local_cmd(self.minion_id, 'network.subnets')
-        self.subnets = result[self.minion_id]
-        if self.public_ip and self.subnets:
-            for subnet in self.subnets:
-                if salt.utils.network.in_subnet(subnet, self.public_ip):
-                    self.public_subnet = subnet
-                    break
+    @property
+    def public_ip(self):
+        if self._public_ip is None:
+            result = GrainsManager.get_grain(self.minion_id, 'fqdn_ip4')
+            _public_ip = result[self.minion_id][0]
+            if _public_ip == '127.0.0.1':
+                logger.debug('fqdn_ipv4 grain is 127.0.0.1, falling back to ipv4 grain')
+                result = GrainsManager.get_grain(self.minion_id, 'ipv4')
+                for addr in result[self.minion_id]:
+                    if addr != '127.0.0.1':
+                        _public_ip = addr
+                        break
+                if _public_ip == '127.0.0.1':
+                    logger.warning("'%s' public IP is the loopback interface IP ('127.0.0.1')",
+                                   self.minion_id)
+            self._public_ip = _public_ip
+        return self._public_ip
+
+    @property
+    def subnets(self):
+        if self._subnets is None:
+            result = SaltClient.local_cmd(self.minion_id, 'network.subnets')
+            self._subnets = result[self.minion_id]
+        return self._subnets
+
+    @property
+    def public_subnet(self):
+        if self._public_subnet is None:
+            if self.public_ip and self.subnets:
+                for subnet in self.subnets:
+                    if salt.utils.network.in_subnet(subnet, self.public_ip):
+                        self._public_subnet = subnet
+                        break
+        return self._public_subnet
+
+    @property
+    def roles(self):
+        if self._roles is None:
+            roles = PillarManager.get('ceph-salt:minions', {})
+            _roles = set()
+            for role, minions in roles.items():
+                if role != 'all' and self.minion_id in minions:
+                    _roles.add(role)
+            self._roles = _roles
+        return self._roles
+
+    @property
+    def execution(self):
+        if self._execution is None:
+            result = GrainsManager.get_grain(self.minion_id, CEPH_SALT_GRAIN_KEY)
+            self._execution = {}
+            if 'execution' in result[self.minion_id]:
+                self._execution = result[self.minion_id]['execution']
+        return self._execution
 
     def add_role(self, role):
         self.roles.add(role)
