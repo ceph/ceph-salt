@@ -155,10 +155,17 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertConfigOption('/cephadm_bootstrap/ceph_conf',
                                 'ceph-salt:bootstrap_ceph_conf')
 
+    def test_cephadm_bootstrap_dashboard_force_password_update(self):
+        self.assertFlagOption('/cephadm_bootstrap/dashboard/force_password_update',
+                              'ceph-salt:dashboard:password_update_required',
+                              True)
+
     def test_cephadm_bootstrap_dashboard_password(self):
+        default = PillarManager.get('ceph-salt:dashboard:password')
         self.assertValueOption('/cephadm_bootstrap/dashboard/password',
                                'ceph-salt:dashboard:password',
-                               'mypassword')
+                               'mypassword',
+                               default)
 
     def test_cephadm_bootstrap_dashboard_username(self):
         self.assertValueOption('/cephadm_bootstrap/dashboard/username',
@@ -228,7 +235,9 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertTrue(run_export(False))
         self.assertJsonInSysOut({
             'dashboard': {
-                'username': 'admin'
+                'username': 'admin',
+                'password': PillarManager.get('ceph-salt:dashboard:password'),
+                'password_update_required': True
             },
             'minions': {
                 'all': ['node1.ceph.com', 'node2.ceph.com'],

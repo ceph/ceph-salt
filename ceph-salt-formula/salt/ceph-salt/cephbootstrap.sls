@@ -29,6 +29,7 @@ wait for other minions:
 {{ macros.begin_step('Run "cephadm bootstrap"') }}
 
 {% set dashboard_username = pillar['ceph-salt']['dashboard']['username'] %}
+{% set dashboard_password = pillar['ceph-salt']['dashboard']['password'] %}
 
 run cephadm bootstrap:
   cmd.run:
@@ -37,6 +38,10 @@ run cephadm bootstrap:
         cephadm --verbose bootstrap --mon-ip {{ pillar['ceph-salt']['bootstrap_mon_ip'] }} \
                 --config /tmp/bootstrap-ceph.conf \
                 --initial-dashboard-user {{ dashboard_username }} \
+                --initial-dashboard-password {{ dashboard_password }} \
+{%- if not pillar['ceph-salt']['dashboard']['password_update_required'] %}
+                --dashboard-password-noupdate \
+{%- endif %}
                 --output-keyring /etc/ceph/ceph.client.admin.keyring \
                 --output-config /etc/ceph/ceph.conf \
                 --skip-monitoring-stack \
@@ -55,17 +60,6 @@ run cephadm bootstrap:
     - failhard: True
 
 {{ macros.end_step('Run "cephadm bootstrap"') }}
-
-{% set dashboard_password = pillar['ceph-salt'].get('dashboard', {'password': None}).get('password', None) %}
-{% if dashboard_password %}
-set ceph-dashboard password:
-  cmd.run:
-    - name: |
-        ceph dashboard ac-user-set-password --force-password admin {{ dashboard_password }}
-    - onchanges:
-      - cmd: run cephadm bootstrap
-    - failhard: True
-{% endif %}
 
 {{ macros.begin_step('Configure cephadm MGR module') }}
 

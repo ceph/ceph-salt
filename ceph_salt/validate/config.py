@@ -17,6 +17,11 @@ def validate_config(host_ls):
         dashboard_username = PillarManager.get('ceph-salt:dashboard:username')
         if not dashboard_username:
             return "No dashboard username specified in config"
+        dashboard_password = PillarManager.get('ceph-salt:dashboard:password')
+        if not dashboard_password:
+            return "No dashboard password specified in config"
+        if not isinstance(PillarManager.get('ceph-salt:dashboard:password_update_required'), bool):
+            return "'ceph-salt:dashboard:password_update_required' must be of type Boolean"
         bootstrap_mon_ip = PillarManager.get('ceph-salt:bootstrap_mon_ip')
         if not bootstrap_mon_ip:
             return "No bootstrap Mon IP specified in config"

@@ -3,6 +3,8 @@ import itertools
 import logging
 import fnmatch
 import json
+import random
+import string
 
 
 from pyparsing import alphanums, OneOrMore, Optional, Regex, Suppress, Word, QuotedString
@@ -311,6 +313,12 @@ class TimeSubnetHandler(PillarHandler):
         return []
 
 
+def generate_password():
+    # type: () -> str
+    return ''.join(random.choice(string.ascii_lowercase + string.digits)
+                   for i in range(10))
+
+
 CEPH_SALT_OPTIONS = {
     'ceph_cluster': {
         'help': '''
@@ -442,9 +450,14 @@ CEPH_SALT_OPTIONS = {
                 'help': 'Dashboard settings',
                 'options': {
                     'password': {
-                        'default_text': 'randomly generated',
-                        'sensitive': True,
-                        'handler': PillarHandler('ceph-salt:dashboard:password')
+                        'handler': PillarHandler('ceph-salt:dashboard:password',
+                                                 generate_password())
+                    },
+                    'force_password_update': {
+                        'type': 'flag',
+                        'help': 'Force password change at first login',
+                        'handler': PillarHandler('ceph-salt:dashboard:password_update_required',
+                                                 True)
                     },
                     'username': {
                         'handler': PillarHandler('ceph-salt:dashboard:username', 'admin')
