@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [15.2.4] - 2020-05-15
+### Added
+- Enforce dashboard password change upon first login (#220)
+- User feedback when adding/removing minions (#227)
+- Optimize "ceph-salt config" command (#224)
+- Optimize remote grain get (#230)
+- Persist default values in pillar data (#219)
+- Log warn when public IP is loopback IP (#216)
+### Fixed
+- Fix error on 'ceph-salt status' when pillar data is empty (#221)
+- Don't log dashboard password (#228)
+- Unable to see dashboard password (#220)
+- Do not log pillar data secrets (#234)
+- Wait longer for clock sync (#233)
+
 ## [15.2.3] - 2020-05-04
 ### Added
 - Support time server not managed by ceph-salt (#206)
@@ -130,7 +145,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal README.
 - The CHANGELOG file.
 
-[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.3...HEAD
+[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.4...HEAD
+[15.2.4]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.4
 [15.2.3]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.3
 [15.2.2]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.2
 [15.2.1]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.1
