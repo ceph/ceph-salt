@@ -1,5 +1,7 @@
 {% import 'macros.yml' as macros %}
 
+{% if 'cephadm' in grains['ceph-salt']['roles'] %}
+
 {{ macros.begin_stage('Prepare to bootstrap the Ceph cluster') }}
 
 {{ macros.begin_step('Install cephadm and other packages') }}
@@ -44,3 +46,5 @@ download ceph container image:
 {{ macros.end_step('Download ceph container image') }}
 
 {{ macros.end_stage('Prepare to bootstrap the Ceph cluster') }}
+
+{% endif %}

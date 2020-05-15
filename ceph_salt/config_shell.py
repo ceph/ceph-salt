@@ -352,6 +352,11 @@ CEPH_SALT_OPTIONS = {
                         'required': True,
                         'default_text': 'no minion'
                     },
+                    'cephadm': {
+                        'type': 'minions',
+                        'handler': RoleHandler('cephadm'),
+                        'help': 'List of minions with Cephadm role'
+                    },
                 }
             },
         }
@@ -1243,6 +1248,8 @@ def run_import(config_file):
         node = CephNode(minion)
         if minion in minions_config.get('admin', []):
             node.add_role('admin')
+        if minion in minions_config.get('cephadm', []):
+            node.add_role('cephadm')
         node.save()
     PP.pl_green('Configuration imported.')
     return True

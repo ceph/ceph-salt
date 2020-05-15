@@ -50,15 +50,23 @@ set the initial deployment of your cluster:
 ceph-salt config
 ```
 
-First step of configuration is to add the salt-minions that should be used for
-deploying Ceph the command `add` under `/ceph_cluster/minions` option supports
-autocomplete and glob expressions:
+First step of configuration is to add the salt-minions that should be managed
+by`ceph-salt`.
+The `add` command under `/ceph_cluster/minions` option supports autocomplete
+and glob expressions:
 
 ```
 /ceph_cluster/minions add *
 ```
 
-Then we must specify which minions will have "ceph.conf" and "keyring" installed:
+Then we must specify which minions will be used to deploy Ceph.
+Those minions will be Ceph nodes controlled by cephadm:
+
+```
+/ceph_cluster/roles/cephadm add *
+```
+
+And which of them will have "ceph.conf" and "keyring" installed:
 
 ```
 /ceph_cluster/roles/admin add *
