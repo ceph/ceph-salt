@@ -1,4 +1,5 @@
 import contextlib
+import copy
 import logging
 import os
 import shutil
@@ -255,6 +256,15 @@ class PillarManager:
             cls.logger.debug("Loaded pillar data: %s", cls.pillar_data)
 
     @classmethod
+    def _hide_dict_secrets(cls, pillar_data):
+        if not isinstance(pillar_data, dict):
+            return
+        for key, val in pillar_data.items():
+            if key in ('private_key', 'password'):
+                pillar_data[key] = '?'
+            cls._hide_dict_secrets(val)
+
+    @classmethod
     def get(cls, key, default=None):
         cls._load()
         res = cls._get_dict_value(cls.pillar_data, key)
@@ -262,7 +272,9 @@ class PillarManager:
             # don't log key value
             cls.logger.info("Got '%s' from pillar", key)
         else:
-            cls.logger.info("Got '%s' from pillar: '%s'", key, res)
+            res_log = copy.deepcopy(res)
+            cls._hide_dict_secrets(res_log)
+            cls.logger.info("Got '%s' from pillar: '%s'", key, res_log)
         if res is None and default is not None:
             res = default
 
@@ -274,10 +286,12 @@ class PillarManager:
         cls._set_dict_value(cls.pillar_data, key, value)
         cls._save_yaml(cls.pillar_data, cls.PILLAR_FILE)
         SaltClient.local().cmd('*', 'saltutil.pillar_refresh', tgt_type="compound")
-        if key == 'ceph-salt:ssh:private_key':
+        if key in ('ceph-salt:ssh:private_key', 'ceph-salt:dashboard:password'):
             cls.logger.info("Set '%s' to pillar", key)
         else:
-            cls.logger.info("Set '%s' to pillar: '%s'", key, value)
+            value_log = copy.deepcopy(value)
+            cls._hide_dict_secrets(value_log)
+            cls.logger.info("Set '%s' to pillar: '%s'", key, value_log)
 
     @classmethod
     def reset(cls, key):
