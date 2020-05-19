@@ -10,6 +10,14 @@ install required packages:
       - podman
     - failhard: True
 
+/var/log/journal:
+  file.directory:
+    - user: root
+    - group: root
+    - mode: '0755'
+    - makedirs: True
+    - failhard: True
+
 {% if pillar['ceph-salt']['updates']['enabled'] %}
 
 {{ macros.begin_step('Update all packages') }}
