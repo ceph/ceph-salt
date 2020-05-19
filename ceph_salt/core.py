@@ -188,7 +188,7 @@ class SshKeyManager:
             raise Exception('invalid private key')
 
         pub_key = key.publickey().exportKey('OpenSSH').decode('utf-8')
-        if not stored_pub_key or pub_key != stored_pub_key:
+        if not stored_pub_key or pub_key.split()[1] != stored_pub_key.split()[1]:
             raise Exception('key pair does not match')
 
     @classmethod
