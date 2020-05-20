@@ -48,6 +48,9 @@ Requires:       python3-PyYAML >= 5.1.2
 Requires:       python3-setuptools
 Requires:       python3-salt >= 3000
 Requires:       python3-curses
+Requires:       netcat-openbsd
+%else
+Requires:       nc 
 %endif
 
 Requires:       ceph-salt-formula

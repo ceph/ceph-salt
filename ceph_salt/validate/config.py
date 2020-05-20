@@ -1,4 +1,34 @@
+import socket
+import subprocess
+
 from ..salt_utils import PillarManager
+from ..exceptions import CmdException
+
+
+def host_resolvable_to_ip(host):
+    return list(set(map(
+        lambda a: a[4][0],
+        socket.getaddrinfo(host, 123)
+    )))
+
+
+def run_sync(command, cwd=None):
+    # logger.info("Running sync command (%s): %s", cwd if cwd else ".", command)
+    with subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd) as proc:
+        stdout, stderr = proc.communicate()
+        if proc.returncode != 0:
+            raise CmdException(command, proc.returncode, stderr)
+    return stdout.decode('utf-8')
+
+
+def probe_udp_port_123(ipaddr):
+    probe_succeeded = None
+    try:
+        run_sync(['nc', '-z', '-u', ipaddr, '123'])
+        probe_succeeded = True
+    except CmdException:
+        probe_succeeded = False
+    return probe_succeeded
 
 
 def validate_config(host_ls):
@@ -66,6 +96,19 @@ def validate_config(host_ls):
             return 'No external time servers specified in config'
         if not time_server_is_minion and external_time_servers:
             return not_minion_err.format('external time servers')
+        # assert that external_time_servers are sane
+        if external_time_servers:
+            external_time_server_ip_addresses = []
+            ahost = None
+            for ahost in external_time_servers:
+                ipaddrs = host_resolvable_to_ip(ahost)
+                if not ipaddrs:
+                    return 'External time server {} is not resolvable to IP address'
+                external_time_server_ip_addresses += list(map(lambda a: (ahost, a), ipaddrs))
+            for host_ip_tuple in external_time_server_ip_addresses:
+                if not probe_udp_port_123(host_ip_tuple[1]):
+                    return ('External time server {} not accepting UDP packets on port 123'
+                            .format(host_ip_tuple[0]))
     ceph_container_image_path = PillarManager.get('ceph-salt:container:images:ceph')
     if not ceph_container_image_path:
         return "No Ceph container image path specified in config"
