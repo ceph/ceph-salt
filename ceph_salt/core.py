@@ -123,6 +123,9 @@ class CephNodeManager:
         PillarManager.set('ceph-salt:minions:admin',
                           [n.minion_id for n in cls._ceph_salt_nodes.values()
                            if 'admin' in n.roles])
+        PillarManager.set('ceph-salt:minions:cephadm',
+                          [n.minion_id for n in cls._ceph_salt_nodes.values()
+                           if 'cephadm' in n.roles])
 
     @classmethod
     def ceph_salt_nodes(cls):

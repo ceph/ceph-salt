@@ -84,10 +84,16 @@ class ValidateConfigTest(SaltMockTestCase):
             validate_config([]),
             not_minion_err.format('external time servers'))
 
-    def test_admin_not_cluster_minion(self):
+    def test_cephadm_not_cluster_minion(self):
+        PillarManager.set('ceph-salt:minions:cephadm', ['node4.ceph.com'])
+        self.assertEqual(validate_config([]),
+                         "Minion 'node4.ceph.com' has 'cephadm' role but is not a cluster minion")
+
+    def test_admin_without_cephadm_role(self):
         PillarManager.set('ceph-salt:bootstrap_minion', 'node3.ceph.com')
         PillarManager.set('ceph-salt:minions:admin', ['node3.ceph.com'])
-        self.assertEqual(validate_config([]), "One or more Admin nodes are not cluster minions")
+        self.assertEqual(validate_config([]),
+                         "Minion 'node3.ceph.com' has 'admin' role but not 'cephadm' role")
 
     def test_no_ceph_container_image_path(self):
         PillarManager.reset('ceph-salt:container:images:ceph')
@@ -107,7 +113,11 @@ class ValidateConfigTest(SaltMockTestCase):
         PillarManager.set('ceph-salt:time_server:server_host', 'node1.ceph.com')
         PillarManager.set('ceph-salt:time_server:external_time_servers', ['pool.ntp.org'])
         PillarManager.set('ceph-salt:time_server:subnet', '10.20.188.0/24')
-        PillarManager.set('ceph-salt:minions:all', ['node1.ceph.com', 'node2.ceph.com'])
+        PillarManager.set('ceph-salt:minions:all', ['node1.ceph.com',
+                                                    'node2.ceph.com',
+                                                    'node3.ceph.com'])
+        PillarManager.set('ceph-salt:minions:cephadm', ['node1.ceph.com',
+                                                        'node2.ceph.com'])
         PillarManager.set('ceph-salt:minions:admin', ['node1.ceph.com'])
         PillarManager.set('ceph-salt:updates:enabled', True)
         PillarManager.set('ceph-salt:updates:reboot', True)
