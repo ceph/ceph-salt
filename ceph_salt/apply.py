@@ -15,7 +15,7 @@ import yaml
 from .core import CephNode, CephNodeManager
 from .exceptions import MinionDoesNotExistInConfiguration, ValidationException
 from .salt_event import EventListener, SaltEventProcessor
-from .salt_utils import SaltClient, GrainsManager, CephOrch
+from .salt_utils import SaltClient, GrainsManager, CephOrch, PillarManager
 from .terminal_utils import PrettyPrinter as PP
 from .validate.config import validate_config
 from .validate.salt_master import check_salt_master_status
@@ -1269,6 +1269,49 @@ class CephSaltExecutor:
         return 0
 
     @staticmethod
+    def check_external_time_servers(ts_minion, external_ts_list):
+        PP.println("Installing python3-ntplib on time server node...")
+        salt_result = SaltClient.local().cmd(
+            ts_minion, 'pkg.install', ["name='python3-ntplib'", "refresh=True"]
+        )
+        for external_ts in external_ts_list:
+            max_attempts = 10
+            for attempt in range(1, max_attempts + 1):
+                PP.println("Probing external time server {} (attempt {} of {})...".format(
+                    external_ts,
+                    attempt,
+                    max_attempts
+                ))
+                salt_result = SaltClient.local().cmd(
+                    ts_minion,
+                    'ceph_salt.probe_ntp',
+                    [external_ts]
+                )
+                if salt_result[ts_minion] == 0:
+                    break
+                if salt_result[ts_minion] == 1:
+                    time.sleep(3)
+                    continue
+                if salt_result[ts_minion] == 2:
+                    PP.pl_red(
+                        "Hostname '{}' could not be resolved to IP address (is it valid?)"
+                        .format(external_ts)
+                    )
+                    return 2
+                PP.pl_red(
+                    "Problem communicating with external time server '{}' (check the log?)"
+                    .format(external_ts)
+                )
+                return 3
+            else:  # inner loop terminated without break
+                PP.pl_red(
+                    "External time server '{}' did not respond to probe"
+                    .format(external_ts)
+                )
+                return 1
+        return 0
+
+    @staticmethod
     def check_apply_prerequisites(minion_id):
         # check salt master is configured
         try:
@@ -1296,6 +1339,19 @@ class CephSaltExecutor:
         retcode = CephSaltExecutor.check_cluster(minion_id, host_ls)
         if retcode > 0:
             return retcode
+
+        # check external time servers, if any
+        time_server_enabled = PillarManager.get('ceph-salt:time_server:enabled')
+        if time_server_enabled:
+            time_server_host = PillarManager.get('ceph-salt:time_server:server_host')
+            external_time_servers = PillarManager.get('ceph-salt:time_server:external_time_servers')
+            if external_time_servers:
+                retcode = CephSaltExecutor.check_external_time_servers(
+                    time_server_host,
+                    external_time_servers
+                )
+                if retcode > 0:
+                    return retcode
 
         PP.println("Ready to apply config!")
         return 0

@@ -1,5 +1,7 @@
 # -*- encoding: utf-8 -*-
 import json
+import ntplib
+import socket
 
 def get_remote_grain(host, grain):
     """
@@ -24,3 +26,16 @@ def set_remote_grain(host, grain, value):
     return __salt__['cmd.run_all']("ssh -o StrictHostKeyChecking=no "
                                    "-i /tmp/ceph-salt-ssh-id_rsa root@{} "
                                    "'salt-call grains.set {} {}'".format(host, grain, value))
+
+def probe_ntp(ahost):
+    conn = ntplib.NTPClient()
+    success = False
+    try:
+        conn.request(ahost, version=3)
+        return 0
+    except socket.gaierror:
+        return 2
+    except ntplib.NTPException:
+        return 1
+    except:
+        return 3
