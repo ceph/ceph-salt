@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [15.2.5] - 2020-05-25
+### Added
+- Support SSH keys import and export (#243)
+- Probe external time servers (#247)
+- Persist journal logs (#244)
+- Add 'cephadm' role (#235)
+### Fixed
+- Retry first chronyc execution (#239)
+
 ## [15.2.4] - 2020-05-15
 ### Added
 - Enforce dashboard password change upon first login (#220)
@@ -145,7 +154,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal README.
 - The CHANGELOG file.
 
-[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.4...HEAD
+[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.5...HEAD
+[15.2.5]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.5
 [15.2.4]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.4
 [15.2.3]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.3
 [15.2.2]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.2
