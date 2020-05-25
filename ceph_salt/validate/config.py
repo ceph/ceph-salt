@@ -1,3 +1,4 @@
+from ..core import SshKeyManager
 from ..salt_utils import PillarManager
 
 
@@ -38,6 +39,18 @@ def validate_config(host_ls):
         if admin_minion not in cephadm_minions:
             return "Minion '{}' has 'admin' role but not 'cephadm' "\
                    "role".format(admin_minion)
+
+    # ssh
+    priv_key = PillarManager.get('ceph-salt:ssh:private_key')
+    if not priv_key:
+        return "No SSH private key specified in config"
+    pub_key = PillarManager.get('ceph-salt:ssh:public_key')
+    if not pub_key:
+        return "No SSH public key specified in config"
+    try:
+        SshKeyManager.check_keys(priv_key, pub_key)
+    except Exception:  # pylint: disable=broad-except
+        return "Invalid SSH key pair"
 
     # system_update
     if not isinstance(PillarManager.get('ceph-salt:updates:enabled'), bool):

@@ -180,14 +180,14 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertNotEqual(PillarManager.get('ceph-salt:ssh:public_key'), None)
 
     def test_ssh_private_key(self):
-        self.assertValueOption('/ssh/private_key',
-                               'ceph-salt:ssh:private_key',
-                               'myprivatekey')
+        self.assertImportOption('/ssh/private_key',
+                                'ceph-salt:ssh:private_key',
+                                'myprivatekey')
 
     def test_ssh_public_key(self):
-        self.assertValueOption('/ssh/public_key',
-                               'ceph-salt:ssh:public_key',
-                               'mypublickey')
+        self.assertImportOption('/ssh/public_key',
+                                'ceph-salt:ssh:public_key',
+                                'mypublickey')
 
     def test_time_server(self):
         self.assertFlagOption('/time_server',
@@ -351,6 +351,21 @@ class ConfigShellTest(SaltMockTestCase):
             self.shell.run_cmdline('{} reset'.format(path))
             self.assertInSysOut('Value reset.')
             self.assertEqual(PillarManager.get(pillar_key), default)
+
+    def assertImportOption(self, path, pillar_key, file_content):
+        file_path = '/import.file'
+        self.fs.create_file(file_path, contents=file_content)
+        self.shell.run_cmdline('{} import {}'.format(path, file_path))
+        self.assertInSysOut('Value imported.')
+        self.assertEqual(PillarManager.get(pillar_key), file_content)
+
+        self.shell.run_cmdline('{} export'.format(path))
+        self.assertInSysOut(file_content)
+
+        self.shell.run_cmdline('{} reset'.format(path))
+        self.assertInSysOut('Value reset.')
+        self.assertEqual(PillarManager.get(pillar_key), None)
+        self.fs.remove(file_path)
 
     def assertValueOption(self, path, pillar_key, value, default=None):
         self.shell.run_cmdline('{} set {}'.format(path, value))

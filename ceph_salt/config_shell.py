@@ -3,6 +3,7 @@ import itertools
 import logging
 import fnmatch
 import json
+from pathlib import Path
 import random
 import string
 
@@ -32,6 +33,9 @@ logger = logging.getLogger(__name__)
 class OptionHandler:
     def value(self):
         return None, None
+
+    def raw_value(self):
+        return None
 
     def save(self, value):
         pass
@@ -63,6 +67,9 @@ class PillarHandler(OptionHandler):
 
     def value(self):
         return PillarManager.get(self.pillar_path), None
+
+    def raw_value(self):
+        return PillarManager.get(self.pillar_path)
 
     def save(self, value):
         PillarManager.set(self.pillar_path, value)
@@ -484,10 +491,12 @@ CEPH_SALT_OPTIONS = {
         'handler': SSHGroupHandler(),
         'options': {
             'private_key': {
+                'type': 'import',
                 'help': "SSH RSA private key",
                 'handler': SshPrivateKeyHandler()
             },
             'public_key': {
+                'type': 'import',
                 'help': "SSH RSA public key",
                 'handler': SshPublicKeyHandler()
             },
@@ -651,7 +660,7 @@ class ValueOptionNode(OptionNode):
         Sets the value of option
         '''
         if self._read_only():
-            raise Exception("Option {} cannot be modified".format(self.option_name))
+            raise CephSaltException("Option {} cannot be modified".format(self.option_name))
         if 'handler' in self.option_dict:
             self.option_dict['handler'].save(value)
         else:
@@ -666,13 +675,50 @@ class ValueOptionNode(OptionNode):
         return matching
 
 
+class ImportValueOptionNode(OptionNode):
+    def _list_commands(self):
+        return ['import', 'export']
+
+    def ui_command_import(self, path):
+        '''
+        Import file content to option value
+        '''
+        if self._read_only():
+            raise CephSaltException("Option {} cannot be modified".format(self.option_name))
+        if not Path(path).is_file():
+            raise CephSaltException("File not found: '{}'".format(path))
+        with open(path, 'r') as file:
+            value = file.read()
+        if 'handler' in self.option_dict:
+            self.option_dict['handler'].save(value)
+        else:
+            self.value = value
+        PP.pl_green('Value imported.')
+
+    # pylint: disable=unused-argument
+    def ui_complete_import(self, parameters, text, current_param):
+        path = Path(text)
+        if path.is_dir():
+            return [str(p) for p in path.iterdir()]
+        return [str(p) for p in path.parent.glob('{}*'.format(path.name))]
+
+    def ui_command_export(self):
+        '''
+        Export option value
+        '''
+        value = self.value
+        if 'handler' in self.option_dict:
+            value = self.option_dict['handler'].raw_value()
+        PP.println(value)
+
+
 class FlagOptionNode(OptionNode):
     def _list_commands(self):
         return ['enable', 'disable']
 
     def _set_option_value(self, bool_value):
         if self._read_only():
-            raise Exception("Option {} cannot be modified".format(self.option_name))
+            raise CephSaltException("Option {} cannot be modified".format(self.option_name))
         if 'handler' in self.option_dict:
             self.option_dict['handler'].save(bool_value)
         else:
@@ -1089,6 +1135,8 @@ def _generate_option_node(option_name, option_dict, parent):
         ConfOptionNode(option_name, option_dict, parent)
     elif option_dict.get('type', None) == 'minions':
         MinionsOptionNode(option_name, option_dict, parent)
+    elif option_dict.get('type', None) == 'import':
+        ImportValueOptionNode(option_name, option_dict, parent)
     else:
         ValueOptionNode(option_name, option_dict, parent)
 
