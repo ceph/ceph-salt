@@ -1,6 +1,5 @@
 # -*- encoding: utf-8 -*-
 import json
-import ntplib
 import socket
 
 def get_remote_grain(host, grain):
@@ -28,6 +27,7 @@ def set_remote_grain(host, grain, value):
                                    "'salt-call grains.set {} {}'".format(host, grain, value))
 
 def probe_ntp(ahost):
+    import ntplib
     conn = ntplib.NTPClient()
     success = False
     try:
