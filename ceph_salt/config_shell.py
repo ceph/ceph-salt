@@ -473,7 +473,17 @@ CEPH_SALT_OPTIONS = {
                     },
                     'username': {
                         'handler': PillarHandler('ceph-salt:dashboard:username', 'admin')
-                    }
+                    },
+                    'ssl_certificate': {
+                        'type': 'import',
+                        'help': "Dashboard SSL certificate",
+                        'handler': PillarHandler('ceph-salt:dashboard:ssl_certificate')
+                    },
+                    'ssl_certificate_key': {
+                        'type': 'import',
+                        'help': "Dashboard SSL certificate key",
+                        'handler': PillarHandler('ceph-salt:dashboard:ssl_certificate_key')
+                    },
                 }
             },
             'mon_ip': {
@@ -608,6 +618,10 @@ class OptionNode(configshell.ConfigNode):
             value = None
             if 'handler' in self.option_dict:
                 value, val_type = self.option_dict['handler'].value()
+                if self.option_dict.get('type') == 'import':
+                    raw_value = self.option_dict['handler'].raw_value()
+                    if value is not None and value == raw_value:
+                        value, val_type = 'value set', None
             if value is not None:
                 if self.option_dict.get('sensitive', False):
                     return '***', None
@@ -631,7 +645,6 @@ class OptionNode(configshell.ConfigNode):
             if self.option_dict.get('required', False):
                 val_type = False
             return 'not set', val_type
-
         value_str = str(value)
         return value_str, val_type
 

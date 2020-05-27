@@ -173,6 +173,16 @@ class ConfigShellTest(SaltMockTestCase):
                                'myusername',
                                'admin')
 
+    def test_cephadm_bootstrap_dashboard_ssl_certificate(self):
+        self.assertImportOption('/cephadm_bootstrap/dashboard/ssl_certificate',
+                                'ceph-salt:dashboard:ssl_certificate',
+                                'mycert')
+
+    def test_cephadm_bootstrap_dashboard_ssl_certificate_key(self):
+        self.assertImportOption('/cephadm_bootstrap/dashboard/ssl_certificate_key',
+                                'ceph-salt:dashboard:ssl_certificate_key',
+                                'mycertkey')
+
     def test_ssh(self):
         self.shell.run_cmdline('/ssh generate')
         self.assertInSysOut('Key pair generated.')
