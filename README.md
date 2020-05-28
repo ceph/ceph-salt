@@ -118,6 +118,16 @@ source of time:
 (In this case, the on-site time server is assumed to be already configured and
 ceph-salt will make no attempt to manage it.)
 
+ceph-salt can also be told not to touch the time sync configuration:
+
+```
+/time_server disable
+```
+
+In this case, it is up to the user to ensure that some form of time syncing is
+configured and running on all machines in the cluster before triggering
+`ceph-salt apply`. This is because `cephadm` will refuse to run without it.
+
 Finally we need to set the Ceph container image path:
 
 ```
