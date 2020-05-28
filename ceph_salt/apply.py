@@ -243,7 +243,7 @@ class CursesScreen:
         try:
             ch = self.stdscr.getch()
             if ch == -1:
-                return
+                return False
             if ch == curses.KEY_NPAGE:
                 if self.body:
                     if self.body_pos < self.body_current_row - self.body_height:
@@ -276,8 +276,11 @@ class CursesScreen:
             elif ch == curses.KEY_UP:
                 for listener in self.key_listeners:
                     listener.up_key()
+            else:
+                return False
         except KeyboardInterrupt:
-            pass
+            return False
+        return True
 
 
 class Event:
@@ -1132,10 +1135,14 @@ class CursesRenderer(Renderer, ScreenKeyListener):
         try:
             self.screen.start()
 
+            finished = False
             logger.info("started render loop")
             while self.running:
-                self.screen.wait_for_event()
-                self._update_screen()
+                finished = finished and self.model.finished()
+                if self.screen.wait_for_event() or not finished:
+                    if self.model.finished():
+                        finished = True
+                    self._update_screen()
             logger.info("finished render loop")
         except Exception as ex:  # pylint: disable=broad-except
             logger.exception(ex)
