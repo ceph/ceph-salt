@@ -1143,7 +1143,10 @@ class CursesRenderer(Renderer, ScreenKeyListener):
         self.screen.shutdown()
         self.loading.stop()
         if has_failed:
-            PP.println("An error occurred in the UI, please check the log for further details.")
+            PP.println("An error occurred in the UI, please check "
+                       "'/var/log/ceph-salt.log' for further details.")
+        else:
+            PP.println("Finished. Log file may be found at '/var/log/ceph-salt.log'.")
 
 
 class TerminalRenderer(Renderer):
