@@ -41,6 +41,9 @@ class ScreenKeyListener:
     def collapse_expand_all_key(self):
         pass
 
+    def pause_key(self):
+        pass
+
 
 class CursesScreen:
     HEADER_HEIGHT = 2
@@ -200,7 +203,7 @@ class CursesScreen:
     def clear_footer(self):
         if self.footer:
             self.footer.move(0, 0)
-            self.footer.clrtoeol()
+            self.footer.erase()
 
     def clear_body(self):
         if self.body:
@@ -276,6 +279,9 @@ class CursesScreen:
             elif ch == curses.KEY_UP:
                 for listener in self.key_listeners:
                     listener.up_key()
+            elif ch == ord('p'):
+                for listener in self.key_listeners:
+                    listener.pause_key()
             else:
                 return False
         except KeyboardInterrupt:
@@ -769,6 +775,7 @@ class CursesRenderer(Renderer, ScreenKeyListener):
             }
         self._render_lock = threading.Lock()
         self.running = None
+        self.paused = None
         self.loading = LoadingWidget()
 
     def _render_header(self, now):
@@ -824,23 +831,29 @@ class CursesRenderer(Renderer, ScreenKeyListener):
 
     def _render_footer(self):
         self.screen.clear_footer()
-        col = self._add_key_shortcut(0, "↑|↓", "Navigate")
-        if self._all_collapsed():
-            col = self._add_key_shortcut(col, "c", "ExpandAll")
-        else:
-            col = self._add_key_shortcut(col, "c", "CollapAll")
-        if self.selected is not None:
-            if self.minions_ui[self.selected]['expanded']:
-                col = self._add_key_shortcut(col, "space", "CollapSel")
+        if not self.paused:
+            col = self._add_key_shortcut(0, "↑|↓", "Navigate")
+            if self._all_collapsed():
+                col = self._add_key_shortcut(col, "c", "ExpandAll")
             else:
-                col = self._add_key_shortcut(col, "space", "ExpandSel")
-        if self.screen.has_scroll():
-            col = self._add_key_shortcut(col, "j|k", "Scroll")
-            col = self._add_key_shortcut(col, "PgDn|PgUp", "ScrollPage")
+                col = self._add_key_shortcut(col, "c", "CollapAll")
+            if self.selected is not None:
+                if self.minions_ui[self.selected]['expanded']:
+                    col = self._add_key_shortcut(col, "space", "CollapSel")
+                else:
+                    col = self._add_key_shortcut(col, "space", "ExpandSel")
+            if self.screen.has_scroll():
+                col = self._add_key_shortcut(col, "j|k", "Scroll")
+                col = self._add_key_shortcut(col, "PgDn|PgUp", "ScrollPage")
+            if not self.model.finished():
+                col = self._add_key_shortcut(col, "p", "Pause")
 
-        self.screen.write_footer(col, " ", CursesScreen.COLOR_MINION, False, False, False)
+            self.screen.write_footer(col, " ", CursesScreen.COLOR_MINION, False, False, False)
 
-        if self.model.finished():
+        if self.paused:
+            self.screen.write_footer(1, "Paused - Press p to resume",
+                                     CursesScreen.COLOR_MARKER, True, False, False, row=1)
+        elif self.model.finished():
             self.screen.write_footer(1, "Press q to exit",
                                      CursesScreen.COLOR_MARKER, True, False, False, row=1)
 
@@ -1102,6 +1115,12 @@ class CursesRenderer(Renderer, ScreenKeyListener):
         if self.model.finished():
             self.running = False
 
+    def pause_key(self):
+        if self.model.finished():
+            self.paused = False
+        elif self.paused is not None:
+            self.paused = not self.paused
+
     def _all_collapsed(self):
         for minion in self.minions_ui.values():
             if minion['expanded']:
@@ -1131,17 +1150,22 @@ class CursesRenderer(Renderer, ScreenKeyListener):
     def run(self):
         self.loading.start()
         self.running = True
+        self.paused = False
         has_failed = False
         try:
             self.screen.start()
 
             finished = False
+            paused = False
             logger.info("started render loop")
             while self.running:
                 finished = finished and self.model.finished()
-                if self.screen.wait_for_event() or not finished:
+                paused = paused and self.paused
+                if (self.screen.wait_for_event() or not finished) and not paused:
                     if self.model.finished():
                         finished = True
+                    if self.paused:
+                        paused = True
                     self._update_screen()
             logger.info("finished render loop")
         except Exception as ex:  # pylint: disable=broad-except
