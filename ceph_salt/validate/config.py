@@ -21,6 +21,12 @@ def validate_config(host_ls):
         dashboard_password = PillarManager.get('ceph-salt:dashboard:password')
         if not dashboard_password:
             return "No dashboard password specified in config"
+        dashboard_ssl_certificate = PillarManager.get('ceph-salt:dashboard:ssl_certificate')
+        dashboard_ssl_certificate_key = PillarManager.get('ceph-salt:dashboard:ssl_certificate_key')
+        if dashboard_ssl_certificate and not dashboard_ssl_certificate_key:
+            return "Dashboard SSL certificate provided, but no SSL certificate key specified"
+        if not dashboard_ssl_certificate and dashboard_ssl_certificate_key:
+            return "Dashboard SSL certificate key provided, but no SSL certificate specified"
         if not isinstance(PillarManager.get('ceph-salt:dashboard:password_update_required'), bool):
             return "'ceph-salt:dashboard:password_update_required' must be of type Boolean"
         bootstrap_mon_ip = PillarManager.get('ceph-salt:bootstrap_mon_ip')

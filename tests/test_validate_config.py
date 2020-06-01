@@ -57,6 +57,16 @@ PBVw2pLCZsH5ol3VJ1/DETsGRMzFubFeTUNOC3MzhhG+V"""
         PillarManager.reset('ceph-salt:dashboard:password')
         self.assertEqual(validate_config([]), "No dashboard password specified in config")
 
+    def test_dashboard_ssl_certificate(self):
+        PillarManager.reset('ceph-salt:dashboard:ssl_certificate_key')
+        self.assertEqual(validate_config([]), "Dashboard SSL certificate provided, "
+                                              "but no SSL certificate key specified")
+
+    def test_dashboard_ssl_certificate_key(self):
+        PillarManager.reset('ceph-salt:dashboard:ssl_certificate')
+        self.assertEqual(validate_config([]), "Dashboard SSL certificate key provided, "
+                                              "but no SSL certificate specified")
+
     def test_dashboard_password_update_required_not_set(self):
         PillarManager.reset('ceph-salt:dashboard:password_update_required')
         self.assertEqual(validate_config([]),
@@ -124,6 +134,56 @@ PBVw2pLCZsH5ol3VJ1/DETsGRMzFubFeTUNOC3MzhhG+V"""
         PillarManager.set('ceph-salt:dashboard:username', 'admin1')
         PillarManager.set('ceph-salt:dashboard:password', 'admin2')
         PillarManager.set('ceph-salt:dashboard:password_update_required', True)
+        PillarManager.set('ceph-salt:dashboard:ssl_certificate',
+                          """-----BEGIN CERTIFICATE-----
+MIIDNTCCAh2gAwIBAgIUNBWaDwDpsU7OWD1iNVDu9576ORgwDQYJKoZIhvcNAQEL
+BQAwKjELMAkGA1UECgwCSVQxGzAZBgNVBAMMEmNlcGgtbWdyLWRhc2hib2FyZDAe
+Fw0yMDA1MjYxNDIwMTZaFw0zMDA1MjQxNDIwMTZaMCoxCzAJBgNVBAoMAklUMRsw
+GQYDVQQDDBJjZXBoLW1nci1kYXNoYm9hcmQwggEiMA0GCSqGSIb3DQEBAQUAA4IB
+DwAwggEKAoIBAQCz1rqRFF4cu6by4a3bpxdt9nmAtf8yOhhUPs5dv5APvqg6E5o2
+Uv5n+pR8gRpyBjVfUqEM6BAvXrLuVjXbiaJkRzbhR9YTpsVmLft6RyzyqxP9q3EN
+W7QCSGwfOJJjdZ9M0iEvrAJ2C66dpDoTI65ewJYgW77COyglhj8FruiXi5q+W25V
++EbZ4aoOqbwiXyTRodPgL42WnKXSloTa1ojzKFMgaUZWjwswX6pf4qGhuIZZVuvx
+P+7lpsag84mF1oZhijiKTJ9/gCmmyhEr3ZZEKxCsIXXQiVFdimbSxLXQBE9iX2EU
+s1b+4iRxCsf5y7VW734svxyj++a8p4jquHc3AgMBAAGjUzBRMB0GA1UdDgQWBBSy
++awnKYIkZJnTuE65jKimjSGQGjAfBgNVHSMEGDAWgBSy+awnKYIkZJnTuE65jKim
+jSGQGjAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBCwUAA4IBAQAf0wm2vNLy
+1O97iFT0ZERnOY8U3LNebZwq2I0luSlrr02gWYK/m5CdQw1EHxERjuuuOOVDazGp
+20qHJczzNowySjF1vU7wc2fzK89RQpXXlmLYl/eaH5bVCdyQ6yC/Mpka65LAqnVi
+XseHg+sXSkWPftmajz2wIAsP2V1b4D3M5dR1+s6ksWLtABkoVZHW726J6wc9Cc8Q
+r1BG2ZGm3Br8nfeaIY3M1A/tRTj+Y44ab1ZaFIr8sT8VwH1/TPfms1NzoydwGEkc
+vmDVPjWIAnF9dV6HJ8kHOcndZyemx2yxFUI1f1DNchRxn9UO1FOITCbeX/mz8TAr
+ZYUvxW5OQp8g
+-----END CERTIFICATE-----""")
+        PillarManager.set('ceph-salt:dashboard:ssl_certificate_key',
+                          """-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCz1rqRFF4cu6by
+4a3bpxdt9nmAtf8yOhhUPs5dv5APvqg6E5o2Uv5n+pR8gRpyBjVfUqEM6BAvXrLu
+VjXbiaJkRzbhR9YTpsVmLft6RyzyqxP9q3ENW7QCSGwfOJJjdZ9M0iEvrAJ2C66d
+pDoTI65ewJYgW77COyglhj8FruiXi5q+W25V+EbZ4aoOqbwiXyTRodPgL42WnKXS
+loTa1ojzKFMgaUZWjwswX6pf4qGhuIZZVuvxP+7lpsag84mF1oZhijiKTJ9/gCmm
+yhEr3ZZEKxCsIXXQiVFdimbSxLXQBE9iX2EUs1b+4iRxCsf5y7VW734svxyj++a8
+p4jquHc3AgMBAAECggEBAKstsAYaWf6Fi8LSl7dlU8LiggLGuXNoovHFmo7XoVur
+QduN/xLIaso0VRQxmyd/y1vBffSYC5fbTvvX6Ynfd0h2FMHYq+emrWy2RhG9IAaY
+Wv3xKzno2O33W5tYMNclBY2M0fPbibgtJHd+85x2MSqVrBB+45Nj1bHqF6DkPRbJ
+PCoYVC11K3TOzf+x9ihOxBmvWEUnNuIjwvWoMK9KfhbiMYqIPwg3VIbrrXeebzJB
+hs4wYssHnLK85LVmPXzgUODLqCR9oaaVh+BdkEepEGB/dh7fylMY8Za6IZ098Cy3
+JQiVfwixRQuKg0ViyFMsgI6mZFIpbVPmps/4XZtdukECgYEA67LI0/08IHh3sFDZ
+eYb5Yva01Kw1/Lwi1MgUSc9aeYU7vJcagVARiTcNtkWUqGIZ3uSOdcOpFSfhLntL
+BC8gr7btpxiKmhVHme+dxs1lc8AEEwm5N6u6gS92rQxCnAW1/7s2eFGvGu43G4k7
+/JpFeGV20+CJhLO4uexJQdsflOECgYEAw1Q5fMvCY1jMiq+kqXB0m3ZPjNcKwa3c
+Uvhdebl7QirauO55zMaLDBhNlu7CaXGmhVixENyGZCpkrUSquqrTtQTRxjsqcS4g
+yDFQIWyiXOg2T9YmAJU7EalrFyK6EimmA8hj62ZWwEdIkZNBtvcN5iBetGHxtdd3
+nWEF2rzd9xcCgYAvgjgM0ux9twqZFZLgdh5qnkPQ4m13Zgy3SyUbw5n/CKYD24lS
+K2t9dwViih/u2OdSEEvO3QOF6iXvkpaKX119TagVmFLHwCZQlwX8foZGkJvBoqIc
+4JaVV5XaR7BddqE6zOer1PswuHePK1hWEFqUbA9JoebWQsunXkNd7OcuwQKBgEyf
+xLF1CTuJwSuCfZjOeZ/myIwaa6jQuEaAEcNHhNfPEeBMBNHU7QUAn6de4DsXD1ju
+Ev/nUn0GuFnUPxldHBG940DdQugFTWzbE3EZOZQyr+OfwWanI/XovQ7lW5L2bZ68
+RJ46ljt1ez1IRBYvUm99MUmXxocsEEtXnUFSp8xfAoGAVr/QnNlwNoLY8LTKgfG1
+BJGDcEjQZ0KwFnaPfCMTXwnWaMHfGA9k7VrDZwxpTfGQ0b2cl+tCk7by/SCmDW6k
+RpDBiJHfMFDSRysZrjmuULRJvcrItRg2r3TIVuB8Wxze7Ugyb9G4hH7ZIW1y9QlG
+SCzirUzUKN2oge2WieNI7MQ=
+-----END PRIVATE KEY-----""")
         PillarManager.set('ceph-salt:bootstrap_minion', 'node1.ceph.com')
         PillarManager.set('ceph-salt:bootstrap_mon_ip', '10.20.188.201')
         PillarManager.set('ceph-salt:time_server:enabled', True)
@@ -144,7 +204,8 @@ ClF4wYDBN6wC9Amp4xouZTDbOqZdkXxUezgbFrG1Nd+YtK7rF3sMdcE7ypKWkxwq3a/ZdWxnlAgQaCq2
 fH2GKzhEIw6sW0FnZ+y6XpBh6nvlD87mD8mrQbnhsjFjX+odS8gmNJOZOBxHdeWy86PHUesjttAUYwi42fWB6LkJrz74nbkp\
 ueqi4w3EjuV3zSsQoAnVkCNO1ShlQYi1LeMB9EmejaGXBugAC+XsK0hn2kabRTa3ido6BbCXJDH+dkFnBKkiGQZY1Gl7+lJZ\
 PkBcJB7nz233ba8bgrT0uSSu3fyWnnobKjnuas9lakvRedwKIy8LjZ""")
-        PillarManager.set('ceph-salt:ssh:private_key', """-----BEGIN RSA PRIVATE KEY-----
+        PillarManager.set('ceph-salt:ssh:private_key',
+                          """-----BEGIN RSA PRIVATE KEY-----
 MIIEpAIBAAKCAQEApReMGAwTesAvQJqeMaLmUw2zqmXZF8VHs4GxaxtTXfmLSu6x
 d7DHXBO8qSlpMcKt2v2XVsZ5QIEGgqtqJ11aNNvx4V65Gjn3x9his4RCMOrFtBZ2
 fsul6QYep75Q/O5g/Jq0G54bIxY1/qHUvIJjSTmTgcR3XlsvOjx1HrI7bQFGMIuN
