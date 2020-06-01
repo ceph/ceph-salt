@@ -36,8 +36,9 @@ def get_remote_grain(host, grain):
     """
     ssh_user = __pillar__['ceph-salt']['ssh']['user']
     sudo = 'sudo ' if ssh_user != 'root' else ''
+    home = '/home/{}'.format(ssh_user) if ssh_user != 'root' else '/root'    
     ret = __salt__['cmd.run_all']("ssh -o StrictHostKeyChecking=no "
-                                  "-i /tmp/ceph-salt-ssh-id_rsa {}@{} "
+                                  "-i {}/.ssh/ceph-salt {}@{} "
                                   "\"{}python3 - <<EOF\n"
                                   "import json\n"
                                   "import salt.utils.data\n"
@@ -46,7 +47,7 @@ def get_remote_grain(host, grain):
                                   "    grains = yaml.full_load(grains_file)\n"
                                   "val = salt.utils.data.traverse_dict_and_list(grains, '{}')\n"
                                   "print(json.dumps({{'local': val}}))\n"
-                                  "EOF\"".format(ssh_user, host, sudo, grain))
+                                  "EOF\"".format(home, ssh_user, host, sudo, grain))
     if ret['retcode'] != 0:
         return None
     return json.loads(ret['stdout'])['local']
