@@ -1,5 +1,7 @@
 {% import 'macros.yml' as macros %}
 
+{% if pillar['ceph-salt']['container']['registries_enabled'] %}
+
 {{ macros.begin_stage('Set up container environment') }}
 
 {{ macros.begin_step('Configure container image registries') }}
@@ -18,3 +20,5 @@
 {{ macros.end_step('Configure container image registries') }}
 
 {{ macros.end_stage('Set up container environment') }}
+
+{% endif %}

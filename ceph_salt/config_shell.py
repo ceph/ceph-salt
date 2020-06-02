@@ -388,31 +388,38 @@ CEPH_SALT_OPTIONS = {
                     },
                 }
             },
-            'registries': {
-                'type': 'list_dict',
-                'help': '''
-                        List of custom registries in v2 format.
-                        =======================================
+            'registries_conf': {
+                'type': 'group',
+                'help': "Custom registries configuration",
+                'handler': FlagGroupHandler('ceph-salt:container:registries_enabled', True),
+                'options': {
+                    'registries': {
+                        'type': 'list_dict',
+                        'help': '''
+List of custom registries in v2 format.
+=======================================
 
-                        Add by specifying B{location}, B{prefix}, and B{insecure}. e.g.,
+Add by specifying B{location}, B{prefix}, and B{insecure}. e.g.,
 
-                          add location=172.17.0.1:5000/docker.io prefix=docker.io insecure=true
-                        ''',
-                'params_spec': {
-                    'location': {
-                        'required': True
+add location=172.17.0.1:5000/docker.io prefix=docker.io insecure=true
+''',
+                        'params_spec': {
+                            'location': {
+                                'required': True
+                            },
+                            'prefix': {},
+                            'insecure': {
+                                'validator': BooleanStringValidator,
+                                'transformer': BooleanStringTransformer
+                            },
+                            'blocked': {
+                                'validator': BooleanStringValidator,
+                                'transformer': BooleanStringTransformer
+                            }
+                        },
+                        'handler': PillarHandler('ceph-salt:container:registries')
                     },
-                    'prefix': {},
-                    'insecure': {
-                        'validator': BooleanStringValidator,
-                        'transformer': BooleanStringTransformer
-                    },
-                    'blocked': {
-                        'validator': BooleanStringValidator,
-                        'transformer': BooleanStringTransformer
-                    }
-                },
-                'handler': PillarHandler('ceph-salt:container:registries')
+                }
             }
         }
     },
