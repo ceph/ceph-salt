@@ -189,8 +189,6 @@ class CursesScreen:
         current_pos = round((self.body_pos * self.body_height) / current_row)
         if current_pos >= self.body_height:
             current_pos = self.body_height - 1
-        logger.info("scroll_size=%s body_height=%s current_row=%s current_pos=%s body_pos=%s",
-                    scroll_size, self.body_height, current_row, current_pos, self.body_pos)
         for i in range(0, scroll_size):
             self._write(self.scrollbar, current_pos + i, 0, "▐", CursesScreen.COLOR_MARKER, False,
                         False, False, 1)
