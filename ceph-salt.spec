@@ -55,6 +55,7 @@ Requires:       ceph-salt-formula
 Requires:       salt-master >= 3000
 Requires:       procps
 
+Conflicts:      deepsea
 
 %description
 ceph-salt is a CLI tool for deploying Ceph clusters starting from version
