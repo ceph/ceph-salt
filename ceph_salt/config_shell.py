@@ -1276,7 +1276,11 @@ def run_config_cmdline(cmdline):
     shell = CephSaltConfigShell()
     generate_config_shell_tree(shell)
     logger.info("running command: %s", cmdline)
-    shell.run_cmdline(cmdline)
+    try:
+        shell.run_cmdline(cmdline)
+    except (configshell.ExecutionError, CephSaltException) as ex:
+        logger.exception(ex)
+        PP.pl_red(ex)
     return True
 
 
