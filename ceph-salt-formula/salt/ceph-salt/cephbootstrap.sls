@@ -70,8 +70,7 @@ configure ssh orchestrator:
         ceph config-key set mgr/cephadm/ssh_identity_pub -i /tmp/ceph-salt-ssh-id_rsa.pub
         ceph mgr module enable cephadm && \
         ceph orch set backend cephadm
-    - onchanges:
-      - cmd: run cephadm bootstrap
+    - unless: "ceph orch status 2>&1 | grep -q 'Backend: cephadm'"
     - failhard: True
 
 {{ macros.end_step('Configure cephadm MGR module') }}
