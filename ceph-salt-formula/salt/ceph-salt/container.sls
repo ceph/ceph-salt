@@ -1,8 +1,8 @@
 {% import 'macros.yml' as macros %}
 
-{{ macros.begin_stage('Container environment') }}
+{{ macros.begin_stage('Set up container environment') }}
 
-{{ macros.begin_step('Configure registries') }}
+{{ macros.begin_step('Configure container image registries') }}
 
 /etc/containers/registries.conf:
   file.managed:
@@ -15,6 +15,6 @@
     - backup: minion
     - failhard: True
 
-{{ macros.end_step('Configure registries') }}
+{{ macros.end_step('Configure container image registries') }}
 
-{{ macros.end_stage('Container environment') }}
+{{ macros.end_stage('Set up container environment') }}
