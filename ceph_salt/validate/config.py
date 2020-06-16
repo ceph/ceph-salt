@@ -9,12 +9,14 @@ def validate_config(host_ls):
     all_minions = PillarManager.get('ceph-salt:minions:all', [])
     bootstrap_minion = PillarManager.get('ceph-salt:bootstrap_minion')
     admin_minions = PillarManager.get('ceph-salt:minions:admin', [])
+    bootstrap_enabled = PillarManager.get('ceph-salt:bootstrap_enabled')
     deployed = len(host_ls) > 0
     if not deployed:
         if not bootstrap_minion:
             return "No bootstrap minion specified in config"
         if bootstrap_minion not in admin_minions:
             return "Bootstrap minion must be 'Admin'"
+    if bootstrap_enabled:
         dashboard_username = PillarManager.get('ceph-salt:dashboard:username')
         if not dashboard_username:
             return "No dashboard username specified in config"

@@ -15,7 +15,7 @@ install cephadm:
 {% endif %}
     - failhard: True
 
-{% if grains['id'] == pillar['ceph-salt']['bootstrap_minion'] %}
+{% if grains['id'] == pillar['ceph-salt'].get('bootstrap_minion') %}
 /var/log/ceph:
   file.directory:
     - user: ceph

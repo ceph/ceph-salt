@@ -45,6 +45,11 @@ PBVw2pLCZsH5ol3VJ1/DETsGRMzFubFeTUNOC3MzhhG+V"""
         PillarManager.reset('ceph-salt:bootstrap_mon_ip')
         self.assertEqual(validate_config([]), "No bootstrap Mon IP specified in config")
 
+    def test_no_bootstrap_mon_ip_bootstrap_disabled(self):
+        PillarManager.set('ceph-salt:bootstrap_enabled', False)
+        PillarManager.reset('ceph-salt:bootstrap_mon_ip')
+        self.assertIsNone(validate_config([]))
+
     def test_loopback_bootstrap_mon_ip(self):
         PillarManager.set('ceph-salt:bootstrap_mon_ip', '127.0.0.1')
         self.assertEqual(validate_config([]), "Mon IP cannot be the loopback interface IP")
@@ -184,6 +189,7 @@ BJGDcEjQZ0KwFnaPfCMTXwnWaMHfGA9k7VrDZwxpTfGQ0b2cl+tCk7by/SCmDW6k
 RpDBiJHfMFDSRysZrjmuULRJvcrItRg2r3TIVuB8Wxze7Ugyb9G4hH7ZIW1y9QlG
 SCzirUzUKN2oge2WieNI7MQ=
 -----END PRIVATE KEY-----""")
+        PillarManager.set('ceph-salt:bootstrap_enabled', True)
         PillarManager.set('ceph-salt:bootstrap_minion', 'node1.ceph.com')
         PillarManager.set('ceph-salt:bootstrap_mon_ip', '10.20.188.201')
         PillarManager.set('ceph-salt:time_server:enabled', True)

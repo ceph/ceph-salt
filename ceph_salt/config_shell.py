@@ -436,11 +436,13 @@ CEPH_SALT_OPTIONS = {
         }
     },
     'cephadm_bootstrap': {
+        'type': 'group',
         'help': '''
                 Cluster Bootstrap Options Configuration
                 =========================================
                 Options to control the Ceph cluster bootstrap
                 ''',
+        'handler': FlagGroupHandler('ceph-salt:bootstrap_enabled', True),
         'options': {
             'advanced': {
                 'type': 'dict',

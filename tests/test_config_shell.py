@@ -151,6 +151,11 @@ class ConfigShellTest(SaltMockTestCase):
                               'mgr-id',
                               'y')
 
+    def test_cephadm_bootstrap(self):
+        self.assertFlagOption('/cephadm_bootstrap',
+                              'ceph-salt:bootstrap_enabled',
+                              reset_supported=False)
+
     def test_cephadm_bootstrap_ceph_conf(self):
         self.assertConfigOption('/cephadm_bootstrap/ceph_conf',
                                 'ceph-salt:bootstrap_ceph_conf')
@@ -246,6 +251,7 @@ class ConfigShellTest(SaltMockTestCase):
 
         self.assertTrue(run_export(False))
         self.assertJsonInSysOut({
+            'bootstrap_enabled': True,
             'dashboard': {
                 'username': 'admin',
                 'password': PillarManager.get('ceph-salt:dashboard:password'),

@@ -1,6 +1,6 @@
 {% import 'macros.yml' as macros %}
 
-{% if grains['id'] == pillar['ceph-salt']['bootstrap_minion'] %}
+{% if grains['id'] == pillar['ceph-salt'].get('bootstrap_minion') %}
 
 {{ macros.begin_stage('Bootstrap the Ceph cluster') }}
 
@@ -25,6 +25,8 @@ wait for other minions:
     - hosts: {{ pillar['ceph-salt']['minions']['all'] }}
     - failhard: True
 {{ macros.end_step('Wait for other minions') }}
+
+{% if pillar['ceph-salt']['bootstrap_enabled'] %}
 
 {{ macros.begin_step('Run "cephadm bootstrap"') }}
 
@@ -61,6 +63,24 @@ run cephadm bootstrap:
     - failhard: True
 
 {{ macros.end_step('Run "cephadm bootstrap"') }}
+
+{% else %}
+
+{{ macros.begin_step('Configure cephadm MGR module') }}
+
+configure ssh orchestrator:
+  cmd.run:
+    - name: |
+        ceph config-key set mgr/cephadm/ssh_identity_key -i /tmp/ceph-salt-ssh-id_rsa
+        ceph config-key set mgr/cephadm/ssh_identity_pub -i /tmp/ceph-salt-ssh-id_rsa.pub
+        ceph mgr module enable cephadm && \
+        ceph orch set backend cephadm
+    - unless: "ceph orch status 2>&1 | grep -q 'Backend: cephadm'"
+    - failhard: True
+
+{{ macros.end_step('Configure cephadm MGR module') }}
+
+{% endif %}
 
 {{ macros.end_stage('Bootstrap the Ceph cluster') }}
 
