@@ -1,5 +1,6 @@
 # -*- encoding: utf-8 -*-
 import logging
+import subprocess
 import time
 
 
@@ -43,6 +44,14 @@ def reboot_if_needed(name):
         is_master = __salt__['service.status']('salt-master')
         if is_master:
             ret['comment'] = 'Salt master must be rebooted manually'
+            return ret
+        running_ceph_containers = len(subprocess.check_output(['podman',
+                                                               'ps',
+                                                               '--filter',
+                                                               'label=ceph=True',
+                                                               '-q']).splitlines())
+        if running_ceph_containers > 0:
+            ret['comment'] = 'Running ceph containers found, please reboot manually'
             return ret
         __salt__['event.send']('ceph-salt/minion_reboot', data={'desc': 'Rebooting...'})
         time.sleep(5)
