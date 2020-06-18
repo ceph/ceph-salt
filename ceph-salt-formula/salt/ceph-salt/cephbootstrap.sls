@@ -47,7 +47,8 @@ run cephadm bootstrap:
                 --skip-monitoring-stack \
                 --skip-prepare-host \
                 --skip-pull \
-                --skip-ssh \
+                --ssh-private-key /tmp/ceph-salt-ssh-id_rsa \
+                --ssh-public-key /tmp/ceph-salt-ssh-id_rsa.pub \
 {%- for arg, value in pillar['ceph-salt'].get('bootstrap_arguments', {}).items() %}
                 --{{ arg }} {{ value if value is not none else '' }} \
 {%- endfor %}
@@ -60,21 +61,6 @@ run cephadm bootstrap:
     - failhard: True
 
 {{ macros.end_step('Run "cephadm bootstrap"') }}
-
-{{ macros.begin_step('Configure cephadm MGR module') }}
-
-configure ssh orchestrator:
-  cmd.run:
-    - name: |
-        ceph config-key set mgr/cephadm/ssh_identity_key -i /tmp/ceph-salt-ssh-id_rsa
-        ceph config-key set mgr/cephadm/ssh_identity_pub -i /tmp/ceph-salt-ssh-id_rsa.pub
-        ceph mgr module enable cephadm && \
-        ceph orch set backend cephadm
-    - onchanges:
-      - cmd: run cephadm bootstrap
-    - failhard: True
-
-{{ macros.end_step('Configure cephadm MGR module') }}
 
 {{ macros.end_stage('Bootstrap the Ceph cluster') }}
 
