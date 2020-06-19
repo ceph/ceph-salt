@@ -70,7 +70,7 @@ def wait_for_grain(name, grain, hosts, timeout=1800):
         if is_timedout:
             ret['comment'] = 'Timeout value reached.'
             return ret
-        time.sleep(5)
+        time.sleep(15)
         completed_counter = 0
         for host in hosts:
             grain_value = __salt__['ceph_salt.get_remote_grain'](host, 'ceph-salt:execution:failed')
