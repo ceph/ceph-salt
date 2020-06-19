@@ -12,7 +12,7 @@ from typing import Dict, List
 
 import yaml
 
-from .core import CephNode, CephNodeManager
+from .core import CephNodeManager
 from .exceptions import MinionDoesNotExistInConfiguration, ValidationException
 from .salt_event import EventListener, SaltEventProcessor
 from .salt_utils import SaltClient, GrainsManager, CephOrch, PillarManager
@@ -1279,25 +1279,13 @@ class CephSaltExecutor:
                       "all minions at the same time to bootstrap a new Ceph cluster: "
                       "\"ceph-salt apply\"")
             return 6
-        # day 2, but minion_id not specified
-        if deployed and minion_id is None:
-            logger.error("Ceph cluster already deployed and minion_id not provided")
-            PP.pl_red("Ceph cluster is already deployed, please apply the config to a "
-                      "single minion at a time: \"ceph-salt apply <minion_id>\"")
-            return 7
-        # day 2, but minion_id already managed by cephadm
-        if deployed and minion_id is not None:
+        # Invalid minion_id
+        if minion_id is not None:
             salt_minions = CephNodeManager.list_all_minions()
             if minion_id not in salt_minions:
                 logger.error("cannot find minion: %s", minion_id)
                 PP.pl_red("Cannot find minion '{}'".format(minion_id))
-                return 8
-            node = CephNode(minion_id)
-            for host in host_ls:
-                if node.hostname == host['hostname']:
-                    logger.error("minion_id already managed by cephadm: %s", minion_id)
-                    PP.pl_red("Minion '{}' is already managed by cephadm".format(minion_id))
-                    return 9
+                return 7
         return 0
 
     @staticmethod
