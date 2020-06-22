@@ -115,8 +115,13 @@ class ConfigShellTest(SaltMockTestCase):
                                'ceph-salt:container:images:ceph',
                                'myvalue')
 
-    def test_containers_registries(self):
-        self.assertListDictOption('/containers/registries',
+    def test_containers_registries_conf(self):
+        self.assertFlagOption('/containers/registries_conf',
+                              'ceph-salt:container:registries_enabled',
+                              reset_supported=False)
+
+    def test_containers_registries_conf_registries(self):
+        self.assertListDictOption('/containers/registries_conf/registries',
                                   'ceph-salt:container:registries',
                                   ['location=172.17.0.1:5000 insecure=false',
                                    ('location=192.168.0.1:8080/docker.io prefix=docker.io'
@@ -246,6 +251,9 @@ class ConfigShellTest(SaltMockTestCase):
 
         self.assertTrue(run_export(False))
         self.assertJsonInSysOut({
+            'container': {
+                'registries_enabled': True
+            },
             'dashboard': {
                 'username': 'admin',
                 'password': PillarManager.get('ceph-salt:dashboard:password'),
