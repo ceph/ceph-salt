@@ -7,7 +7,6 @@ include:
     - .container
     - .apparmor
     - .time-prep
-    - .time-sync
     - .cephtools
     - .provision-end
     - .cephbootstrap
