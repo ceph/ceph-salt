@@ -2,14 +2,11 @@
 import json
 
 def configured():
-    ret = __salt__['cmd.run_all']("sh -c 'type ceph'")
-    if ret['retcode'] != 0:
-        return False
     if not __salt__['file.file_exists']("/etc/ceph/ceph.conf"):
         return False
     if not __salt__['file.file_exists']("/etc/ceph/ceph.client.admin.keyring"):
         return False
-    ret = __salt__['cmd.run_all']("ceph orch status")
+    ret = __salt__['cmd.run_all']("timeout 60 ceph orch status")
     if ret['retcode'] != 0:
         return False
     return True
