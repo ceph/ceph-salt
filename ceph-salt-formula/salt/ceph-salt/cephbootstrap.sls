@@ -44,7 +44,9 @@ run cephadm bootstrap:
 {%- endif %}
                 --output-keyring /etc/ceph/ceph.client.admin.keyring \
                 --output-config /etc/ceph/ceph.conf \
+{%- if not pillar['ceph-salt']['bootstrap_node_monitoring_stack'] %}
                 --skip-monitoring-stack \
+{%- endif %}
                 --skip-prepare-host \
                 --skip-pull \
                 --skip-ssh \

@@ -497,6 +497,12 @@ add location=172.17.0.1:5000/docker.io prefix=docker.io insecure=true
                 'help': 'Bootstrap Mon IP',
                 'handler': PillarHandler('ceph-salt:bootstrap_mon_ip')
             },
+            'monitoring_stack': {
+                'type': 'flag',
+                'help': ('Whether to deploy the whole monitoring stack on the '
+                         'bootstrap node'),
+                'handler': PillarHandler('ceph-salt:bootstrap_node_monitoring_stack', False)
+            },
         }
     },
     'ssh': {

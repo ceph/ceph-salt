@@ -251,6 +251,7 @@ class ConfigShellTest(SaltMockTestCase):
 
         self.assertTrue(run_export(False))
         self.assertJsonInSysOut({
+            'bootstrap_node_monitoring_stack': False,
             'container': {
                 'registries_enabled': True
             },
