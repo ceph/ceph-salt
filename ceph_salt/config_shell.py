@@ -376,6 +376,39 @@ CEPH_SALT_OPTIONS = {
                 for deployment.
                 ''',
         'options': {
+            'auth': {
+                'type': 'group',
+                'help': "Registry autentications",
+                'options': {
+                    'registries': {
+                        'type': 'list_dict',
+                        'help': '''
+List of registry authentications.
+=======================================
+
+Add by specifying B{registry}, B{username}, B{password}, and B{tls_verify}. e.g.,
+
+add registry=172.17.0.1:5000 username=testuser password=testpassword tls_verify=false
+''',
+                        'params_spec': {
+                            'registry': {
+                                'required': True
+                            },
+                            'username': {
+                                'required': True
+                            },
+                            'password': {
+                                'required': True
+                            },
+                            'tls_verify': {
+                                'validator': BooleanStringValidator,
+                                'transformer': BooleanStringTransformer
+                            },
+                        },
+                        'handler': PillarHandler('ceph-salt:container:auth')
+                    }
+                }
+            },
             'images': {
                 'type': 'group',
                 'help': "Container images paths",
