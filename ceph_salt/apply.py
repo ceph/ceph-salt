@@ -14,6 +14,7 @@ import yaml
 
 from .core import CephNodeManager
 from .exceptions import MinionDoesNotExistInConfiguration, ValidationException
+from .logging_utils import LoggingUtil
 from .salt_event import EventListener, SaltEventProcessor
 from .salt_utils import SaltClient, GrainsManager, CephOrch, PillarManager
 from .terminal_utils import PrettyPrinter as PP
@@ -1173,9 +1174,9 @@ class CursesRenderer(Renderer, ScreenKeyListener):
         self.loading.stop()
         if has_failed:
             PP.println("An error occurred in the UI, please check "
-                       "'/var/log/ceph-salt.log' for further details.")
+                       "'{}' for further details.".format(LoggingUtil.log_file))
         else:
-            PP.println("Finished. Log file may be found at '/var/log/ceph-salt.log'.")
+            PP.println("Finished. Log file may be found at '{}'.".format(LoggingUtil.log_file))
 
 
 class TerminalRenderer(Renderer):

@@ -9,44 +9,12 @@ import pkg_resources
 
 from .config_shell import run_config_cmdline, run_config_shell, run_status, run_export, run_import
 from .exceptions import CephSaltException
+from .logging_utils import LoggingUtil
 from .terminal_utils import check_root_privileges, PrettyPrinter as PP
 from .apply import CephSaltExecutor
 
 
 logger = logging.getLogger(__name__)
-
-
-def _setup_logging(log_level, log_file):
-    """
-    Logging configuration
-    """
-    if log_level == "silent":
-        return
-
-    logging.config.dictConfig({
-        'version': 1,
-        'disable_existing_loggers': False,
-        'formatters': {
-            'standard': {
-                'format': '%(asctime)s [%(levelname)s] [%(name)s] %(message)s'
-            },
-        },
-        'handlers': {
-            'file': {
-                'level': log_level.upper(),
-                'filename': log_file,
-                'class': 'logging.FileHandler',
-                'formatter': 'standard'
-            },
-        },
-        'loggers': {
-            '': {
-                'handlers': ['file'],
-                'level': log_level.upper(),
-                'propagate': True,
-            }
-        }
-    })
 
 
 def ceph_salt_main():
@@ -69,7 +37,7 @@ def ceph_salt_main():
 @click.version_option(pkg_resources.get_distribution('ceph-salt'), message="%(version)s")
 @check_root_privileges
 def cli(log_level, log_file):
-    _setup_logging(log_level, log_file)
+    LoggingUtil.setup_logging(log_level, log_file)
 
 
 @cli.command(name='config')
