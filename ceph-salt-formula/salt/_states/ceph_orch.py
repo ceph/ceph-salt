@@ -12,7 +12,7 @@ def wait_for_admin_host(name, timeout=1800):
         if is_timedout:
             ret['comment'] = 'Timeout value reached.'
             return ret
-        time.sleep(5)
+        time.sleep(15)
         admin_hosts = __pillar__['ceph-salt']['minions']['admin']
         for admin_host in admin_hosts:
             failed = __salt__['ceph_salt.get_remote_grain'](admin_host, 'ceph-salt:execution:failed')
