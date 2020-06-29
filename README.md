@@ -50,6 +50,12 @@ set the initial deployment of your cluster:
 ceph-salt config
 ```
 
+This opens a shell where you can manipulate ceph-salt's configuration. Each
+configuration option is present under a configuration group. You can navigate
+through the groups and options using the familiar `ls` and `cd` commands
+similar to a regular shell. In each path you can type `help` to see the
+available commands. Different options might have different commands available.
+
 First step of configuration is to add the salt-minions that should be managed
 by`ceph-salt`.
 The `add` command under `/ceph_cluster/minions` option supports autocomplete
@@ -134,8 +140,9 @@ Finally we need to set the Ceph container image path:
 /containers/images/ceph set docker.io/ceph/daemon-base:latest
 ```
 
-Afterwards, run `apply` to start the `ceph-salt-formula` and execute the
-deployment:
+Afterwards, you can exit the `ceph-salt` configuration shell by typing `exit`
+or pressing `[Ctrl]+[d]`. Now use the `apply` command to start the
+`ceph-salt-formula` and execute the deployment:
 
 ```
 ceph-salt apply
