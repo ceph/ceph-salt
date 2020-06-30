@@ -131,7 +131,7 @@ configured and running on all machines in the cluster before triggering
 Finally we need to set the Ceph container image path:
 
 ```
-/containers/images/ceph set docker.io/ceph/daemon-base:latest
+/containers/images/ceph set docker.io/ceph/ceph:v15.2.2
 ```
 
 Afterwards, run `apply` to start the `ceph-salt-formula` and execute the
