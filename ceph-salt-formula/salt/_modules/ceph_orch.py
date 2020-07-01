@@ -6,10 +6,11 @@ def configured():
         return False
     if not __salt__['file.file_exists']("/etc/ceph/ceph.client.admin.keyring"):
         return False
-    ret = __salt__['cmd.run_all']("timeout 60 ceph orch status")
-    if ret['retcode'] != 0:
+    status_ret = __salt__['cmd.run_all']("timeout 60 ceph orch status --format=json")
+    if status_ret['retcode'] != 0:
         return False
-    return True
+    status = json.loads(status_ret['stdout'])
+    return status.get('available', False)
 
 def host_ls():
     ret = __salt__['cmd.run']("ceph orch host ls --format=json")
