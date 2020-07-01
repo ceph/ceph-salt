@@ -120,6 +120,30 @@ class ConfigShellTest(SaltMockTestCase):
                               'ceph-salt:container:registries_enabled',
                               reset_supported=False)
 
+    def test_containers_auth_registries(self):
+        self.assertListDictOption('/containers/auth/registries',
+                                  'ceph-salt:container:auth',
+                                  [('registry=172.17.0.1:5000 '
+                                    'username=testuser '
+                                    'password=testpassword '
+                                    'tls_verify=false'),
+                                   ('registry=192.168.0.1:443 '
+                                    'username=testuser2 '
+                                    'password=testpassword2')],
+                                  [
+                                      {
+                                          'registry': '172.17.0.1:5000',
+                                          'username': 'testuser',
+                                          'password': 'testpassword',
+                                          'tls_verify': False
+                                      },
+                                      {
+                                          'registry': '192.168.0.1:443',
+                                          'username': 'testuser2',
+                                          'password': 'testpassword2'
+                                      }
+                                  ])
+
     def test_containers_registries_conf_registries(self):
         self.assertListDictOption('/containers/registries_conf/registries',
                                   'ceph-salt:container:registries',
