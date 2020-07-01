@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [15.2.6] - 2020-07-01
+### Added
+- Support registry authentication (#277)
+- Allow users to disable custom registries configuration (#262)
+- Allow to re-apply config (#269)
+- Add "Conflicts: deepsea" to spec file (#259)
+- Switch to reactive UI refresh after execution is complete (#254)
+- Allow user to "paused" UI refresh during execution (#254)
+- Report log file location on exit (#255)
+- Allow users to provide their dashboard cert for bootstrap (#253)
+### Removed
+- Don't log scrollbar info when rendering scrollbar (#263)
+### Fixed
+- Fix log location message (#278)
+- Reduce the number of remote grain requests (#271)
+- Optimize "ceph_orch.wait_for_admin_host" state (#276)
+- Handle execution errors on command line (#264)
+- Improve containers step/stage descriptions (#268)
+- Fix python3-ntplib required version (#249)
+
 ## [15.2.5] - 2020-05-25
 ### Added
 - Support SSH keys import and export (#243)
@@ -154,7 +174,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal README.
 - The CHANGELOG file.
 
-[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.5...HEAD
+[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.6...HEAD
+[15.2.6]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.6
 [15.2.5]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.5
 [15.2.4]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.4
 [15.2.3]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.3
