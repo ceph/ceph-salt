@@ -1120,7 +1120,7 @@ class MinionsOptionNode(OptionNode):
         elif counter > 1:
             PP.pl_green('{} minions added.'.format(counter))
         elif not has_errors:
-            PP.pl_red('No minions matched "{}".'.format(minion_id))
+            PP.pl_red('No minions added.')
 
     def ui_command_remove(self, minion_id):
         matching = fnmatch.filter(self.value, minion_id)
@@ -1144,7 +1144,7 @@ class MinionsOptionNode(OptionNode):
         elif counter > 1:
             PP.pl_green('{} minions removed.'.format(counter))
         elif not has_errors:
-            PP.pl_red('No minions matched "{}".'.format(minion_id))
+            PP.pl_red('No minions removed.')
 
     # pylint: disable=unused-argument
     def ui_complete_add(self, parameters, text, current_param):
