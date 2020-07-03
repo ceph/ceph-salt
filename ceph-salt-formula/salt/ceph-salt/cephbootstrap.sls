@@ -30,6 +30,7 @@ wait for other minions:
 
 {% set dashboard_username = pillar['ceph-salt']['dashboard']['username'] %}
 {% set dashboard_password = pillar['ceph-salt']['dashboard']['password'] %}
+{% set ssh_user = pillar['ceph-salt']['ssh']['user'] %}
 
 run cephadm bootstrap:
   cmd.run:
@@ -39,6 +40,7 @@ run cephadm bootstrap:
                 --config /tmp/bootstrap-ceph.conf \
                 --initial-dashboard-user {{ dashboard_username }} \
                 --initial-dashboard-password {{ dashboard_password }} \
+                --ssh-user {{ ssh_user }} \
 {%- if not pillar['ceph-salt']['dashboard']['password_update_required'] %}
                 --dashboard-password-noupdate \
 {%- endif %}
