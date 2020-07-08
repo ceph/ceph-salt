@@ -16,6 +16,7 @@ configure cephadm mgr module:
 {%- if auth %}
         ceph cephadm registry-login -i /tmp/ceph-salt-registry-json
 {%- endif %}
+        ceph config set mgr mgr/cephadm/manage_etc_ceph_ceph_conf true
     - failhard: True
 
 {{ macros.end_stage('Ensure cephadm MGR module is configured') }}
