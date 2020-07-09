@@ -8,7 +8,16 @@ import random
 import string
 
 
-from pyparsing import alphanums, OneOrMore, Optional, Regex, Suppress, Word, QuotedString
+from pyparsing import (
+    alphanums,
+    alphas8bit,
+    OneOrMore,
+    Optional,
+    QuotedString,
+    Regex,
+    Suppress,
+    Word
+)
 
 import configshell_fb as configshell
 from configshell_fb.shell import locatedExpr
@@ -1219,7 +1228,8 @@ class CephSaltConfigShell(configshell.ConfigShell):
             '~/.ceph_salt_config_shell')
         # Grammar of the command line
         command = locatedExpr(Word(alphanums + '_'))('command')
-        var = QuotedString('"') | QuotedString("'") | Word(alphanums + '?;&*$!#,=_\+/.<>()~@:-%[]')
+        var = QuotedString('"') | QuotedString("'") | Word(
+            alphanums + alphas8bit + '?;&*$!#,=_\+/.<>()~@:-%[]')
         value = var
         keyword = Word(alphanums + '_\-')
         kparam = locatedExpr(keyword + Suppress('=') + Optional(value, default=''))('kparams*')

@@ -199,7 +199,7 @@ class ConfigShellTest(SaltMockTestCase):
     def test_cephadm_bootstrap_dashboard_username(self):
         self.assertValueOption('/cephadm_bootstrap/dashboard/username',
                                'ceph-salt:dashboard:username',
-                               'myusername',
+                               'myusernameö',
                                'admin')
 
     def test_cephadm_bootstrap_dashboard_ssl_certificate(self):
