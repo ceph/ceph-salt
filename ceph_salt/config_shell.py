@@ -1260,29 +1260,14 @@ base:
     return False
 
 
-def count_hosts(host_ls):
-    all_hostnames = [CephNode(minion_id).hostname for minion_id
-                     in PillarManager.get('ceph-salt:minions:all', [])]
-    deployed = []
-    not_managed = []
-    for host in host_ls:
-        if host['hostname'] in all_hostnames:
-            deployed.append(host)
-        else:
-            not_managed.append(host)
-    return (len(all_hostnames), len(deployed), len(not_managed))
-
-
 def run_status():
     if not check_config_prerequesites():
         return False
     status = {}
     result = True
     host_ls = CephOrch.host_ls()
-    ceph_salt_nodes, deployed_nodes, not_managed_nodes = count_hosts(host_ls)
-    status['hosts'] = '{}/{} managed by cephadm'.format(deployed_nodes, ceph_salt_nodes)
-    if not_managed_nodes:
-        status['hosts'] += ' ({} hosts not managed by cephsalt)'.format(not_managed_nodes)
+    all = PillarManager.get('ceph-salt:minions:all', [])
+    status['cluster'] = '{} minions, {} hosts managed by cephadm'.format(len(all), len(host_ls))
     error_msg = validate_config(host_ls)
     if error_msg:
         result = False
@@ -1291,7 +1276,7 @@ def run_status():
     else:
         status['config'] = PP.green("OK")
     for k, v in status.items():
-        PP.println('{}{}'.format('{}: '.format(k).ljust(8), v))
+        PP.println('{}{}'.format('{}: '.format(k).ljust(9), v))
     return result
 
 
