@@ -50,6 +50,7 @@ wait for other minions:
 {% set dashboard_username = pillar['ceph-salt']['dashboard']['username'] %}
 {% set dashboard_password = pillar['ceph-salt']['dashboard']['password'] %}
 {% set ssh_user = pillar['ceph-salt']['ssh']['user'] %}
+{% set auth = pillar['ceph-salt'].get('container', {}).get('auth', {}) %}
 
 {# --mon-ip is still required, even though we're also putting the Mon IP      #}
 {# directly in the placement YAML (see https://tracker.ceph.com/issues/46782) #}
@@ -68,6 +69,9 @@ run cephadm bootstrap:
                 --initial-dashboard-user {{ dashboard_username }} \
                 --output-config /etc/ceph/ceph.conf \
                 --output-keyring /etc/ceph/ceph.client.admin.keyring \
+{%- if auth %}
+                --registry-json /tmp/ceph-salt-registry-json \
+{%- endif %}
                 --skip-monitoring-stack \
                 --skip-prepare-host \
                 --skip-pull \

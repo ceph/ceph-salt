@@ -42,6 +42,37 @@ have cephadm check the host:
 
 {{ macros.end_step('Run "cephadm check-host"') }}
 
+{% set auth = pillar['ceph-salt'].get('container', {}).get('auth', {}) %}
+
+{% if auth %}
+
+{{ macros.begin_step('Login into registry') }}
+
+create ceph-salt-registry-json:
+  file.managed:
+    - name: /tmp/ceph-salt-registry-json
+    - source:
+        - salt://ceph-salt/files/registry-login-json.j2
+    - template: jinja
+    - user: root
+    - group: root
+    - mode: '0600'
+    - backup: minion
+    - failhard: True
+
+login into registry:
+  cmd.run:
+    - name: |
+        cephadm registry-login \
+        --registry-url {{ auth.get('registry') }} \
+        --registry-username {{ auth.get('username') }} \
+        --registry-password {{ auth.get('password') }}
+    - failhard: True
+
+{{ macros.end_step('Login into registry') }}
+
+{% endif %}
+
 {{ macros.begin_step('Download ceph container image') }}
 download ceph container image:
   cmd.run:

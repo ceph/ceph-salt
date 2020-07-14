@@ -5,6 +5,7 @@
 {{ macros.begin_stage('Ensure cephadm MGR module is configured') }}
 
 {% set ssh_user = pillar['ceph-salt']['ssh']['user'] %}
+{% set auth = pillar['ceph-salt'].get('container', {}).get('auth', {}) %}
 
 configure cephadm mgr module:
   cmd.run:
@@ -12,6 +13,9 @@ configure cephadm mgr module:
         ceph cephadm set-priv-key -i /tmp/ceph-salt-ssh-id_rsa
         ceph cephadm set-pub-key -i /tmp/ceph-salt-ssh-id_rsa.pub
         ceph cephadm set-user {{ ssh_user }}
+{%- if auth %}
+        ceph cephadm registry-login -i /tmp/ceph-salt-registry-json
+{%- endif %}
     - failhard: True
 
 {{ macros.end_stage('Ensure cephadm MGR module is configured') }}
