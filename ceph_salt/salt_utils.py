@@ -314,7 +314,7 @@ class CephOrch:
 
     @staticmethod
     def host_ls():
-        result = SaltClient.local().cmd('ceph-salt:member', 'ceph_orch.configured',
+        result = SaltClient.local().cmd('ceph-salt:roles:admin', 'ceph_orch.configured',
                                         tgt_type='grain')
         for minion, value in result.items():
             if value is True:
