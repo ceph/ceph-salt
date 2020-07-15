@@ -3,7 +3,11 @@
 # For more information on this configuration file, see containers-registries.conf(5)
 
 # An array of host[:port] registries to try when pulling an unqualified image, in order
+{% if grains.get('os_family') == 'Suse' and grains.get('osfullname') == 'SLES' %}
+unqualified-search-registries = ["registry.suse.com"]
+{% else %}
 unqualified-search-registries = ["docker.io"]
+{% endif %}
 
 {% for reg in registries %}
 [[registry]]
