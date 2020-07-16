@@ -122,6 +122,14 @@ PBVw2pLCZsH5ol3VJ1/DETsGRMzFubFeTUNOC3MzhhG+V"""
         self.assertEqual(validate_config([]),
                          "Minion 'node3.ceph.com' has 'admin' role but not 'cephadm' role")
 
+    def test_incomplete_registry_auth(self):
+        PillarManager.set('ceph-salt:container:auth:username', 'testuser')
+        self.assertEqual(validate_config([]), "Registry auth configuration is incomplete")
+        PillarManager.set('ceph-salt:container:auth:password', 'testpassword')
+        self.assertEqual(validate_config([]), "Registry auth configuration is incomplete")
+        PillarManager.set('ceph-salt:container:auth:registry', '172.17.0.1:5000')
+        self.assertEqual(validate_config([]), None)
+
     def test_no_ceph_container_image_path(self):
         PillarManager.reset('ceph-salt:container:images:ceph')
         self.assertEqual(validate_config([]), "No Ceph container image path specified in config")

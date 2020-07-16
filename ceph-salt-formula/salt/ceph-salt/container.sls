@@ -21,32 +21,32 @@
 
 {% endif %}
 
-{{ macros.begin_step('Login into registries') }}
+{% set auth = pillar['ceph-salt'].get('container', {}).get('auth', {}) %}
 
-{% set registries = pillar['ceph-salt'].get('container', {}).get('auth', []) -%}
-{%- for reg in registries %}
-create ceph-salt-registry-password-{{loop.index}}:
+{% if auth %}
+
+{{ macros.begin_step('Login into registry') }}
+
+create ceph-salt-registry-password:
   file.managed:
-    - name: /tmp/ceph-salt-registry-password-{{loop.index}}
+    - name: /tmp/ceph-salt-registry-password
     - user: root
     - group: root
     - mode: '0600'
-    - contents_pillar: ceph-salt:container:auth:{{loop.index - 1}}:password
+    - contents_pillar: ceph-salt:container:auth:password
     - failhard: True
 
-login into registry {{loop.index}}:
+login into registry:
   cmd.run:
     - name: |
         podman login \
-{%- if 'tls_verify' in reg %}
-        --tls-verify={{reg.tls_verify}} \
-{%- endif %}
-        -u={{reg.username}} \
-        --password-stdin < /tmp/ceph-salt-registry-password-{{loop.index}} \
-        {{reg.registry}}
+        -u={{ auth.get('username') }} \
+        --password-stdin < /tmp/ceph-salt-registry-password \
+        {{ auth.get('registry') }}
     - failhard: True
-{%- endfor %}
 
-{{ macros.end_step('Login into registries') }}
+{{ macros.end_step('Login into registry') }}
+
+{% endif %}
 
 {{ macros.end_stage('Set up container environment') }}

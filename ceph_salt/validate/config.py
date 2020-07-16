@@ -85,7 +85,18 @@ def validate_config(host_ls):
             return 'No external time servers specified in config'
         if not time_server_is_minion and external_time_servers:
             return not_minion_err.format('external time servers')
+
+    # container
     ceph_container_image_path = PillarManager.get('ceph-salt:container:images:ceph')
     if not ceph_container_image_path:
         return "No Ceph container image path specified in config"
+    auth = PillarManager.get('ceph-salt:container:auth')
+    if auth:
+        username = auth.get('username')
+        password = auth.get('password')
+        registry = auth.get('registry')
+        if username or password or registry:
+            if not username or not password or not registry:
+                return "Registry auth configuration is incomplete"
+
     return None
