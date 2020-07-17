@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [15.2.7] - 2020-07-17
+### Added
+- Only allow authentication on a single registry (#298)
+- Allow user to specify sudo ssh user (#290)
+- Rely on "bootstrap" to configure MGR module (#270)
+### Removed
+- Drop unqualified image name support (#299)
+### Fixed
+- Check 'ceph orch status' output (#283)
+- Optimize 'ceph-salt status' (#293)
+- Improve "no minions matched" message when adding/removing minions (#287)
+
 ## [15.2.6] - 2020-07-01
 ### Added
 - Support registry authentication (#277)
@@ -174,7 +186,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal README.
 - The CHANGELOG file.
 
-[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.6...HEAD
+[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.7...HEAD
+[15.2.7]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.7
 [15.2.6]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.6
 [15.2.5]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.5
 [15.2.4]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.4
