@@ -2,9 +2,6 @@
 # {% include "ceph-salt/files/managed-header.txt.j2" ignore missing %}
 # For more information on this configuration file, see containers-registries.conf(5)
 
-# An array of host[:port] registries to try when pulling an unqualified image, in order
-unqualified-search-registries = ["docker.io"]
-
 {% for reg in registries %}
 [[registry]]
 {% if reg.prefix is defined %}

@@ -134,7 +134,8 @@ In this case, it is up to the user to ensure that some form of time syncing is
 configured and running on all machines in the cluster before triggering
 `ceph-salt apply`. This is because `cephadm` will refuse to run without it.
 
-Finally we need to set the Ceph container image path:
+Finally we need to set the Ceph container image absolute path (relative path is
+not supported):
 
 ```
 /containers/images/ceph set docker.io/ceph/ceph:v15.2.2

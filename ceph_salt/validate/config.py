@@ -93,6 +93,8 @@ def validate_config(host_ls):
     ceph_container_image_path = PillarManager.get('ceph-salt:container:images:ceph')
     if not ceph_container_image_path:
         return "No Ceph container image path specified in config"
+    if '.' not in ceph_container_image_path.split('/')[0]:
+        return "A relative image path was given, but only absolute image paths are supported"
     auth = PillarManager.get('ceph-salt:container:auth')
     if auth:
         username = auth.get('username')

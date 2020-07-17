@@ -138,6 +138,12 @@ PBVw2pLCZsH5ol3VJ1/DETsGRMzFubFeTUNOC3MzhhG+V"""
         PillarManager.reset('ceph-salt:container:images:ceph')
         self.assertEqual(validate_config([]), "No Ceph container image path specified in config")
 
+    def test_ceph_container_image_relative_path(self):
+        PillarManager.set('ceph-salt:container:images:ceph', 'ceph/ceph:v15.2.2')
+        self.assertEqual(validate_config([]),
+                         "A relative image path was given, but only absolute image paths "
+                         "are supported")
+
     def test_valid(self):
         self.assertEqual(validate_config([]), None)
 
@@ -210,6 +216,7 @@ SCzirUzUKN2oge2WieNI7MQ=
         PillarManager.set('ceph-salt:minions:admin', ['node1.ceph.com'])
         PillarManager.set('ceph-salt:updates:enabled', True)
         PillarManager.set('ceph-salt:updates:reboot', True)
+        PillarManager.set('ceph-salt:container:registries_enabled', True)
         PillarManager.set('ceph-salt:container:images:ceph', 'docker.io/ceph/daemon-base:latest')
         PillarManager.set('ceph-salt:ssh:user', 'root')
         PillarManager.set('ceph-salt:ssh:public_key', """ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQ\
