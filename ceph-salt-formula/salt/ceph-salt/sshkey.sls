@@ -2,11 +2,37 @@
 
 {{ macros.begin_stage('Distribute SSH keys') }}
 
+{% set ssh_user = pillar['ceph-salt']['ssh']['user'] %}
+{% set ssh_user_group = 'root' if ssh_user == 'root' else 'users' %}
+
+{% if ssh_user != 'root' %}
+
+create ssh user group:
+  group.present:
+    - name: {{ ssh_user_group }}
+
+create ssh user:
+  user.present:
+    - name: {{ ssh_user }}
+    - home: /home/{{ssh_user}}
+    - groups:
+      - {{ ssh_user_group }}
+    - failhard: True
+
+configure sudoers:
+    file.append:
+        - name: /etc/sudoers.d/{{ssh_user}}
+        - text:
+          - "{{ssh_user}} ALL=(ALL) NOPASSWD: ALL"
+
+{% endif %}
+
 # make sure .ssh is present with the right permissions
-/home/root/.ssh:
+create ssh dir:
   file.directory:
-    - user: root
-    - group: root
+    - name: /home/{{ ssh_user }}/.ssh
+    - user: {{ ssh_user }}
+    - group: {{ ssh_user_group }}
     - mode: '0700'
     - makedirs: True
     - failhard: True
@@ -15,8 +41,8 @@
 create ceph-salt-ssh-id_rsa:
   file.managed:
     - name: /tmp/ceph-salt-ssh-id_rsa
-    - user: root
-    - group: root
+    - user: {{ ssh_user }}
+    - group: {{ ssh_user_group }}
     - mode: '0600'
     - contents_pillar: ceph-salt:ssh:private_key
     - failhard: True
@@ -25,8 +51,8 @@ create ceph-salt-ssh-id_rsa:
 create ceph-salt-ssh-id_rsa.pub:
   file.managed:
     - name: /tmp/ceph-salt-ssh-id_rsa.pub
-    - user: root
-    - group: root
+    - user: {{ ssh_user }}
+    - group: {{ ssh_user_group }}
     - mode: '0644'
     - contents_pillar: ceph-salt:ssh:public_key
     - failhard: True
@@ -34,7 +60,7 @@ create ceph-salt-ssh-id_rsa.pub:
 # add public key to authorized_keys
 install ssh key:
     ssh_auth.present:
-      - user: root
+      - user: {{ ssh_user }}
       - comment: ssh_orchestrator_key
       - config: /%h/.ssh/authorized_keys
       - name: {{ pillar['ceph-salt']['ssh']['public_key'] }}
