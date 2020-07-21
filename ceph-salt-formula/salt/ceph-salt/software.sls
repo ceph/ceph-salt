@@ -8,6 +8,7 @@ install required packages:
       - iputils
       - lsof
       - podman
+      - rsync
     - failhard: True
 
 /var/log/journal:
