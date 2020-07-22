@@ -139,5 +139,27 @@ def purge(non_interactive, yes_i_really_really_mean_it):
     sys.exit(retcode)
 
 
+@cli.command(name='update')
+@click.option('-n', '--non-interactive', is_flag=True, default=False,
+              help='Apply config in non-interactive mode')
+@click.option('-r', '--reboot', is_flag=True, default=False,
+              help='Reboot if needed')
+@click.argument('minion_id', required=False)
+def update(non_interactive, reboot, minion_id):
+    """
+    Update all packages
+    """
+    executor = CephSaltExecutor(not non_interactive, minion_id,
+                                'ceph-salt.update', {
+                                    'ceph-salt': {
+                                        'updates': {
+                                            'reboot': reboot
+                                        }
+                                    }
+                                })
+    retcode = executor.run()
+    sys.exit(retcode)
+
+
 if __name__ == '__main__':
     ceph_salt_main()
