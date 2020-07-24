@@ -52,6 +52,10 @@ Requires:       python3-ntplib >= 0.3.3
 %endif
 
 Requires:       ceph-salt-formula
+Requires:       iputils
+Requires:       lsof
+Requires:       podman
+Requires:       rsync
 Requires:       salt-master >= 3000
 Requires:       procps
 
