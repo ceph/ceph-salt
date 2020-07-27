@@ -11,6 +11,7 @@ install cephadm:
     - pkgs:
         - cephadm
 {% if 'admin' in grains['ceph-salt']['roles'] %}
+        - ceph-base
         - ceph-common
 {% endif %}
     - failhard: True
