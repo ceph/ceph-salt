@@ -1,4 +1,4 @@
-# {% include "ceph-salt/files/managed-header.txt.j2" ignore missing %}
+# {% include "ceph-salt/apply/files/managed-header.txt.j2" ignore missing %}
 {%- set time_server = pillar['ceph-salt']['time_server']['server_host'] %}
 {%- if grains['id'] == time_server %}
 {%- for server in pillar['ceph-salt']['time_server'].get('external_time_servers', []) %}

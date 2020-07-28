@@ -500,8 +500,10 @@ class MinionExecution:
 
 
 class CephSaltModel:
-    def __init__(self, minion_id):
+    def __init__(self, minion_id, state, pillar):
         self.minion_id = minion_id
+        self.state = state
+        self.pillar = pillar
         self._minions: Dict[str, MinionExecution] = {}
         self.begin_time = None
         self.end_time = None
@@ -556,9 +558,9 @@ class Renderer:
         self.model = model
         self.running = False
         if self.model.minion_id:
-            self.cmd_str = "salt {} state.apply ceph-salt".format(self.model.minion_id)
+            self.cmd_str = "salt {} state.apply {}".format(self.model.minion_id, self.model.state)
         else:
-            self.cmd_str = "salt -G 'ceph-salt:member' state.apply ceph-salt"
+            self.cmd_str = "salt -G 'ceph-salt:member' state.apply {}".format(self.model.state)
 
     def minion_update(self, minion: str):
         pass
@@ -663,13 +665,18 @@ class CephSaltExecutorThread(threading.Thread):
         try:
             if not self.controller.running:
                 self.controller.begin()
+            model = self.controller.model
             if self.minion_id:
-                logger.info("Calling: salt '%s' state.apply ceph-salt", self.minion_id)
-                returns = SaltClient.local().cmd_iter(self.minion_id, 'state.apply', ['ceph-salt'])
+                logger.info("Calling: salt '%s' state.apply %s", self.minion_id, model.state)
+                returns = SaltClient.local().cmd_iter(self.minion_id, 'state.apply',
+                                                      [model.state,
+                                                       "pillar={}".format(model.pillar)])
             else:
-                logger.info("Calling: salt -G 'ceph-salt:member' state.apply ceph-salt")
+                logger.info("Calling: salt -G 'ceph-salt:member' state.apply %s", model.state)
                 returns = SaltClient.local().cmd_iter('ceph-salt:member', 'state.apply',
-                                                      ['ceph-salt'], tgt_type='grain')
+                                                      [model.state,
+                                                       "pillar={}".format(model.pillar)],
+                                                      tgt_type='grain')
             for ret in returns:
                 logger.info("Response:\n%s", json.dumps(ret, sort_keys=True, indent=2))
                 now = datetime.datetime.utcnow()
@@ -1216,7 +1223,7 @@ class TerminalRenderer(Renderer):
     def execution_stopped(self):
         super(TerminalRenderer, self).execution_stopped()
         PP.println()
-        PP.println("Finished execution of ceph-salt formula")
+        PP.println("Finished execution of {} formula".format(self.model.state))
         PP.println()
         PP.println("Summary: Total={} Succeeded={} Failed={}"
                    .format(self.model.minions_total(), self.model.minions_succeeded(),
@@ -1224,7 +1231,9 @@ class TerminalRenderer(Renderer):
 
 
 class CephSaltExecutor:
-    def __init__(self, interactive, minion_id):
+    def __init__(self, interactive, minion_id, state, pillar):
+        self.pillar = pillar
+        self.state = state
         self.minion_id = minion_id
         self.interactive = interactive
         self.model = None
@@ -1234,13 +1243,13 @@ class CephSaltExecutor:
         self.executor = None
 
     @staticmethod
-    def check_formula():
+    def check_formula(state):
         # verify that ceph-salt formula is available
-        PP.println("Checking if ceph-salt formula is available...")
-        result = SaltClient.local_cmd('ceph-salt:member', 'state.sls_exists', ['ceph-salt'],
+        PP.println("Checking if {} formula is available...".format(state))
+        result = SaltClient.local_cmd('ceph-salt:member', 'state.sls_exists', [state],
                                       tgt_type='grain')
         if not all(result.values()):
-            PP.println("salt-master will be restarted to load ceph-salt formula")
+            PP.println("salt-master will be restarted to load {} formula".format(state))
             logger.info('restarting salt-master service')
             result = SaltClient.caller_cmd('service.restart', ['salt-master'])
             if not result:
@@ -1249,12 +1258,12 @@ class CephSaltExecutor:
                 return 3
 
         # check ceph-salt formula again after salt-master restart
-        result = SaltClient.local_cmd('ceph-salt:member', 'state.sls_exists', ['ceph-salt'],
+        result = SaltClient.local_cmd('ceph-salt:member', 'state.sls_exists', [state],
                                       tgt_type='grain')
         if not all(result.values()):
-            logger.error("ceph-salt formula still not found")
-            PP.pl_red("Could not find ceph-salt formula. Please check if ceph-salt-formula package "
-                      "is installed")
+            logger.error("%s formula still not found", state)
+            PP.pl_red("Could not find {} formula. Please check if ceph-salt-formula package "
+                      "is installed".format(state))
             return 4
 
         PP.println("Syncing minions with the master...")
@@ -1269,17 +1278,18 @@ class CephSaltExecutor:
         return 0
 
     @staticmethod
-    def check_cluster(minion_id, host_ls):
+    def check_cluster(state, minion_id, host_ls):
         PP.println("Checking if there is an existing Ceph cluster...")
         deployed = len(host_ls) > 0
 
         # day 1, but minion_id specified
-        if minion_id is not None and not deployed:
-            logger.error("ceph cluster not deployed and minion_id provided")
-            PP.pl_red("Ceph cluster is not deployed yet, please apply the config to "
-                      "all minions at the same time to bootstrap a new Ceph cluster: "
-                      "\"ceph-salt apply\"")
-            return 6
+        if state in ['ceph-salt', 'ceph-salt.apply']:
+            if minion_id is not None and not deployed:
+                logger.error("ceph cluster not deployed and minion_id provided")
+                PP.pl_red("Ceph cluster is not deployed yet, please apply the config to "
+                          "all minions at the same time to bootstrap a new Ceph cluster: "
+                          "\"ceph-salt apply\"")
+                return 6
         # Invalid minion_id
         if minion_id is not None:
             salt_minions = CephNodeManager.list_all_minions()
@@ -1333,7 +1343,7 @@ class CephSaltExecutor:
         return 0
 
     @staticmethod
-    def check_apply_prerequisites(minion_id):
+    def check_prerequisites(minion_id, state):
         # check salt master is configured
         try:
             check_salt_master_status()
@@ -1352,39 +1362,46 @@ class CephSaltExecutor:
             return 2
 
         # check formula
-        retcode = CephSaltExecutor.check_formula()
+        retcode = CephSaltExecutor.check_formula(state)
         if retcode > 0:
             return retcode
 
         # check cluster
-        retcode = CephSaltExecutor.check_cluster(minion_id, host_ls)
+        retcode = CephSaltExecutor.check_cluster(state, minion_id, host_ls)
         if retcode > 0:
             return retcode
 
         # check external time servers, if any
-        time_server_enabled = PillarManager.get('ceph-salt:time_server:enabled')
-        if time_server_enabled:
-            time_server_host = PillarManager.get('ceph-salt:time_server:server_host')
-            external_time_servers = PillarManager.get('ceph-salt:time_server:external_time_servers')
-            if external_time_servers:
-                retcode = CephSaltExecutor.check_external_time_servers(
-                    time_server_host,
-                    external_time_servers
-                )
-                if retcode > 0:
-                    return retcode
+        if state in ['ceph-salt', 'ceph-salt.apply']:
+            time_server_enabled = PillarManager.get('ceph-salt:time_server:enabled')
+            if time_server_enabled:
+                time_server_host = PillarManager.get('ceph-salt:time_server:server_host')
+                ext_time_servers = PillarManager.get('ceph-salt:time_server:external_time_servers')
+                if ext_time_servers:
+                    retcode = CephSaltExecutor.check_external_time_servers(
+                        time_server_host,
+                        ext_time_servers
+                    )
+                    if retcode > 0:
+                        return retcode
 
-        PP.println("Ready to apply config!")
+        PP.println("Ready to start!")
         return 0
 
     def run(self):
         # validate
-        retcode = self.check_apply_prerequisites(self.minion_id)
+        retcode = self.check_prerequisites(self.minion_id, self.state)
         if retcode > 0:
             return retcode
 
         # init
-        self.model = CephSaltModel(self.minion_id)
+        self.model = CephSaltModel(self.minion_id, self.state, self.pillar)
+        if 'ceph-salt' not in self.pillar:
+            self.pillar['ceph-salt'] = {}
+        minions = [self.minion_id] if self.minion_id else sorted(self.model.minions_names())
+        self.pillar['ceph-salt']['execution'] = {
+            'minions': minions
+        }
         if self.interactive:
             self.renderer = CursesRenderer(self.model)
         else:

@@ -9,7 +9,7 @@
 /tmp/chrony_sync_clock.sh:
   file.managed:
     - source:
-        - salt://ceph-salt/files/chrony_sync_clock.sh
+        - salt://ceph-salt/apply/files/chrony_sync_clock.sh
     - user: root
     - group: root
     - mode: '0755'

@@ -7,7 +7,7 @@ import os
 import mock
 import pytest
 
-from ceph_salt.apply import CephSaltController, TerminalRenderer, CephSaltModel, Event, \
+from ceph_salt.execute import CephSaltController, TerminalRenderer, CephSaltModel, Event, \
     CursesRenderer, CephSaltExecutor
 from ceph_salt.exceptions import MinionDoesNotExistInConfiguration
 from ceph_salt.salt_utils import GrainsManager
@@ -91,10 +91,10 @@ class ApplyTest(SaltMockTestCase):
 
     def test_minion_does_not_exist(self):
         with pytest.raises(MinionDoesNotExistInConfiguration):
-            CephSaltModel('node3.ceph.com')
+            CephSaltModel('node3.ceph.com', 'ceph-salt', {})
 
     def test_controller_with_terminal_renderer(self):
-        model = CephSaltModel(None)
+        model = CephSaltModel(None, 'ceph-salt', {})
         renderer = TerminalRenderer(model)
         controller = CephSaltController(model, renderer)
 
@@ -221,7 +221,7 @@ class ApplyTest(SaltMockTestCase):
         body.addstr = mock.MagicMock(side_effect=addstr)
         body.getyx = mock.MagicMock(side_effect=addstr.getyx)
 
-        model = CephSaltModel(None)
+        model = CephSaltModel(None, 'ceph-salt', {})
         renderer = CursesRenderer(model)
         controller = CephSaltController(model, renderer)
 
@@ -320,33 +320,34 @@ class ApplyTest(SaltMockTestCase):
 
     def test_check_formula_ok(self):
         self.fs.create_file(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
-        self.assertEqual(CephSaltExecutor.check_formula(), 0)
+        self.assertEqual(CephSaltExecutor.check_formula('ceph-salt'), 0)
         self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
 
     def test_check_formula_exists1(self):
         ServiceMock.restart_result = False
-        self.assertEqual(CephSaltExecutor.check_formula(), 3)
+        self.assertEqual(CephSaltExecutor.check_formula('ceph-salt'), 3)
         ServiceMock.restart_result = True
 
     def test_check_formula_exists2(self):
-        self.assertEqual(CephSaltExecutor.check_formula(), 4)
+        self.assertEqual(CephSaltExecutor.check_formula('ceph-salt'), 4)
 
     def test_check_formula_exists3(self):
         SaltUtilMock.sync_all_result = False
         self.fs.create_file(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
-        self.assertEqual(CephSaltExecutor.check_formula(), 5)
+        self.assertEqual(CephSaltExecutor.check_formula('ceph-salt'), 5)
         SaltUtilMock.sync_all_result = True
         self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
 
     def test_check_cluster_day1_with_minion(self):
         self.fs.create_file(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
-        self.assertEqual(CephSaltExecutor.check_cluster('node1.ceph.com', []), 6)
+        self.assertEqual(CephSaltExecutor.check_cluster('ceph-salt', 'node1.ceph.com', []), 6)
         self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
 
     def test_check_minion_not_found(self):
         self.fs.create_file(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
         host_ls_result = [{'hostname': 'node1'}]
         CephOrchMock.host_ls_result = host_ls_result
-        self.assertEqual(CephSaltExecutor.check_cluster('node9.ceph.com', host_ls_result), 7)
+        self.assertEqual(CephSaltExecutor.check_cluster('ceph-salt',
+                                                        'node9.ceph.com', host_ls_result), 7)
         CephOrchMock.host_ls_result = []
         self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))

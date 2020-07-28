@@ -22,7 +22,7 @@ service_reload:
 /etc/chrony.conf:
   file.managed:
     - source:
-        - salt://ceph-salt/files/chrony.conf.j2
+        - salt://ceph-salt/apply/files/chrony.conf.j2
     - template: jinja
     - user: root
     - group: root

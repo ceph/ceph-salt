@@ -11,7 +11,7 @@ from .config_shell import run_config_cmdline, run_config_shell, run_status, run_
 from .exceptions import CephSaltException
 from .logging_utils import LoggingUtil
 from .terminal_utils import check_root_privileges, PrettyPrinter as PP
-from .apply import CephSaltExecutor
+from .execute import CephSaltExecutor
 
 
 logger = logging.getLogger(__name__)
@@ -101,7 +101,8 @@ def apply(non_interactive, minion_id):
     """
     Apply configuration by running ceph-salt formula
     """
-    executor = CephSaltExecutor(not non_interactive, minion_id)
+    executor = CephSaltExecutor(not non_interactive, minion_id,
+                                'ceph-salt', {})
     retcode = executor.run()
     sys.exit(retcode)
 
