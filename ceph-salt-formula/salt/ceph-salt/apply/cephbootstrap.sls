@@ -36,21 +36,22 @@ run cephadm bootstrap:
   cmd.run:
     - name: |
         CEPHADM_IMAGE={{ pillar['ceph-salt']['container']['images']['ceph'] }} \
-        cephadm --verbose bootstrap --mon-ip {{ pillar['ceph-salt']['bootstrap_mon_ip'] }} \
+        cephadm --verbose bootstrap \
                 --config /tmp/bootstrap-ceph.conf \
-                --initial-dashboard-user {{ dashboard_username }} \
-                --initial-dashboard-password {{ dashboard_password }} \
-                --ssh-user {{ ssh_user }} \
 {%- if not pillar['ceph-salt']['dashboard']['password_update_required'] %}
                 --dashboard-password-noupdate \
 {%- endif %}
-                --output-keyring /etc/ceph/ceph.client.admin.keyring \
+                --initial-dashboard-password {{ dashboard_password }} \
+                --initial-dashboard-user {{ dashboard_username }} \
+                --mon-ip {{ pillar['ceph-salt']['bootstrap_mon_ip'] }} \
                 --output-config /etc/ceph/ceph.conf \
+                --output-keyring /etc/ceph/ceph.client.admin.keyring \
                 --skip-monitoring-stack \
                 --skip-prepare-host \
                 --skip-pull \
                 --ssh-private-key /tmp/ceph-salt-ssh-id_rsa \
                 --ssh-public-key /tmp/ceph-salt-ssh-id_rsa.pub \
+                --ssh-user {{ ssh_user }} \
 {%- for arg, value in pillar['ceph-salt'].get('bootstrap_arguments', {}).items() %}
                 --{{ arg }} {{ value if value is not none else '' }} \
 {%- endfor %}
