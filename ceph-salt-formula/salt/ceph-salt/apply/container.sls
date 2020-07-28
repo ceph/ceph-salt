@@ -9,7 +9,7 @@
 /etc/containers/registries.conf:
   file.managed:
     - source:
-        - salt://ceph-salt/files/registries.conf.j2
+        - salt://ceph-salt/apply/files/registries.conf.j2
     - template: jinja
     - user: root
     - group: root

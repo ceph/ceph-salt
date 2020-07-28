@@ -120,6 +120,7 @@ class StateMock:
 
 class ServiceMock:
     restart_result = True
+
     @classmethod
     def restart(cls, service):  # pylint: disable=unused-argument
         return cls.restart_result

@@ -1,9 +1,13 @@
 # -*- encoding: utf-8 -*-
 import json
+import logging
 import time
 
 
-def wait_for_admin_host(name, timeout=1800):
+logger = logging.getLogger(__name__)
+
+
+def set_admin_host(name, timeout=1800):
     ret = {'name': name, 'changes': {}, 'comment': '', 'result': False}
     starttime = time.time()
     timelimit = starttime + timeout
@@ -46,6 +50,10 @@ def wait_for_admin_host(name, timeout=1800):
 
 
 def add_host(name, host):
+    """
+    Requires the following grains to be set:
+      - ceph-salt:execution:admin_host
+    """
     ret = {'name': name, 'changes': {}, 'comment': '', 'result': False}
     admin_host = __salt__['grains.get']('ceph-salt:execution:admin_host')
     ssh_user = __pillar__['ceph-salt']['ssh']['user']
@@ -60,6 +68,10 @@ def add_host(name, host):
 
 
 def copy_ceph_conf_and_keyring(name):
+    """
+    Requires the following grains to be set:
+      - ceph-salt:execution:admin_host
+    """
     ret = {'name': name, 'changes': {}, 'comment': '', 'result': False}
     admin_host = __salt__['grains.get']('ceph-salt:execution:admin_host')
     ssh_user = __pillar__['ceph-salt']['ssh']['user']

@@ -41,8 +41,15 @@ updates disabled:
 
 {% if pillar['ceph-salt']['updates']['reboot'] %}
 
+{{ macros.begin_stage('Check if system reboot is needed') }}
+check if system reboot is needed:
+  ceph_salt.set_reboot_needed:
+    - failhard: True
+{{ macros.end_stage('Check if system reboot is needed') }}
+
 reboot:
    ceph_salt.reboot_if_needed:
+     - ignore_running_services: False
      - failhard: True
 
 {% endif %}
