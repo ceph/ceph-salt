@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
 import json
 import socket
+import time
 
 def _send_event(tag, data):
     __salt__['event.send'](tag, data=data)
@@ -65,3 +66,10 @@ def probe_ntp(ahost):
         return 1
     except:
         return 3
+
+def is_safety_disengaged():
+    execution = __pillar__['ceph-salt'].get('execution', {})
+    safety_disengage_time = execution.get('safety_disengage_time')
+    if safety_disengage_time and safety_disengage_time + 60 > time.time():
+        return True
+    return False
