@@ -5,15 +5,16 @@
 {{ macros.begin_stage('Bootstrap the Ceph cluster') }}
 
 {% set bootstrap_ceph_conf = pillar['ceph-salt'].get('bootstrap_ceph_conf', {}) %}
+{% set bootstrap_ceph_conf_tmpfile = "/tmp/bootstrap-ceph.conf" %}
 
 create bootstrap ceph conf:
   cmd.run:
     - name: |
-        echo -en "" > /tmp/bootstrap-ceph.conf
+        echo -en "" > {{ bootstrap_ceph_conf_tmpfile }}
 {% for section, settings in bootstrap_ceph_conf.items() %}
-        echo -en "[{{ section }}]\n" >> /tmp/bootstrap-ceph.conf
+        echo -en "[{{ section }}]\n" >> {{ bootstrap_ceph_conf_tmpfile }}
 {% for setting, value in settings.items() %}
-        echo -en "        {{ setting }} = {{ value }}\n" >> /tmp/bootstrap-ceph.conf
+        echo -en "        {{ setting }} = {{ value }}\n" >> {{ bootstrap_ceph_conf_tmpfile }}
 {% endfor %}
 {% endfor %}
     - failhard: True
@@ -37,7 +38,7 @@ run cephadm bootstrap:
     - name: |
         CEPHADM_IMAGE={{ pillar['ceph-salt']['container']['images']['ceph'] }} \
         cephadm --verbose bootstrap \
-                --config /tmp/bootstrap-ceph.conf \
+                --config {{ bootstrap_ceph_conf_tmpfile }} \
 {%- if not pillar['ceph-salt']['dashboard']['password_update_required'] %}
                 --dashboard-password-noupdate \
 {%- endif %}
