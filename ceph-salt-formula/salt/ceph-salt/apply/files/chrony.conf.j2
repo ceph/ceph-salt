@@ -5,8 +5,6 @@
 pool {{ server }} iburst
 {%- endfor %}
 
-local stratum 10
-manual
 allow {{ pillar['ceph-salt']['time_server']['subnet'] }}
 {%- else %}    {# grains['id'] == time_server #}
 server {{ time_server }} iburst
