@@ -1367,9 +1367,10 @@ class CephSaltExecutor:
             return retcode
 
         # check cluster
-        retcode = CephSaltExecutor.check_cluster(state, minion_id, host_ls)
-        if retcode > 0:
-            return retcode
+        if state not in ['ceph-salt.purge']:
+            retcode = CephSaltExecutor.check_cluster(state, minion_id, host_ls)
+            if retcode > 0:
+                return retcode
 
         # check external time servers, if any
         if state in ['ceph-salt', 'ceph-salt.apply']:
@@ -1398,10 +1399,10 @@ class CephSaltExecutor:
         self.model = CephSaltModel(self.minion_id, self.state, self.pillar)
         if 'ceph-salt' not in self.pillar:
             self.pillar['ceph-salt'] = {}
+        if 'execution' not in self.pillar['ceph-salt']:
+            self.pillar['ceph-salt']['execution'] = {}
         minions = [self.minion_id] if self.minion_id else sorted(self.model.minions_names())
-        self.pillar['ceph-salt']['execution'] = {
-            'minions': minions
-        }
+        self.pillar['ceph-salt']['execution']['minions'] = minions
         if self.interactive:
             self.renderer = CursesRenderer(self.model)
         else:
@@ -1418,3 +1419,46 @@ class CephSaltExecutor:
         self.event_proc.stop()
         self.executor.join()
         return self.controller.retcode
+
+
+def run_disengage_safety():
+    PillarManager.set('ceph-salt:execution:safety_disengage_time', time.time())
+    return 0
+
+
+def run_purge(non_interactive, yes_i_really_really_mean_it, prompt_proceed):
+    admin_minions = GrainsManager.filter_by('ceph-salt:roles', 'admin')
+    if not admin_minions:
+        PP.pl_red("No ceph-salt admin minions found.")
+        return 1
+    admin_minion = admin_minions[0]
+    if not SaltClient.local().cmd(admin_minion, 'ceph_salt.is_safety_disengaged')[admin_minion]:
+        PP.pl_red("Safety is not disengaged. Run 'ceph-salt disengage-safety' "
+                  "to disable protection against dangerous operations.")
+        return 2
+    fsid = None
+    for minion in admin_minions:
+        fsid = SaltClient.local().cmd(minion, 'ceph_orch.fsid')[minion]
+        if fsid is not None:
+            break
+    if not fsid:
+        PP.pl_red("Unable to find cluster FSID. Is ceph cluster deployed?")
+        return 3
+    if not yes_i_really_really_mean_it:
+        if non_interactive:
+            PP.pl_red("This command would completely remove ceph cluster '{}' and all the data "
+                      "it contains. If you are really sure you want to do that, include the "
+                      "'--yes-i-really-really-mean-it' option.".format(fsid))
+            return 4
+        prompt_proceed("You are about to permanently remove ceph cluster '{}'. "
+                       "Proceed?".format(fsid), 'n')
+        prompt_proceed("Proceed, even though this may destroy valuable data?", 'n')
+    executor = CephSaltExecutor(not non_interactive, None,
+                                'ceph-salt.purge', {
+                                    'ceph-salt': {
+                                        'execution': {
+                                            'fsid': fsid
+                                        }
+                                    }
+                                })
+    return executor.run()

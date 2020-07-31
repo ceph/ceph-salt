@@ -15,3 +15,10 @@ def configured():
 def host_ls():
     ret = __salt__['cmd.run']("ceph orch host ls --format=json")
     return json.loads(ret)
+
+def fsid():
+    ret = __salt__['cmd.run_all']("ceph -s --format=json")
+    if ret['retcode'] == 0:
+        status = json.loads(ret['stdout'])
+        return status.get('fsid', None)
+    return None

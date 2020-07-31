@@ -11,7 +11,7 @@ from .config_shell import run_config_cmdline, run_config_shell, run_status, run_
 from .exceptions import CephSaltException
 from .logging_utils import LoggingUtil
 from .terminal_utils import check_root_privileges, PrettyPrinter as PP
-from .execute import CephSaltExecutor
+from .execute import CephSaltExecutor, run_disengage_safety, run_purge
 
 
 logger = logging.getLogger(__name__)
@@ -104,6 +104,38 @@ def apply(non_interactive, minion_id):
     executor = CephSaltExecutor(not non_interactive, minion_id,
                                 'ceph-salt', {})
     retcode = executor.run()
+    sys.exit(retcode)
+
+
+def _prompt_proceed(msg, default):
+    really_want_to = click.prompt(
+        '{} (y/n):'.format(msg),
+        type=str,
+        default=default,
+    )
+    if really_want_to.lower()[0] != 'y':
+        raise click.Abort()
+
+
+@cli.command(name='disengage-safety')
+def disengage_safety():
+    """
+    Disable safety so dangerous operations like purging the whole cluster can be performed
+    """
+    retcode = run_disengage_safety()
+    sys.exit(retcode)
+
+
+@cli.command(name='purge')
+@click.option('-n', '--non-interactive', is_flag=True, default=False,
+              help='Destroy all ceph clusters in non-interactive mode')
+@click.option('--yes-i-really-really-mean-it', is_flag=True, default=False,
+              help='Confirm I really want to perform this dangerous operation')
+def purge(non_interactive, yes_i_really_really_mean_it):
+    """
+    Destroy all ceph clusters
+    """
+    retcode = run_purge(non_interactive, yes_i_really_really_mean_it, _prompt_proceed)
     sys.exit(retcode)
 
 

@@ -1,4 +1,5 @@
 # pylint: disable=arguments-differ
+from copy import deepcopy
 import itertools
 import logging
 import fnmatch
@@ -1299,7 +1300,8 @@ def run_config_cmdline(cmdline):
 
 
 def run_export(pretty):
-    config = PillarManager.get('ceph-salt')
+    config = deepcopy(PillarManager.get('ceph-salt'))
+    config.pop('execution', None)
     if pretty:
         PP.println(json.dumps(config, indent=4, sort_keys=True))
     else:
