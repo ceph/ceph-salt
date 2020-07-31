@@ -16,13 +16,14 @@ create static bootstrap yaml:
         echo -en "service_name: mgr\n" >> {{ bootstrap_spec_yaml_tmpfile }}
         echo -en "placement:\n" >> {{ bootstrap_spec_yaml_tmpfile }}
         echo -en "    hosts:\n" >> {{ bootstrap_spec_yaml_tmpfile }}
-        echo -en "        - {{ grains['host'] }}\n" >> {{ bootstrap_spec_yaml_tmpfile }}
+        echo -en "        - '{{ grains['host'] }}'\n" >> {{ bootstrap_spec_yaml_tmpfile }}
+        >> foo
         echo -en "---\n" >> {{ bootstrap_spec_yaml_tmpfile }}
         echo -en "service_type: mon\n" >> {{ bootstrap_spec_yaml_tmpfile }}
         echo -en "service_name: mon\n" >> {{ bootstrap_spec_yaml_tmpfile }}
         echo -en "placement:\n" >> {{ bootstrap_spec_yaml_tmpfile }}
         echo -en "    hosts:\n" >> {{ bootstrap_spec_yaml_tmpfile }}
-        echo -en "        - {{ grains['host'] }}\n" >> {{ bootstrap_spec_yaml_tmpfile }}
+        echo -en "        - '{{ grains['host'] }}:{{ pillar['ceph-salt']['bootstrap_mon_ip'] }}'\n" >> {{ bootstrap_spec_yaml_tmpfile }}
 
 create bootstrap ceph conf:
   cmd.run:
@@ -50,11 +51,14 @@ wait for other minions:
 {% set dashboard_password = pillar['ceph-salt']['dashboard']['password'] %}
 {% set ssh_user = pillar['ceph-salt']['ssh']['user'] %}
 
+{# --mon-ip is still required, even though we're also putting the Mon IP      #}
+{# directly in the placement YAML (see https://tracker.ceph.com/issues/46782) #}
 run cephadm bootstrap:
   cmd.run:
     - name: |
         CEPHADM_IMAGE={{ pillar['ceph-salt']['container']['images']['ceph'] }} \
         cephadm --verbose bootstrap \
+                --mon-ip {{ pillar['ceph-salt']['bootstrap_mon_ip'] }} \
                 --apply-spec {{ bootstrap_spec_yaml_tmpfile }} \
                 --config {{ bootstrap_ceph_conf_tmpfile }} \
 {%- if not pillar['ceph-salt']['dashboard']['password_update_required'] %}
@@ -62,7 +66,6 @@ run cephadm bootstrap:
 {%- endif %}
                 --initial-dashboard-password {{ dashboard_password }} \
                 --initial-dashboard-user {{ dashboard_username }} \
-                --mon-ip {{ pillar['ceph-salt']['bootstrap_mon_ip'] }} \
                 --output-config /etc/ceph/ceph.conf \
                 --output-keyring /etc/ceph/ceph.client.admin.keyring \
                 --skip-monitoring-stack \
