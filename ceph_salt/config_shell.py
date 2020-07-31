@@ -1279,7 +1279,7 @@ def run_config_shell():
         try:
             shell.run_interactive()
             break
-        except (configshell.ExecutionError, CephSaltException) as ex:
+        except (configshell.ExecutionError, CephSaltException, ValueError) as ex:
             logger.exception(ex)
             PP.pl_red(ex)
     return True
@@ -1293,7 +1293,7 @@ def run_config_cmdline(cmdline):
     logger.info("running command: %s", cmdline)
     try:
         shell.run_cmdline(cmdline)
-    except (configshell.ExecutionError, CephSaltException) as ex:
+    except (configshell.ExecutionError, CephSaltException, ValueError) as ex:
         logger.exception(ex)
         PP.pl_red(ex)
     return True
