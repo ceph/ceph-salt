@@ -11,7 +11,7 @@ include:
     - .cephtools
     - .provision-end
     - .cephbootstrap
-    - .find-admin-host
+    - .cephconfigure
     - .cephorch
     - .ceph-admin
     - .cleanup
