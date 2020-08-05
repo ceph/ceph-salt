@@ -19,13 +19,9 @@ create ssh user:
       - {{ ssh_user_group }}
     - failhard: True
 
-configure sudoers:
-    file.append:
-        - name: /etc/sudoers.d/{{ssh_user}}
-        - text:
-          - "{{ssh_user}} ALL=(ALL) NOPASSWD: ALL"
-
 {% endif %}
+
+{{ macros.sudoers('configure sudoers') }}
 
 # make sure .ssh is present with the right permissions
 create ssh dir:

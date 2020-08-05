@@ -16,7 +16,11 @@ install cephadm:
 {% endif %}
     - failhard: True
 
+# in case any package instalation re-writes sudoers /etc/sudoers.d/<ssh_user>
+{{ macros.sudoers('configure sudoers after package instalation') }}
+
 {% if grains['id'] == pillar['ceph-salt'].get('bootstrap_minion') %}
+
 /var/log/ceph:
   file.directory:
     - user: ceph
