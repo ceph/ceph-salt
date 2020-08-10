@@ -23,6 +23,10 @@ copy ceph.conf and keyring from an admin node:
 
 {{ macros.end_stage('Ensure ceph.conf and keyring are present') }}
 
+{% set admin_minion = pillar['ceph-salt'].get('bootstrap_minion', pillar['ceph-salt']['minions']['admin'][0]) %}
+
+{% if grains['id'] == admin_minion %}
+
 {{ macros.begin_stage('Ensure cephadm MGR module is enabled') }}
 
 {% set ssh_user = pillar['ceph-salt']['ssh']['user'] %}
@@ -38,6 +42,8 @@ enable cephadm mgr module:
     - failhard: True
 
 {{ macros.end_stage('Ensure cephadm MGR module is enabled') }}
+
+{% endif %}
 
 {% endif %}
 
