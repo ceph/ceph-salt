@@ -420,7 +420,7 @@ List of custom registries in v2 format.
 
 Add by specifying B{location}, B{prefix}, and B{insecure}. e.g.,
 
-add location=172.17.0.1:5000/docker.io prefix=docker.io insecure=true
+add location=172.17.0.1:5000/docker.io prefix=docker.io insecure=false
 ''',
                         'params_spec': {
                             'location': {
