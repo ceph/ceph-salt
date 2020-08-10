@@ -223,7 +223,7 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertValueOption('/ssh/user',
                                'ceph-salt:ssh:user',
                                'myuser',
-                               'root')
+                               'ceph-salt')
 
     def test_time_server(self):
         self.assertFlagOption('/time_server',
@@ -286,7 +286,7 @@ class ConfigShellTest(SaltMockTestCase):
                 'cephadm': ['node1.ceph.com', 'node2.ceph.com']
             },
             'ssh': {
-                'user': 'root'
+                'user': 'ceph-salt'
             },
             'time_server': {
                 'enabled': True,

@@ -538,7 +538,7 @@ add location=172.17.0.1:5000/docker.io prefix=docker.io insecure=true
             },
             'user': {
                 'help': 'SSH user',
-                'handler': PillarHandler('ceph-salt:ssh:user', 'root')
+                'handler': PillarHandler('ceph-salt:ssh:user', 'ceph-salt')
             },
         }
     },
