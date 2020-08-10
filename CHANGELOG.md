@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [15.2.8] - 2020-08-10
+### Added
+- Change default SSH user from 'root' to 'ceph-salt' (#319)
+- Make bootstrap minion optional (#315)
+- Purge ceph cluster (#306)
+- Install 'ceph-base' on admin minions (#305)
+- Declare RPM dependencies in spec file (#302)
+### Fixed
+- 'cephadm' MGR module should only be enabled after cluster bootstrapped (#322)
+- Support SSH users that are configured by packages (#318)
+- aa-teardown can fail if apparmor is disabled on the boot command line (#316)
+- Configure 'qualified-search-registries = ["docker.io"]' (#321)
+- SSH pub and priv key should be set via 'cephadm' (#312)
+- Only create a single MON and MGR during bootstrap (#308)
+- Handle value errors on command line (#313)
+- Omit chrony.conf useless and counterproductive options (#311)
+- Install rsync (#301)
+
 ## [15.2.7] - 2020-07-17
 ### Added
 - Only allow authentication on a single registry (#298)
@@ -186,7 +204,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal README.
 - The CHANGELOG file.
 
-[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.7...HEAD
+[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.8...HEAD
+[15.2.8]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.8
 [15.2.7]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.7
 [15.2.6]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.6
 [15.2.5]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.5
