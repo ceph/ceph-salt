@@ -72,7 +72,7 @@ Those minions will be Ceph nodes controlled by cephadm:
 /ceph_cluster/roles/cephadm add *
 ```
 
-And which of them will have "ceph.conf" and "keyring" installed:
+And which of them will have admin "keyring" installed:
 
 ```
 /ceph_cluster/roles/admin add *
