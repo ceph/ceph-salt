@@ -1278,9 +1278,8 @@ class CephSaltExecutor:
         return 0
 
     @staticmethod
-    def check_cluster(state, minion_id, host_ls):
+    def check_cluster(state, minion_id, deployed):
         PP.println("Checking if there is an existing Ceph cluster...")
-        deployed = len(host_ls) > 0
 
         # day 1, but minion_id specified
         if state in ['ceph-salt', 'ceph-salt.apply']:
@@ -1352,10 +1351,10 @@ class CephSaltExecutor:
             PP.pl_red(e)
             return 1
 
-        host_ls = CephOrch.host_ls()
+        deployed = CephOrch.deployed()
 
         # check config is valid
-        error_msg = validate_config(host_ls)
+        error_msg = validate_config(deployed)
         if error_msg:
             logger.error(error_msg)
             PP.pl_red(error_msg)
@@ -1368,7 +1367,7 @@ class CephSaltExecutor:
 
         # check cluster
         if state not in ['ceph-salt.purge']:
-            retcode = CephSaltExecutor.check_cluster(state, minion_id, host_ls)
+            retcode = CephSaltExecutor.check_cluster(state, minion_id, deployed)
             if retcode > 0:
                 return retcode
 

@@ -16,25 +16,25 @@ class ValidateConfigTest(SaltMockTestCase):
 
     def test_no_bootstrap_minion(self):
         PillarManager.reset('ceph-salt:bootstrap_minion')
-        self.assertEqual(validate_config([]), "No bootstrap minion specified in config")
-        self.assertEqual(validate_config([{'hostname': 'node1'}]), None)
+        self.assertEqual(validate_config(False), "No bootstrap minion specified in config")
+        self.assertEqual(validate_config(True), None)
 
     def test_bootstrap_minion_is_not_admin(self):
         PillarManager.set('ceph-salt:minions:admin', [])
-        self.assertEqual(validate_config([]), "Bootstrap minion must be 'Admin'")
-        self.assertEqual(validate_config([{'hostname': 'node1'}]), None)
+        self.assertEqual(validate_config(False), "Bootstrap minion must be 'Admin'")
+        self.assertEqual(validate_config(True), None)
 
     def test_ssh_no_user(self):
         PillarManager.reset('ceph-salt:ssh:user')
-        self.assertEqual(validate_config([]), "No SSH user specified in config")
+        self.assertEqual(validate_config(False), "No SSH user specified in config")
 
     def test_ssh_no_private_key(self):
         PillarManager.reset('ceph-salt:ssh:private_key')
-        self.assertEqual(validate_config([]), "No SSH private key specified in config")
+        self.assertEqual(validate_config(False), "No SSH private key specified in config")
 
     def test_ssh_no_public_key(self):
         PillarManager.reset('ceph-salt:ssh:public_key')
-        self.assertEqual(validate_config([]), "No SSH public key specified in config")
+        self.assertEqual(validate_config(False), "No SSH public key specified in config")
 
     def test_ssh_invalid_key_pair(self):
         public_key = """ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCrI0b980egkmfqFQcsYWrqb2TR3QX/dL+\
@@ -43,63 +43,65 @@ HA5UDa0RFLiOW0xh0liHqd02NZ3j4AoQsh6MSanrROAC2g/cYNDeLo/DR3NXTOPsIhwOkGCncFaOkraV
 0P8s0ybiomlBY9m+tYNZJypz4lTPfHa9XHWRn5nxFiqiR5yswRRXeZDAEPBXgN9maIC1Rj2mmDVGpr4v3gKf9TBD\
 PBVw2pLCZsH5ol3VJ1/DETsGRMzFubFeTUNOC3MzhhG+V"""
         PillarManager.set('ceph-salt:ssh:public_key', public_key)
-        self.assertEqual(validate_config([]), "Invalid SSH key pair")
+        self.assertEqual(validate_config(False), "Invalid SSH key pair")
 
     def test_no_bootstrap_mon_ip(self):
         PillarManager.reset('ceph-salt:bootstrap_mon_ip')
-        self.assertEqual(validate_config([]), "No bootstrap Mon IP specified in config")
+        self.assertEqual(validate_config(False), "No bootstrap Mon IP specified in config")
 
     def test_loopback_bootstrap_mon_ip(self):
         PillarManager.set('ceph-salt:bootstrap_mon_ip', '127.0.0.1')
-        self.assertEqual(validate_config([]), "Mon IP cannot be the loopback interface IP")
+        self.assertEqual(validate_config(False), "Mon IP cannot be the loopback interface IP")
 
     def test_no_dashboard_username(self):
         PillarManager.reset('ceph-salt:dashboard:username')
-        self.assertEqual(validate_config([]), "No dashboard username specified in config")
+        self.assertEqual(validate_config(False), "No dashboard username specified in config")
 
     def test_no_dashboard_password(self):
         PillarManager.reset('ceph-salt:dashboard:password')
-        self.assertEqual(validate_config([]), "No dashboard password specified in config")
+        self.assertEqual(validate_config(False), "No dashboard password specified in config")
 
     def test_dashboard_ssl_certificate(self):
         PillarManager.reset('ceph-salt:dashboard:ssl_certificate_key')
-        self.assertEqual(validate_config([]), "Dashboard SSL certificate provided, "
-                                              "but no SSL certificate key specified")
+        self.assertEqual(validate_config(False), "Dashboard SSL certificate provided, "
+                                                 "but no SSL certificate key specified")
 
     def test_dashboard_ssl_certificate_key(self):
         PillarManager.reset('ceph-salt:dashboard:ssl_certificate')
-        self.assertEqual(validate_config([]), "Dashboard SSL certificate key provided, "
-                                              "but no SSL certificate specified")
+        self.assertEqual(validate_config(False), "Dashboard SSL certificate key provided, "
+                                                 "but no SSL certificate specified")
 
     def test_dashboard_password_update_required_not_set(self):
         PillarManager.reset('ceph-salt:dashboard:password_update_required')
-        self.assertEqual(validate_config([]),
+        self.assertEqual(validate_config(False),
                          "'ceph-salt:dashboard:password_update_required' must be of type Boolean")
 
     def test_updates_enabled_not_set(self):
         PillarManager.reset('ceph-salt:updates:enabled')
-        self.assertEqual(validate_config([]), "'ceph-salt:updates:enabled' must be of type Boolean")
+        self.assertEqual(validate_config(False),
+                         "'ceph-salt:updates:enabled' must be of type Boolean")
 
     def test_updates_reboot_not_set(self):
         PillarManager.reset('ceph-salt:updates:reboot')
-        self.assertEqual(validate_config([]), "'ceph-salt:updates:reboot' must be of type Boolean")
+        self.assertEqual(validate_config(False),
+                         "'ceph-salt:updates:reboot' must be of type Boolean")
 
     def test_time_server_enabled_not_set(self):
         PillarManager.reset('ceph-salt:time_server:enabled')
-        self.assertEqual(validate_config([]),
+        self.assertEqual(validate_config(False),
                          "'ceph-salt:time_server:enabled' must be of type Boolean")
 
     def test_no_time_server_host(self):
         PillarManager.reset('ceph-salt:time_server:server_host')
-        self.assertEqual(validate_config([]), "No time server host specified in config")
+        self.assertEqual(validate_config(False), "No time server host specified in config")
 
     def test_no_time_server_subnet(self):
         PillarManager.reset('ceph-salt:time_server:subnet')
-        self.assertEqual(validate_config([]), "No time server subnet specified in config")
+        self.assertEqual(validate_config(False), "No time server subnet specified in config")
 
     def test_no_external_time_servers(self):
         PillarManager.reset('ceph-salt:time_server:external_time_servers')
-        self.assertEqual(validate_config([]), "No external time servers specified in config")
+        self.assertEqual(validate_config(False), "No external time servers specified in config")
 
     def test_time_server_not_a_minion(self):
         not_minion_err = ('Time server is not a minion: {} '
@@ -107,45 +109,45 @@ PBVw2pLCZsH5ol3VJ1/DETsGRMzFubFeTUNOC3MzhhG+V"""
         PillarManager.set('ceph-salt:time_server:server_host', 'foo.example.com')
         PillarManager.reset('ceph-salt:time_server:external_time_servers')
         self.assertEqual(
-            validate_config([]),
+            validate_config(False),
             not_minion_err.format('time server subnet'))
         PillarManager.reset('ceph-salt:time_server:subnet')
         PillarManager.set('ceph-salt:time_server:external_time_servers', ['pool.ntp.org'])
         self.assertEqual(
-            validate_config([]),
+            validate_config(False),
             not_minion_err.format('external time servers'))
 
     def test_cephadm_not_cluster_minion(self):
         PillarManager.set('ceph-salt:minions:cephadm', ['node4.ceph.com'])
-        self.assertEqual(validate_config([]),
+        self.assertEqual(validate_config(False),
                          "Minion 'node4.ceph.com' has 'cephadm' role but is not a cluster minion")
 
     def test_admin_without_cephadm_role(self):
         PillarManager.set('ceph-salt:bootstrap_minion', 'node3.ceph.com')
         PillarManager.set('ceph-salt:minions:admin', ['node3.ceph.com'])
-        self.assertEqual(validate_config([]),
+        self.assertEqual(validate_config(False),
                          "Minion 'node3.ceph.com' has 'admin' role but not 'cephadm' role")
 
     def test_incomplete_registry_auth(self):
         PillarManager.set('ceph-salt:container:auth:username', 'testuser')
-        self.assertEqual(validate_config([]), "Registry auth configuration is incomplete")
+        self.assertEqual(validate_config(False), "Registry auth configuration is incomplete")
         PillarManager.set('ceph-salt:container:auth:password', 'testpassword')
-        self.assertEqual(validate_config([]), "Registry auth configuration is incomplete")
+        self.assertEqual(validate_config(False), "Registry auth configuration is incomplete")
         PillarManager.set('ceph-salt:container:auth:registry', '172.17.0.1:5000')
-        self.assertEqual(validate_config([]), None)
+        self.assertEqual(validate_config(False), None)
 
     def test_no_ceph_container_image_path(self):
         PillarManager.reset('ceph-salt:container:images:ceph')
-        self.assertEqual(validate_config([]), "No Ceph container image path specified in config")
+        self.assertEqual(validate_config(False), "No Ceph container image path specified in config")
 
     def test_ceph_container_image_relative_path(self):
         PillarManager.set('ceph-salt:container:images:ceph', 'ceph/ceph:v15.2.2')
-        self.assertEqual(validate_config([]),
+        self.assertEqual(validate_config(False),
                          "A relative image path was given, but only absolute image paths "
                          "are supported")
 
     def test_valid(self):
-        self.assertEqual(validate_config([]), None)
+        self.assertEqual(validate_config(False), None)
 
     @classmethod
     def create_valid_config(cls):

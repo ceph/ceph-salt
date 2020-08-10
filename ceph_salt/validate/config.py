@@ -2,14 +2,13 @@ from ..core import SshKeyManager
 from ..salt_utils import PillarManager
 
 
-def validate_config(host_ls):
+def validate_config(deployed):
     """
     :return: Error message if config is invalid, otherwise "None"
     """
     all_minions = PillarManager.get('ceph-salt:minions:all', [])
     bootstrap_minion = PillarManager.get('ceph-salt:bootstrap_minion')
     admin_minions = PillarManager.get('ceph-salt:minions:admin', [])
-    deployed = len(host_ls) > 0
     if not deployed:
         if not bootstrap_minion:
             return "No bootstrap minion specified in config"

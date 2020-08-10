@@ -1,6 +1,6 @@
 {% import 'macros.yml' as macros %}
 
-{% if grains['id'] == pillar['ceph-salt']['bootstrap_minion'] %}
+{% if grains['id'] == pillar['ceph-salt'].get('bootstrap_minion') %}
 
 {{ macros.begin_stage('Bootstrap the Ceph cluster') }}
 

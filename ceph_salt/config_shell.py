@@ -1258,7 +1258,8 @@ def run_status():
     host_ls = CephOrch.host_ls()
     all = PillarManager.get('ceph-salt:minions:all', [])
     status['cluster'] = '{} minions, {} hosts managed by cephadm'.format(len(all), len(host_ls))
-    error_msg = validate_config(host_ls)
+    deployed = CephOrch.deployed()
+    error_msg = validate_config(deployed)
     if error_msg:
         result = False
         logger.info(error_msg)

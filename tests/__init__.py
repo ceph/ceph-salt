@@ -128,11 +128,16 @@ class ServiceMock:
 
 class CephOrchMock:
     configured_result = True
+    ceph_configured_result = True
     host_ls_result = []
 
     @classmethod
     def configured(cls):
         return cls.configured_result
+
+    @classmethod
+    def ceph_configured(cls):
+        return cls.ceph_configured_result
 
     @classmethod
     def host_ls(cls):

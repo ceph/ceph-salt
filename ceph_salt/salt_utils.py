@@ -320,3 +320,12 @@ class CephOrch:
             if value is True:
                 return SaltClient.local_cmd(minion, 'ceph_orch.host_ls')[minion]
         return []
+
+    @staticmethod
+    def deployed():
+        result = SaltClient.local().cmd('ceph-salt:roles:admin', 'ceph_orch.ceph_configured',
+                                        tgt_type='grain')
+        for value in result.values():
+            if value is True:
+                return True
+        return False
