@@ -1,0 +1,6 @@
+{% set auth = pillar['ceph-salt'].get('container', {}).get('auth', {}) %}
+{
+"url": "{{ auth.get('registry') }}",
+"username": "{{ auth.get('username') }}",
+"password": "{{ auth.get('password') }}"
+}

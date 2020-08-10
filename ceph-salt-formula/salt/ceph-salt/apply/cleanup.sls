@@ -8,19 +8,7 @@ remove ceph-salt-ssh-id_rsa.pub:
     - name: /tmp/ceph-salt-ssh-id_rsa.pub
     - failhard: True
 
-remove ceph-salt-registry-password:
+remove ceph-salt-registry-json:
   file.absent:
-    - name: /tmp/ceph-salt-registry-password
+    - name: /tmp/ceph-salt-registry-json
     - failhard: True
-
-{% set auth = pillar['ceph-salt'].get('container', {}).get('auth', {}) %}
-
-{% if auth %}
-
-logout from registry:
-  cmd.run:
-    - name: |
-        podman logout {{ auth.get('registry') }}
-    - failhard: True
-
-{% endif %}
