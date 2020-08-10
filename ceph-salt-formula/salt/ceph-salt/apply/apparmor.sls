@@ -12,6 +12,8 @@ aa-teardown:
   cmd.run:
     - onlyif:
       - sh -c "type aa-teardown"
+    - onfail:
+      - test: apparmor
     - failhard: True
 
 stop apparmor:
