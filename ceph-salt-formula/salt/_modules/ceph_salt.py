@@ -3,6 +3,7 @@ import json
 import socket
 import time
 
+
 def _send_event(tag, data):
     __salt__['event.send'](tag, data=data)
     return {
@@ -12,17 +13,22 @@ def _send_event(tag, data):
         'comment': ''
     }
 
+
 def begin_stage(name):
     return _send_event('ceph-salt/stage/begin', data={'desc': name})
+
 
 def end_stage(name):
     return _send_event('ceph-salt/stage/end', data={'desc': name})
 
+
 def begin_step(name):
     return _send_event('ceph-salt/step/begin', data={'desc': name})
 
+
 def end_step(name):
     return _send_event('ceph-salt/step/end', data={'desc': name})
+
 
 def get_remote_grain(host, grain):
     """
@@ -45,13 +51,6 @@ def get_remote_grain(host, grain):
         return None
     return json.loads(ret['stdout'])['local']
 
-def set_remote_grain(host, grain, value):
-    ssh_user = __pillar__['ceph-salt']['ssh']['user']
-    sudo = 'sudo ' if ssh_user != 'root' else ''
-    return __salt__['cmd.run_all']("ssh -o StrictHostKeyChecking=no "
-                                   "-i /tmp/ceph-salt-ssh-id_rsa {}@{} "
-                                   "'{}salt-call grains.set {} {}'".format(ssh_user, host, sudo,
-                                                                           grain, value))
 
 def probe_ntp(ahost):
     import ntplib
@@ -66,6 +65,7 @@ def probe_ntp(ahost):
         return 1
     except:
         return 3
+
 
 def is_safety_disengaged():
     execution = __pillar__['ceph-salt'].get('execution', {})

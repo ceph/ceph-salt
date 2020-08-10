@@ -28,6 +28,9 @@ update packages:
     - name: pkg.upgrade
     - failhard: True
 
+# in case any package update re-writes sudoers /etc/sudoers.d/<ssh_user>
+{{ macros.sudoers('configure sudoers after package update') }}
+
 {{ macros.end_step('Update all packages') }}
 
 {% else %}
