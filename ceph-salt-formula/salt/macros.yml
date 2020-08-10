@@ -34,6 +34,7 @@
     - text:
       - "{{ssh_user}} ALL=NOPASSWD: /usr/bin/ceph -s"
       - "{{ssh_user}} ALL=NOPASSWD: /usr/bin/ceph orch host add *"
+      - "{{ssh_user}} ALL=NOPASSWD: /usr/bin/ceph orch host ok-to-stop *"
       - "{{ssh_user}} ALL=NOPASSWD: /usr/bin/ceph orch status --format=json"
       - "{{ssh_user}} ALL=NOPASSWD: /usr/bin/python3"
       - "{{ssh_user}} ALL=NOPASSWD: /usr/bin/rsync"

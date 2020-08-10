@@ -1296,6 +1296,12 @@ class CephSaltExecutor:
                 logger.error("cannot find minion: %s", minion_id)
                 PP.pl_red("Cannot find minion '{}'".format(minion_id))
                 return 7
+        # ceph-salt.update called, but cluster not deployed yet
+        if state == 'ceph-salt.update' and not deployed:
+            logger.error("ceph cluster not deployed and ceph-salt.update called")
+            PP.pl_red("Ceph cluster is not deployed yet, please apply the config to "
+                      "bootstrap a new Ceph cluster first: \"ceph-salt apply\"")
+            return 8
         return 0
 
     @staticmethod
