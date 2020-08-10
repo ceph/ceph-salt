@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [15.2.9] - 2020-08-10
+### Added
+- Add 'ceph-salt update [--reboot] [minion_id]' command (#303)
+- Enable 'ceph.conf' management by cephadm (#291)
+- Suggest 'secure=false' on custom registries configuration help (#323)
+- Make use of cephadm for registry authentication (#295)
+
 ## [15.2.8] - 2020-08-10
 ### Added
 - Change default SSH user from 'root' to 'ceph-salt' (#319)
@@ -204,7 +211,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal README.
 - The CHANGELOG file.
 
-[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.8...HEAD
+[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.9...HEAD
+[15.2.9]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.9
 [15.2.8]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.8
 [15.2.7]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.7
 [15.2.6]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.6
