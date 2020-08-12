@@ -38,7 +38,7 @@ def get_remote_grain(host, grain):
     sudo = 'sudo ' if ssh_user != 'root' else ''
     home = '/home/{}'.format(ssh_user) if ssh_user != 'root' else '/root'    
     ret = __salt__['cmd.run_all']("ssh -o StrictHostKeyChecking=no "
-                                  "-i {}/.ssh/ceph-salt {}@{} "
+                                  "-i {}/.ssh/id_rsa {}@{} "
                                   "\"{}python3 - <<EOF\n"
                                   "import json\n"
                                   "import salt.utils.data\n"

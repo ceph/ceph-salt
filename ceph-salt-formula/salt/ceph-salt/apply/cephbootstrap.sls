@@ -68,8 +68,8 @@ run cephadm bootstrap:
                 --skip-monitoring-stack \
                 --skip-prepare-host \
                 --skip-pull \
-                --ssh-private-key {{ home }}/.ssh/ceph-salt \
-                --ssh-public-key {{ home }}/.ssh/ceph-salt.pub \
+                --ssh-private-key {{ home }}/.ssh/id_rsa \
+                --ssh-public-key {{ home }}/.ssh/id_rsa.pub \
                 --ssh-user {{ ssh_user }} \
 {%- for arg, value in pillar['ceph-salt'].get('bootstrap_arguments', {}).items() %}
                 --{{ arg }} {{ value if value is not none else '' }} \

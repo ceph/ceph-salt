@@ -37,7 +37,7 @@ def set_admin_host(name, if_grain=None, timeout=1800):
                     sudo = 'sudo ' if ssh_user != 'root' else ''
                     home = '/home/{}'.format(ssh_user) if ssh_user != 'root' else '/root'                
                     status_ret = __salt__['cmd.run_all']("ssh -o StrictHostKeyChecking=no "
-                                                         "-i {}/.ssh/ceph-salt {}@{} "
+                                                         "-i {}/.ssh/id_rsa {}@{} "
                                                          "'if [[ -f /etc/ceph/ceph.conf "
                                                          "&& -f /etc/ceph/ceph.client.admin.keyring ]]; "
                                                          "then timeout 60 {}ceph -s; "
@@ -75,7 +75,7 @@ def wait_until_ceph_orch_available(name, timeout=1800):
         sudo = 'sudo ' if ssh_user != 'root' else ''
         home = '/home/{}'.format(ssh_user) if ssh_user != 'root' else '/root'    
         status_ret = __salt__['cmd.run_all']("ssh -o StrictHostKeyChecking=no "
-                                             "-i {}/.ssh/ceph-salt {}@{} "
+                                             "-i {}/.ssh/id_rsa {}@{} "
                                              "'if [[ -f /etc/ceph/ceph.conf "
                                              "&& -f /etc/ceph/ceph.client.admin.keyring ]]; "
                                              "then timeout 60 {}ceph orch status --format=json; "
@@ -102,7 +102,7 @@ def add_host(name, host):
     sudo = 'sudo ' if ssh_user != 'root' else ''
     home = '/home/{}'.format(ssh_user) if ssh_user != 'root' else '/root'
     cmd_ret = __salt__['cmd.run_all']("ssh -o StrictHostKeyChecking=no "
-                                      "-i {}/.ssh/ceph-salt {}@{} "
+                                      "-i {}/.ssh/id_rsa {}@{} "
                                       "'{}ceph orch host add {}'".format(home, ssh_user,
                                                                          admin_host, sudo, host))
     if cmd_ret['retcode'] == 0:
@@ -144,7 +144,7 @@ def copy_ceph_conf_and_keyring(name):
     home = '/home/{}'.format(ssh_user) if ssh_user != 'root' else '/root'
     cmd_ret = __salt__['cmd.run_all']("{1}rsync --rsync-path='{1}rsync' "
                                       "-e 'ssh -o StrictHostKeyChecking=no "
-                                      "-i {0}/.ssh/ceph-salt' "
+                                      "-i {0}/.ssh/id_rsa' "
                                       "{2}@{3}:/etc/ceph/{{ceph.conf,ceph.client.admin.keyring}} "
                                       "/etc/ceph/".format(home, sudo, ssh_user, admin_host))
     if cmd_ret['retcode'] == 0:
@@ -176,7 +176,7 @@ def wait_for_ceph_orch_host_ok_to_stop(name, if_grain, timeout=36000):
             sudo = 'sudo ' if ssh_user != 'root' else ''
             home = '/home/{}'.format(ssh_user) if ssh_user != 'root' else '/root'    
             cmd_ret = __salt__['cmd.run_all']("ssh -o StrictHostKeyChecking=no "
-                                              "-i {}/.ssh/ceph-salt {}@{} "
+                                              "-i {}/.ssh/id_rsa {}@{} "
                                               "'{}ceph orch host ok-to-stop {}'".format(home,
                                                                                         ssh_user,
                                                                                         admin_host,

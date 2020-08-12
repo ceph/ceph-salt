@@ -38,7 +38,7 @@ create ssh dir:
 # private key
 create ceph-salt-ssh-id_rsa:
   file.managed:
-    - name: {{ home }}/.ssh/ceph-salt
+    - name: {{ home }}/.ssh/id_rsa
     - user: {{ ssh_user }}
     - group: {{ ssh_user_group }}
     - mode: '0600'
@@ -48,7 +48,7 @@ create ceph-salt-ssh-id_rsa:
 # public key
 create ceph-salt-ssh-id_rsa.pub:
   file.managed:
-    - name: {{ home }}/.ssh/ceph-salt.pub
+    - name: {{ home }}/.ssh/id_rsa.pub
     - user: {{ ssh_user }}
     - group: {{ ssh_user_group }}
     - mode: '0644'
