@@ -161,5 +161,25 @@ def update(non_interactive, reboot, minion_id):
     sys.exit(retcode)
 
 
+@cli.command(name='reboot')
+@click.option('-n', '--non-interactive', is_flag=True, default=False,
+              help='Reboot in non-interactive mode')
+@click.option('-f', '--force', is_flag=True, default=False,
+              help='Force reboot even if not needed')
+@click.argument('minion_id', required=False)
+def reboot_cmd(non_interactive, force, minion_id):
+    """
+    Reboot hosts if needed
+    """
+    executor = CephSaltExecutor(not non_interactive, minion_id,
+                                'ceph-salt.reboot', {
+                                    'ceph-salt': {
+                                        'force-reboot': force
+                                    }
+                                })
+    retcode = executor.run()
+    sys.exit(retcode)
+
+
 if __name__ == '__main__':
     ceph_salt_main()

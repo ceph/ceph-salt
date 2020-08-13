@@ -33,13 +33,16 @@ def end_step(name):
     return _send_event('ceph-salt/step/end', data={'desc': name})
 
 
-def set_reboot_needed(name):
+def set_reboot_needed(name, force=False):
     ret = {'name': name, 'changes': {}, 'comment': '', 'result': False}
-    if __grains__.get('os_family') == 'Suse':
-        needs_reboot = __salt__['cmd.run_all']('zypper ps')['retcode'] > 0
+    if force:
+        needs_reboot = True
     else:
-        ret['comment'] = 'Unsupported distribution: Unable to check if reboot is needed'
-        return ret
+        if __grains__.get('os_family') == 'Suse':
+            needs_reboot = __salt__['cmd.run_all']('zypper ps')['retcode'] > 0
+        else:
+            ret['comment'] = 'Unsupported distribution: Unable to check if reboot is needed'
+            return ret
     __salt__['grains.set']('ceph-salt:execution:reboot_needed', needs_reboot)
     ret['result'] = True
     return ret

@@ -646,6 +646,8 @@ class CephSaltController(EventListener):
         minion.rebooting = False
         if minion.stage_end('Reboot', event.stamp):
             self.renderer.minion_update(event.minion)
+        if 'ceph-salt' in self.model.pillar:
+            self.model.pillar['ceph-salt'].pop('force-reboot', None)
         executor = CephSaltExecutorThread(self, event.minion)
         executor.start()
 
