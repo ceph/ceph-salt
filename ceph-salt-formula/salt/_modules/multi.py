@@ -10,7 +10,7 @@ import multiprocessing.dummy
 import multiprocessing
 import re
 import socket
-from subprocess import Popen
+from subprocess import Popen, PIPE
 # pylint: disable=import-error
 
 log = logging.getLogger(__name__)
@@ -164,11 +164,12 @@ def iperf_client_cmd(server, cpu=0, port=5200):
     elif not server:
         ret = [LOCALHOST_NAME, 2, "0", "Server name is empty"]
     else:
-        iperf_cmd = ["/usr/bin/iperf3", "-fm", "-A"+str(cpu),
+        cmd = ["/usr/bin/iperf3", "-fm", "-A"+str(cpu),
                      "-t10", "-c"+server, "-p"+str(port)]
-        log.debug('iperf_client_cmd: cmd {}'.format(iperf_cmd))
-        retcode, stdout, stderr = __salt__['helper.run'](iperf_cmd)
-        ret = (server, retcode, stdout, stderr)
+        log.debug('iperf_client_cmd: cmd {}'.format(cmd))
+        proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
+        proc.wait()
+        ret = (server, proc.returncode, proc.stdout.read().decode(), proc.stderr.read().decode())
     return ret
 
 
@@ -223,8 +224,10 @@ def ping_cmd(host):
         sudo salt 'node' multi.ping_cmd <hostname>|<ip>
     '''
     cmd = ["/usr/bin/ping", "-c1", "-q", "-W1", host]
-    retcode, stdout, stderr = __salt__['helper.run'](cmd)
-    return host, retcode, stdout, stderr
+    log.debug('ping_cmd hostname={}'.format(host))
+    proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
+    proc.wait()
+    return host, proc.returncode, proc.stdout.read().decode(), proc.stderr.read().decode()
 
 
 def jumbo_ping(*hosts):
@@ -251,8 +254,9 @@ def jumbo_ping_cmd(host):
     '''
     cmd = ["/usr/bin/ping", "-Mdo", "-s8972", "-c1", "-q", "-W1", host]
     log.debug('ping_cmd hostname={}'.format(host))
-    retcode, stdout, stderr = __salt__['helper.run'](cmd)
-    return host, retcode, stdout, stderr
+    proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
+    proc.wait()
+    return host, proc.returncode, proc.stdout.read().decode(), proc.stderr.read().decode()
 
 
 def prepare_iperf_server():

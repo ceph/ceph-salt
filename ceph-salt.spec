@@ -49,9 +49,11 @@ Requires:       python3-setuptools
 Requires:       python3-salt >= 3000
 Requires:       python3-curses
 Requires:       python3-ntplib >= 0.3.3
+Requires:       python3-netaddr
 %endif
 
 Requires:       ceph-salt-formula
+Requires:       iperf
 Requires:       iputils
 Requires:       lsof
 Requires:       podman

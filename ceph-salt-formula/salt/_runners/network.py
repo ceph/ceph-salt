@@ -38,24 +38,24 @@ def help_():
     """
     Usage
     """
-    usage = ('salt-run net.get_cpu_count server=minion\n\n'
+    usage = ('salt-run network.get_cpu_count server=minion\n\n'
              '    Returns the number of cpus for a minion\n'
              '\n\n'
-             'salt-run net.ping:\n'
-             'salt-run net.ping ceph:\n'
-             'salt-run net.ping cluster=ceph:\n'
-             'salt-run net.ping exclude=target:\n\n'
-             'salt-run net.ping remove=192.168.128.0/24:\n\n'
+             'salt-run network.ping:\n'
+             'salt-run network.ping6:\n'
+             'salt-run network.ping ipversion="ipv6":\n'
+             'salt-run network.ping exclude=target:\n\n'
+             'salt-run network.ping remove=192.168.128.0/24:\n\n'
              '    Summarizes network connectivity between minion interfaces\n'
              '\n\n'
-             'salt-run net.jumbo_ping:\n\n'
+             'salt-run network.jumbo_ping:\n\n'
              '    Summarizes network connectivity between minion interfaces for jumbo packets\n'
              '\n\n'
-             'salt-run net.iperf:\n'
-             'salt-run net.iperf ceph:\n'
-             'salt-run net.iperf cluster=ceph:\n'
-             'salt-run net.iperf exclude=target:\n\n'
-             'salt-run net.ping remove=192.168.128.0/24:\n\n'
+             'salt-run network.iperf:\n'
+             'salt-run network.iperf6:\n'
+             'salt-run network.iperf ipversion="ipv6":\n'
+             'salt-run network.iperf exclude=target:\n\n'
+             'salt-run network.ping remove=192.168.128.0/24:\n\n'
              '    Summarizes bandwidth throughput between minion interfaces\n'
              '\n\n')
     print(usage)
@@ -73,26 +73,28 @@ def get_cpu_count(server):
     return cpu_core
 
 
-def iperf(cluster=None, exclude=None, remove=None, output=None, **kwargs):
+def iperf6(exclude=None, remove=None, output=None, **kwargs):
+    """
+    """
+    return iperf(ipversion='ipv6', exclude=exclude, remove=remove, output=output, **kwargs)
+
+
+def iperf(ipversion='ipv4', exclude=None, remove=None, output=None, **kwargs):
     """
     iperf server created from the each minions and then clients are created
     base on the server's cpu count and request that number of other minions
     as client to hit the server and report the total bendwidth.
 
-    CLI Example: (Before DeepSea with a cluster configuration)
+    CLI Example:
     .. code-block:: bash
-        sudo salt-run net.iperf
+        sudo salt-run network.iperf
 
     or you can run it with exclude
     .. code-block:: bash
-        sudo salt-run net.iperf exclude="E@host*,host-osd-name*,192.168.1.1"
-
-    (After DeepSea with a cluster configuration)
-    .. code-block:: bash
-        sudo salt-run net.iperf cluster=ceph
+        sudo salt-run network.iperf exclude="E@host*,host-osd-name*,192.168.1.1"
 
     To get all host iperf result
-        sudo salt-run net.iperf cluster=ceph output=full
+        sudo salt-run network.iperf output=full
 
     """
     exclude_string = exclude_iplist = None
@@ -101,116 +103,61 @@ def iperf(cluster=None, exclude=None, remove=None, output=None, **kwargs):
 
     addresses = []
     local = salt.client.LocalClient()
-    # Salt targets can use list or string
-    if cluster:
-        search = "I@cluster:{}".format(cluster)
 
-        if exclude_string:
-            search += " and not ( " + exclude_string + " )"
-            log.debug("iperf: search {} ".format(search))
+    search = _search_criteria()
+    if exclude_string:
+        search += " and not ( " + exclude_string + " )"
+        log.debug("iperf: search {} ".format(search))
 
-        public_networks = local.cmd(search, 'pillar.item',
-                                    ['public_network'], tgt_type="compound")
+    addresses = local.cmd(search, 'grains.get',
+                          [ipversion], tgt_type="compound")
 
-        ipversion = 'ipv4'
-        log.info("public networks:\n{}".format(pprint.pformat(public_networks)))
-        for host in public_networks:
-            if 'public_network' in public_networks[host]:
-                ipversion = _ipversion(public_networks[host]['public_network'])
-                break
+    addresses = _remove_minion_not_found(addresses)
+    addresses = _flatten(list(addresses.values()))
+    addresses = _remove_minion_exclude(addresses, remove)
+    # Lazy loopback removal - use ipaddress when adding IPv6
+    try:
+        if ipversion == 'ipv4':
+            addresses.remove('127.0.0.1')
+        elif ipversion == 'ipv6':
+            addresses.remove('::1')
+            addresses = [addr for addr in addresses if not addr.startswith("fe80")]
+        if exclude_iplist:
+            for ex_ip in exclude_iplist:
+                log.debug("iperf: removing {} ip ".format(ex_ip))
+                addresses.remove(ex_ip)
+    except ValueError:
+        log.debug("iperf: remove {} ip doesn't exist".format(ex_ip))
+    _create_server(addresses)
+    result = _create_client(addresses)
 
-        log.debug("iperf: public_network {} ".format(public_networks))
-        cluster_networks = local.cmd(search, 'pillar.item',
-                                     ['cluster_network'], tgt_type="compound")
-        log.debug("iperf: cluster_network {} ".format(cluster_networks))
-        total = local.cmd(search, 'grains.get', [ipversion], tgt_type="compound")
-        log.debug("iperf: total grains.get {} ".format(total))
-        public_addresses = []
-        cluster_addresses = []
-        for host in sorted(six.iterkeys(total)):
-            if 'public_network' in public_networks[host]:
-                public_addresses.extend(
-                    _address(total[host],
-                             public_networks[host]['public_network']))
-            if 'cluster_network' in cluster_networks[host]:
-                cluster_addresses.extend(
-                    _address(total[host],
-                             cluster_networks[host]['cluster_network']))
-            log.debug("iperf: public_network {} ".format(public_addresses))
-            log.debug("iperf: cluster_network {} ".format(cluster_addresses))
-        result = {}
-        _create_server(public_addresses)
-        p_result = _create_client(public_addresses)
-        _create_server(cluster_addresses)
-        c_result = _create_client(cluster_addresses)
-        p_valid = {}
-        for address in p_result:
-            if isinstance(p_result[address], float) or isinstance(p_result[address], int):
-                p_valid.update({address: p_result[address]})
-            else:
-                log.error("Failure: {}".format(p_result[address]))
-        p_sort = _add_unit(sorted(list(p_valid.items()),
-                                  key=operator.itemgetter(1), reverse=True))
-
-        c_valid = {}
-        for address in c_result:
-            if isinstance(c_result[address], float) or isinstance(c_result[address], int):
-                c_valid.update({address: c_result[address]})
-            else:
-                log.error("Failure: {}".format(c_result[address]))
-        c_sort = _add_unit(sorted(list(c_result.items()),
-                                  key=operator.itemgetter(1), reverse=True))
-
-        if output:
-            result.update({'Public Network': p_sort})
-            result.update({'Cluster Network': c_sort})
-            return result
-        else:
-            result.update({'Public Network':
-                           {"Slowest 2 hosts": p_sort[-2:],
-                            "Fastest 2 hosts": p_sort[:2]}})
-            result.update({'Cluster Network':
-                           {"Slowest 2 hosts": c_sort[-2:],
-                            "Fastest 2 hosts": c_sort[:2]}})
-            return result
+    sort_result = _add_unit(sorted(list(result.items()),
+                                   key=operator.itemgetter(1),
+                                   reverse=True))
+    if output:
+        return sort_result
     else:
-        # pylint: disable=redefined-variable-type
-        search = __utils__['deepsea_minions.show']()
-        if exclude_string:
-            search += " and not ( " + exclude_string + " )"
-            log.debug("iperf: search {} ".format(search))
+        return {"Slowest 2 hosts": sort_result[-2:],
+                "Fastest 2 hosts": sort_result[:2]}
 
-        ipversion = 'ipv4'
-        addresses = local.cmd(search, 'grains.get',
-                              [ipversion], tgt_type="compound")
 
-        addresses = _remove_minion_not_found(addresses)
-        addresses = _flatten(list(addresses.values()))
-        addresses = _remove_minion_exclude(addresses, remove)
-        # Lazy loopback removal - use ipaddress when adding IPv6
+def _search_criteria():
+    """
+    Return string of all ceph-salt minions; otherwise, default to '*'
+    """
+    pillar_util = salt.utils.master.MasterPillarUtil('*', "compound",
+                                                 use_cached_grains=True,
+                                                 grains_fallback=False,
+                                                 opts=__opts__)
+    cached = pillar_util.get_minion_pillar()
+    search = '*'
+    for minion in cached:
         try:
-            if ipversion == 'ipv4':
-                addresses.remove('127.0.0.1')
-            elif ipversion == 'ipv6':
-                addresses.remove('::1')
-                addresses = [addr for addr in addresses if not addr.startswith("fe80")]
-            if exclude_iplist:
-                for ex_ip in exclude_iplist:
-                    log.debug("iperf: removing {} ip ".format(ex_ip))
-                    addresses.remove(ex_ip)
-        except ValueError:
-            log.debug("iperf: remove {} ip doesn't exist".format(ex_ip))
-        _create_server(addresses)
-        result = _create_client(addresses)
-        sort_result = _add_unit(sorted(list(result.items()),
-                                       key=operator.itemgetter(1),
-                                       reverse=True))
-        if output:
-            return sort_result
-        else:
-            return {"Slowest 2 hosts": sort_result[-2:],
-                    "Fastest 2 hosts": sort_result[:2]}
-
+            search = " or ".join(cached[minion]['ceph-salt']['minions']['all'])
+            break
+        except KeyError:
+            pass
+    return search
 
 def _add_unit(records):
     """
@@ -229,13 +176,13 @@ def _create_server(addresses):
     """
     start_service = []
     local = salt.client.LocalClient()
-    log.debug("net.iperf._create_server: address list {} ".format(addresses))
+    log.debug("network.iperf._create_server: address list {} ".format(addresses))
     for server in addresses:
         cpu_core = get_cpu_count(server)
-        log.debug("net.iperf._create_server: server {} cpu count {} "
+        log.debug("network.iperf._create_server: server {} cpu count {} "
                   .format(server, cpu_core))
         for count in range(cpu_core):
-            log.debug("net.iperf._create_server: server {} count {} port {} "
+            log.debug("network.iperf._create_server: server {} count {} port {} "
                       .format(server, count, 5200+count))
             start_service.append(local.cmd("S@{}".format(server),
                                            'multi.iperf_server_cmd',
@@ -251,7 +198,7 @@ def _create_client(addresses):
     local = salt.client.LocalClient()
     for server in addresses:
         cpu_core = get_cpu_count(server)
-        log.debug("net.iperf._create_client: server {} cpu count {} "
+        log.debug("network.iperf._create_client: server {} cpu count {} "
                   .format(server, cpu_core))
         clients = list(addresses)
         clients.remove(server)
@@ -260,7 +207,7 @@ def _create_client(addresses):
         for x in range(0, cpu_core, clients_size):
             # pylint: disable=invalid-name
             for y, client in enumerate(clients):
-                log.debug("net.iperf._create_client:")
+                log.debug("network.iperf._create_client:")
                 log.debug("server port:{}, x:{} client:{} to server:{}"
                           .format(5200+x+y, x/clients_size, client, server))
                 if x+y < cpu_core:
@@ -270,11 +217,11 @@ def _create_client(addresses):
                             'multi.iperf',
                             [server, x/clients_size, 5200+x+y],
                             tgt_type="compound"))
-                    log.debug("net.iperf._create_client:")
+                    log.debug("network.iperf._create_client:")
                     log.debug("calling from client:{} ".format(client))
                     log.debug("to server:{} ".format(server))
                     log.debug("cpu:{} port:{}".format(x/clients_size, 5200+x+y))
-        log.debug("net.iperf._create_client:")
+        log.debug("network.iperf._create_client:")
         log.debug("Server {} iperf client count {}".format(server, len(jid)))
         time.sleep(8)
 
@@ -289,7 +236,8 @@ def _create_client(addresses):
                 not_done = True
     results = []
     for job in jid:
-        results.append(__salt__['jobs.lookup_jid'](job))
+        result = __salt__['jobs.lookup_jid'](job)
+        results.append(result)
     return _summarize_iperf(results)
 
 
@@ -299,8 +247,14 @@ def jumbo_ping(cluster=None, exclude=None, remove=None, **kwargs):
     """
     ping(cluster, exclude, ping_type="jumbo")
 
+def ping6(exclude=None, remove=None, ping_type=None, **kwargs):
+    """
+    Ping IPv6
+    """
+    return ping(ipversion='ipv6', exclude=exclude, remove=remove, ping_type=ping_type, **kwargs)
 
-def ping(cluster=None, exclude=None, remove=None, ping_type=None, **kwargs):
+
+def ping(ipversion='ipv4', exclude=None, remove=None, ping_type=None, **kwargs):
     """
     Ping all addresses from all addresses on all minions.  If cluster is passed,
     restrict addresses to public and cluster networks.
@@ -311,22 +265,17 @@ def ping(cluster=None, exclude=None, remove=None, ping_type=None, **kwargs):
     for success.  Failures take between 6 to 12 seconds.  Optimizations should
     focus there.
 
-    CLI Example: (Before DeepSea with a cluster configuration)
+    CLI Example:
     .. code-block:: bash
-        sudo salt-run net.ping
+        sudo salt-run network.ping
 
     or you can run it with exclude
     .. code-block:: bash
-        sudo salt-run net.ping exclude="E@host*,host-osd-name*,192.168.1.1"
+        sudo salt-run network.ping exclude="E@host*,host-osd-name*,192.168.1.1"
 
     or you can run exclude, with remove that host has multiple ip per node
     .. code-block:: bash
-        sudo salt-run net.ping exclude="E@host*" remove="192.168.128.0/24,192.168.228.0/24"
-
-    (After DeepSea with a cluster configuration)
-    .. code-block:: bash
-        sudo salt-run net.ping cluster=ceph
-        sudo salt-run net.ping ceph
+        sudo salt-run network.ping exclude="E@host*" remove="192.168.128.0/24,192.168.228.0/24"
 
     """
     exclude_string = exclude_iplist = None
@@ -337,10 +286,9 @@ def ping(cluster=None, exclude=None, remove=None, ping_type=None, **kwargs):
     if _skip_dunder(kwargs):
         print("Unsupported parameters:{}".format(" ,".join(list(extra_kwargs.keys()))))
         text = re.sub(re.compile("^ {12}", re.MULTILINE), "", '''
-            salt-run net.ping [cluster] [exclude]
+            salt-run network.ping [cluster] [exclude]
 
             Ping all addresses from all addresses on all minions.
-            If cluster is specified, restrict addresses to cluster networks.
             If exclude is specified, remove matching addresses.
             Detail read the Salt compound matchers.
             All the excluded individual ip address interface will be removed,
@@ -348,81 +296,54 @@ def ping(cluster=None, exclude=None, remove=None, ping_type=None, **kwargs):
 
 
             Examples:
-                salt-run net.ping
-                salt-run net.ping ceph
-                salt-run net.ping ceph L@mon1.ceph
-                salt-run net.ping cluster=ceph exclude=L@mon1.ceph
-                salt-run net.ping exclude=S@192.168.21.254
-                salt-run net.ping exclude=S@192.168.21.0/29
-                salt-run net.ping exclude="E@host*,host-osd-name*,192.168.1.1"
-                salt-run net.ping remove="192.168.128.0/24"
+                salt-run network.ping
+                salt-run network.ping6
+                salt-run network.ping exclude=L@mon1.ceph
+                salt-run network.ping exclude=S@192.168.21.254
+                salt-run network.ping exclude=S@192.168.21.0/29
+                salt-run network.ping exclude="E@host*,host-osd-name*,192.168.1.1"
+                salt-run network.ping remove="192.168.128.0/24"
         ''')
         print(text)
         return ""
 
     local = salt.client.LocalClient()
-    if cluster:
-        search = "I@cluster:{}".format(cluster)
-        if exclude_string:
-            search += " and not ( " + exclude_string + " )"
-            log.debug("ping: search {} ".format(search))
-        networks = local.cmd(search, 'pillar.item',
-                             ['cluster_network', 'public_network'],
-                             tgt_type="compound")
+    # pylint: disable=redefined-variable-type
+    search = _search_criteria()
 
-        ipversion = 'ipv4'
-        log.info("networks:\n{}".format(pprint.pformat(networks)))
-        for host in networks:
-            if 'public_network' in networks[host]:
-                ipversion = _ipversion(networks[host]['public_network'])
-                break
+    if exclude_string:
+        search += " and not ( " + exclude_string + " )"
+        log.debug("ping: search {} ".format(search))
+    addresses = local.cmd(search, 'grains.get',
+                          [ipversion], tgt_type="compound")
+    addresses = _remove_minion_not_found(addresses)
+    addresses = _flatten(list(addresses.values()))
+    addresses = _remove_minion_exclude(addresses, remove)
+    # Lazy loopback removal - use ipaddress when adding IPv6
+    try:
+        if addresses:
+            if ipversion == 'ipv4':
+                addresses.remove('127.0.0.1')
+            elif ipversion == 'ipv6':
+                addresses.remove('::1')
+                addresses = [addr for addr in addresses if not addr.startswith("fe80")]
+            else:
+                raise RuntimeError("Neither IPv4 nor IPv6")
+            log.info("addresses:\n{}".format(pprint.pformat(addresses)))
+        if exclude_iplist:
+            for ex_ip in exclude_iplist:
+                log.debug("ping: removing {} ip ".format(ex_ip))
+                addresses.remove(ex_ip)
+    except ValueError:
+        log.debug("ping: remove {} ip doesn't exist".format(ex_ip))
 
-        total = local.cmd(search, 'grains.get', [ipversion], tgt_type="compound")
-        addresses = []
-        for host in sorted(six.iterkeys(total)):
-            if 'cluster_network' in networks[host]:
-                addresses.extend(_address(total[host],
-                                          networks[host]['cluster_network']))
-            if 'public_network' in networks[host]:
-                addresses.extend(_address(total[host],
-                                          networks[host]['public_network']))
-    else:
-        # pylint: disable=redefined-variable-type
-        search = "*"
-        ipversion = 'ipv4'
-
-        if exclude_string:
-            search += " and not ( " + exclude_string + " )"
-            log.debug("ping: search {} ".format(search))
-        addresses = local.cmd(search, 'grains.get',
-                              [ipversion], tgt_type="compound")
-        addresses = _remove_minion_not_found(addresses)
-        addresses = _flatten(list(addresses.values()))
-        addresses = _remove_minion_exclude(addresses, remove)
-        # Lazy loopback removal - use ipaddress when adding IPv6
-        try:
-            if addresses:
-                if ipversion == 'ipv4':
-                    addresses.remove('127.0.0.1')
-                elif ipversion == 'ipv6':
-                    addresses.remove('::1')
-                    addresses = [addr for addr in addresses if not addr.startswith("fe80")]
-                else:
-                    raise RuntimeError("Neither IPv4 nor IPv6")
-                log.info("addresses:\n{}".format(pprint.pformat(addresses)))
-            if exclude_iplist:
-                for ex_ip in exclude_iplist:
-                    log.debug("ping: removing {} ip ".format(ex_ip))
-                    addresses.remove(ex_ip)
-        except ValueError:
-            log.debug("ping: remove {} ip doesn't exist".format(ex_ip))
     if ping_type == "jumbo":
         results = local.cmd(search, 'multi.jumbo_ping',
                             addresses, tgt_type="compound")
     else:
         results = local.cmd(search, 'multi.ping',
                             addresses, tgt_type="compound")
-    results = _remove_minion_not_found(results)
+    #results = _remove_minion_not_found(results)
     _summarize(len(addresses), results)
     return ""
 
@@ -467,7 +388,10 @@ def _remove_minion_exclude(addresses, remove_subnet_list):
         r"([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])" +
         r"(\/([0-9]|[1-2][0-9]|3[0-2]))$")
     log.debug("_remove_minion_exclude: removing {} ".format(remove_subnet_list))
-    remove_subnets = remove_subnet_list.split(",")
+    if remove_subnet_list:
+        remove_subnets = remove_subnet_list.split(",")
+    else:
+        remove_subnets = []
     remove_list = []
     for subnet in remove_subnets:
         if pattern_ipcidr.match(subnet):
@@ -487,9 +411,9 @@ def _remove_minion_not_found(addresses):
     Return all the correct value instead of not found values
     """
     remove_addrs = set()
-    for k, v in addresses.items():
-        if 'Minion did not return. [No response]' in v:
-            print("Warning: exclude={} not found".format(k))
+    for k in addresses:
+        if not isinstance(addresses[k], list):
+            log.warning("Removing {}: returned {}".format(k, addresses[k]))
             remove_addrs.add(k)
     for k in remove_addrs:
         del addresses[k]
@@ -627,11 +551,9 @@ def _summarize_iperf(results):
                 server_results[result[host]['server']] += " " + result[host]['filter']
                 log.debug("Speed {}".format(server_results[result[host]['server']]))
             elif result[host]['failed']:
-                log.debug("failed:\n{}".format(result[host]['failed']))
-                server_results[result[host]['server']] += " Failed to connect from {}".format(host)
+                log.warning("{} failed to connect to {}".format(host, result[host]['server']))
             elif result[host]['errored']:
-                log.debug("errored :\n{}".format(result[host]['errored']))
-                server_results[result[host]['server']] += " {} iperf error check installation.".format(host)
+                log.warning("iperf errored on {}".format(host))
 
     for key, result in six.iteritems(server_results):
         total = 0
