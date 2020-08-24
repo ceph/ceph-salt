@@ -222,8 +222,7 @@ min-similarity-lines=4
 
 
 [MISCELLANEOUS]
-notes=FIXME,
-      XXX,
+notes=XXX,
       TODO
 
 [IMPORTS]

@@ -110,6 +110,10 @@ class SaltUtilMock:
     def sync_all(cls):
         return cls.sync_all_result
 
+    @classmethod
+    def running(cls):
+        return True
+
 
 class StateMock:
     @staticmethod
