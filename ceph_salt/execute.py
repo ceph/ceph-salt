@@ -1249,6 +1249,8 @@ class CephSaltExecutor:
         result = SaltClient.local_cmd('ceph-salt:member', 'state.sls_exists', [state],
                                       tgt_type='grain')
         if not all(result.values()):
+            # FIXME: check whether we are running under SUMA. If so, then we
+            # cannot restart the salt-master
             PP.println("salt-master will be restarted to load {} formula".format(state))
             logger.info('restarting salt-master service')
             result = SaltClient.caller_cmd('service.restart', ['salt-master'])
