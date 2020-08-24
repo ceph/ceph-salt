@@ -57,7 +57,7 @@ create ceph-salt-ssh-id_rsa.pub:
 install ssh key:
     ssh_auth.present:
       - user: {{ ssh_user }}
-      - comment: ssh_orchestrator_key
+      - comment: ssh_key_created_by_ceph_salt
       - config: /%h/.ssh/authorized_keys
       - name: {{ pillar['ceph-salt']['ssh']['public_key'] }}
       - failhard: True
