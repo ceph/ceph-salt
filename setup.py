@@ -18,4 +18,4 @@ def get_version_from_spec():
 
 setup(
     version=get_version_from_spec(),
-    setup_cfg=True)
+    )
