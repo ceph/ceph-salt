@@ -1,10 +1,13 @@
 # -*- encoding: utf-8 -*-
 import json
+import logging
 import socket
 import time
 
+log = logging.getLogger(__name__)
 
 def _send_event(tag, data):
+    log.info("{}, data={}".format(tag, data))
     __salt__['event.send'](tag, data=data)
     return {
         'name': tag,
