@@ -250,16 +250,6 @@ class ConfigShellTest(SaltMockTestCase):
                                'ceph-salt:time_server:subnet',
                                '10.20.188.0/24')
 
-    def test_system_update_packages(self):
-        self.assertFlagOption('/system_update/packages',
-                              'ceph-salt:updates:enabled',
-                              True)
-
-    def test_system_update_reboot(self):
-        self.assertFlagOption('/system_update/reboot',
-                              'ceph-salt:updates:reboot',
-                              True)
-
     def test_export(self):
         self.shell.run_cmdline('/ceph_cluster/minions add node1.ceph.com')
         self.shell.run_cmdline('/ceph_cluster/minions add node2.ceph.com')
@@ -292,10 +282,6 @@ class ConfigShellTest(SaltMockTestCase):
                 'enabled': True,
                 'server_host': 'node1.ceph.com',
                 'subnet': '10.20.188.0/24'
-            },
-            'updates': {
-                'enabled': True,
-                'reboot': True
             }})
 
         self.shell.run_cmdline('/time_server/subnet reset')

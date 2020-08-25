@@ -442,25 +442,6 @@ add location=172.17.0.1:5000/docker.io prefix=docker.io insecure=false
             }
         }
     },
-    'system_update': {
-        'help': '''
-                System Update Options Configuration
-                =========================================
-                Options to control system updates
-                ''',
-        'options': {
-            'packages': {
-                'type': 'flag',
-                'help': 'Update all packages',
-                'handler': PillarHandler('ceph-salt:updates:enabled', True)
-            },
-            'reboot': {
-                'type': 'flag',
-                'help': 'Reboot if needed',
-                'handler': PillarHandler('ceph-salt:updates:reboot', True)
-            }
-        }
-    },
     'cephadm_bootstrap': {
         'help': '''
                 Cluster Bootstrap Options Configuration

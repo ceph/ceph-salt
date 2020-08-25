@@ -2,7 +2,7 @@
 
 include:
     - .provision-begin
-    - .sshkey
+    - ..common.sshkey
     - .software
     - .container
     - .apparmor

@@ -152,8 +152,8 @@ def update(non_interactive, reboot, minion_id):
     executor = CephSaltExecutor(not non_interactive, minion_id,
                                 'ceph-salt.update', {
                                     'ceph-salt': {
-                                        'updates': {
-                                            'reboot': reboot
+                                        'execution': {
+                                            'reboot-if-needed': reboot
                                         }
                                     }
                                 })

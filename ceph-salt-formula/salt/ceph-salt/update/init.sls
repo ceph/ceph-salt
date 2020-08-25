@@ -2,6 +2,7 @@
 
 include:
     - .update-begin
+    - ..common.sshkey
     - .update
     - .update-end
 
