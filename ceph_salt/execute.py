@@ -1249,6 +1249,8 @@ class CephSaltExecutor:
         result = SaltClient.local_cmd('ceph-salt:member', 'state.sls_exists', [state],
                                       tgt_type='grain')
         if not all(result.values()):
+            # FIXME: check whether we are running under SUMA. If so, then we
+            # cannot restart the salt-master
             PP.println("salt-master will be restarted to load {} formula".format(state))
             logger.info('restarting salt-master service')
             result = SaltClient.caller_cmd('service.restart', ['salt-master'])
@@ -1261,9 +1263,16 @@ class CephSaltExecutor:
         result = SaltClient.local_cmd('ceph-salt:member', 'state.sls_exists', [state],
                                       tgt_type='grain')
         if not all(result.values()):
-            logger.error("%s formula still not found", state)
-            PP.pl_red("Could not find {} formula. Please check if ceph-salt-formula package "
-                      "is installed".format(state))
+            logger.error("%s formula still not found: checking for running Salt jobs", state)
+            result = SaltClient.local_cmd('ceph-salt:member', 'saltutil.running', tgt_type='grain')
+            if any(result.values()):
+                logger.error("Running Salt jobs detected: refusing to apply Salt Formula")
+                PP.pl_red("Running Salt jobs detected. The safest thing to do in this case is "
+                          "wait. Once the jobs complete or time out, you will be able to apply "
+                          "the Salt Formula again.")
+            else:
+                PP.pl_red("Could not find {} formula. Please check if ceph-salt-formula package "
+                          "is installed".format(state))
             return 4
 
         PP.println("Syncing minions with the master...")
