@@ -696,10 +696,12 @@ class CephSaltExecutorThread(threading.Thread):
                     if ret[minion]['retcode'] != 0:
                         self.controller.set_retcode(2)  # failure in state execution
         except Exception as ex:  # pylint: disable=broad-except
+            logger.error("Failure in CephSaltExecutor execution")
             logger.exception(ex)
             self.controller.set_retcode(3)  # failure in CephSaltExecutor execution
 
         if not self.controller.model.minions_rebooting() and self.controller.executors <= 1:
+            logger.info("Finishing CephSaltExecutor execution")
             self.controller.end()
         self.controller.executors -= 1
 
