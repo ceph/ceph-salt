@@ -76,16 +76,6 @@ PBVw2pLCZsH5ol3VJ1/DETsGRMzFubFeTUNOC3MzhhG+V"""
         self.assertEqual(validate_config(False),
                          "'ceph-salt:dashboard:password_update_required' must be of type Boolean")
 
-    def test_updates_enabled_not_set(self):
-        PillarManager.reset('ceph-salt:updates:enabled')
-        self.assertEqual(validate_config(False),
-                         "'ceph-salt:updates:enabled' must be of type Boolean")
-
-    def test_updates_reboot_not_set(self):
-        PillarManager.reset('ceph-salt:updates:reboot')
-        self.assertEqual(validate_config(False),
-                         "'ceph-salt:updates:reboot' must be of type Boolean")
-
     def test_time_server_enabled_not_set(self):
         PillarManager.reset('ceph-salt:time_server:enabled')
         self.assertEqual(validate_config(False),
@@ -216,8 +206,6 @@ SCzirUzUKN2oge2WieNI7MQ=
         PillarManager.set('ceph-salt:minions:cephadm', ['node1.ceph.com',
                                                         'node2.ceph.com'])
         PillarManager.set('ceph-salt:minions:admin', ['node1.ceph.com'])
-        PillarManager.set('ceph-salt:updates:enabled', True)
-        PillarManager.set('ceph-salt:updates:reboot', True)
         PillarManager.set('ceph-salt:container:registries_enabled', True)
         PillarManager.set('ceph-salt:container:images:ceph', 'docker.io/ceph/daemon-base:latest')
         PillarManager.set('ceph-salt:ssh:user', 'root')

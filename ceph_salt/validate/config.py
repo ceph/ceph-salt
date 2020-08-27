@@ -60,12 +60,6 @@ def validate_config(deployed):
     except Exception:  # pylint: disable=broad-except
         return "Invalid SSH key pair"
 
-    # system_update
-    if not isinstance(PillarManager.get('ceph-salt:updates:enabled'), bool):
-        return "'ceph-salt:updates:enabled' must be of type Boolean"
-    if not isinstance(PillarManager.get('ceph-salt:updates:reboot'), bool):
-        return "'ceph-salt:updates:reboot' must be of type Boolean"
-
     # time_server
     time_server_enabled = PillarManager.get('ceph-salt:time_server:enabled')
     if not isinstance(time_server_enabled, bool):

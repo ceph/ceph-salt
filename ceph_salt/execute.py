@@ -1305,12 +1305,6 @@ class CephSaltExecutor:
                 logger.error("cannot find minion: %s", minion_id)
                 PP.pl_red("Cannot find minion '{}'".format(minion_id))
                 return 7
-        # ceph-salt.update called, but cluster not deployed yet
-        if state == 'ceph-salt.update' and not deployed:
-            logger.error("ceph cluster not deployed and ceph-salt.update called")
-            PP.pl_red("Ceph cluster is not deployed yet, please apply the config to "
-                      "bootstrap a new Ceph cluster first: \"ceph-salt apply\"")
-            return 8
         return 0
 
     @staticmethod
@@ -1357,7 +1351,7 @@ class CephSaltExecutor:
         return 0
 
     @staticmethod
-    def check_prerequisites(minion_id, state):
+    def check_prerequisites(minion_id, state, deployed):
         # check salt master is configured
         try:
             check_salt_master_status()
@@ -1365,8 +1359,6 @@ class CephSaltExecutor:
             logger.error(e)
             PP.pl_red(e)
             return 1
-
-        deployed = CephOrch.deployed()
 
         # check config is valid
         error_msg = validate_config(deployed)
@@ -1404,8 +1396,10 @@ class CephSaltExecutor:
         return 0
 
     def run(self):
+        deployed = CephOrch.deployed()
+
         # validate
-        retcode = self.check_prerequisites(self.minion_id, self.state)
+        retcode = self.check_prerequisites(self.minion_id, self.state, deployed)
         if retcode > 0:
             return retcode
 
@@ -1417,6 +1411,7 @@ class CephSaltExecutor:
             self.pillar['ceph-salt']['execution'] = {}
         minions = [self.minion_id] if self.minion_id else sorted(self.model.minions_names())
         self.pillar['ceph-salt']['execution']['minions'] = minions
+        self.pillar['ceph-salt']['execution']['deployed'] = deployed
         if self.interactive:
             self.renderer = CursesRenderer(self.model)
         else:

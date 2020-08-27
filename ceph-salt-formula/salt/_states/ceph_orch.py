@@ -7,42 +7,50 @@ import time
 logger = logging.getLogger(__name__)
 
 
-def set_admin_host(name, timeout=1800):
+def set_admin_host(name, if_grain=None, timeout=1800):
     ret = {'name': name, 'changes': {}, 'comment': '', 'result': False}
-    starttime = time.time()
-    timelimit = starttime + timeout
-    configured_admin_host = None
-    while not configured_admin_host:
-        is_timedout = time.time() > timelimit
-        if is_timedout:
-            ret['comment'] = 'Timeout value reached.'
-            return ret
-        time.sleep(15)
-        admin_hosts = __pillar__['ceph-salt']['minions']['admin']
-        for admin_host in admin_hosts:
-            failed = __salt__['ceph_salt.get_remote_grain'](admin_host, 'ceph-salt:execution:failed')
-            if failed:
-                ret['comment'] = 'One or more admin minions failed.'
+    if_grain_value = True
+    if if_grain is not None:
+        if_grain_value = __salt__['grains.get'](if_grain)
+    if if_grain_value:
+        __salt__['event.send']('ceph-salt/stage/begin',
+                               data={'desc': "Find an admin host"})
+        starttime = time.time()
+        timelimit = starttime + timeout
+        configured_admin_host = None
+        while not configured_admin_host:
+            is_timedout = time.time() > timelimit
+            if is_timedout:
+                ret['comment'] = 'Timeout value reached.'
                 return ret
-            provisioned = __salt__['ceph_salt.get_remote_grain'](admin_host,
-                                                                'ceph-salt:execution:provisioned')
-            if provisioned:
-                ssh_user = __pillar__['ceph-salt']['ssh']['user']
-                sudo = 'sudo ' if ssh_user != 'root' else ''
-                status_ret = __salt__['cmd.run_all']("ssh -o StrictHostKeyChecking=no "
-                                                     "-i /tmp/ceph-salt-ssh-id_rsa {}@{} "
-                                                     "'if [[ -f /etc/ceph/ceph.conf "
-                                                     "&& -f /etc/ceph/ceph.client.admin.keyring ]]; "
-                                                     "then timeout 60 {}ceph -s; "
-                                                     "else (exit 1); fi'".format(
-                                                         ssh_user,
-                                                         admin_host,
-                                                         sudo))
-                if status_ret['retcode'] == 0:
-                    configured_admin_host = admin_host
-                    break
+            time.sleep(15)
+            admin_hosts = __pillar__['ceph-salt']['minions']['admin']
+            for admin_host in admin_hosts:
+                failed = __salt__['ceph_salt.get_remote_grain'](admin_host, 'ceph-salt:execution:failed')
+                if failed:
+                    ret['comment'] = 'One or more admin minions failed.'
+                    return ret
+                provisioned = __salt__['ceph_salt.get_remote_grain'](admin_host,
+                                                                     'ceph-salt:execution:provisioned')
+                if provisioned:
+                    ssh_user = __pillar__['ceph-salt']['ssh']['user']
+                    sudo = 'sudo ' if ssh_user != 'root' else ''
+                    status_ret = __salt__['cmd.run_all']("ssh -o StrictHostKeyChecking=no "
+                                                         "-i /tmp/ceph-salt-ssh-id_rsa {}@{} "
+                                                         "'if [[ -f /etc/ceph/ceph.conf "
+                                                         "&& -f /etc/ceph/ceph.client.admin.keyring ]]; "
+                                                         "then timeout 60 {}ceph -s; "
+                                                         "else (exit 1); fi'".format(
+                                                             ssh_user,
+                                                             admin_host,
+                                                             sudo))
+                    if status_ret['retcode'] == 0:
+                        configured_admin_host = admin_host
+                        break
 
-    __salt__['grains.set']('ceph-salt:execution:admin_host', configured_admin_host)
+        __salt__['event.send']('ceph-salt/stage/end',
+                               data={'desc': "Find an admin host"})
+        __salt__['grains.set']('ceph-salt:execution:admin_host', configured_admin_host)
     ret['result'] = True
     return ret
 

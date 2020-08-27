@@ -2,13 +2,9 @@
 
 {% if 'cephadm' in grains['ceph-salt']['roles'] or 'admin' in grains['ceph-salt']['roles'] %}
 
-{{ macros.begin_stage('Find an admin host') }}
-
 find an admin host:
   ceph_orch.set_admin_host:
     - failhard: True
-
-{{ macros.end_stage('Find an admin host') }}
 
 {% endif %}
 
