@@ -5,6 +5,7 @@
 install required packages:
   pkg.installed:
     - pkgs:
+      - iperf
       - iputils
       - lsof
       - podman
