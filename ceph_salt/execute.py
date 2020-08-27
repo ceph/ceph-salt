@@ -676,17 +676,20 @@ class CephSaltExecutorThread(threading.Thread):
             if not self.controller.running:
                 self.controller.begin()
             model = self.controller.model
+            cmd_timeout = 60
             if self.minion_id:
                 logger.info("Calling: salt '%s' state.apply %s", self.minion_id, model.state)
                 returns = SaltClient.local().cmd_iter(self.minion_id, 'state.apply',
                                                       [model.state,
-                                                       "pillar={}".format(model.pillar)])
+                                                       "pillar={}".format(model.pillar)],
+                                                      timeout=cmd_timeout)
             else:
                 logger.info("Calling: salt -G 'ceph-salt:member' state.apply %s", model.state)
                 returns = SaltClient.local().cmd_iter('ceph-salt:member', 'state.apply',
                                                       [model.state,
                                                        "pillar={}".format(model.pillar)],
-                                                      tgt_type='grain')
+                                                      tgt_type='grain',
+                                                      timeout=cmd_timeout)
             for ret in returns:
                 logger.info("Response:\n%s", json.dumps(ret, sort_keys=True, indent=2))
                 now = datetime.datetime.utcnow()
