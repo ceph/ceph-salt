@@ -320,10 +320,15 @@ class Step:
         self.end_time = None
         self.failure = None
         self.success = None
+        log_msg = "STEP [BEGIN] \"{}\" on minion {}".format(self.desc, self.minion)
+        logger.info(log_msg)
 
     def end(self, timestamp, success=True):
         self.end_time = timestamp
         self.success = success
+        log_msg = "STEP [END] \"{}\" on minion {} (success={})".format(
+            self.desc, self.minion, self.success)
+        logger.info(log_msg)
 
     def finished(self):
         return self.end_time is not None
@@ -342,6 +347,8 @@ class Stage:
         self.current_step = None
         self.end_time = None
         self.success = None
+        log_msg = "STAGE [BEGIN] \"{}\" on minion {}".format(self.desc, self.minion)
+        logger.info(log_msg)
 
     @property
     def last_step(self):
@@ -356,6 +363,9 @@ class Stage:
         for step in self.steps.values():
             if not step.finished():
                 step.end(timestamp, True)
+        log_msg = "STAGE [END] \"{}\" on minion {} (success={})".format(
+            self.desc, self.minion, self.success)
+        logger.info(log_msg)
 
     def step_begin(self, desc, timestamp):
         """
