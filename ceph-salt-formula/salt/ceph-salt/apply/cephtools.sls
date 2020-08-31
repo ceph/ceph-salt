@@ -73,13 +73,9 @@ login into registry:
 
 {% endif %}
 
-{{ macros.begin_step('Download ceph container image') }}
 download ceph container image:
-  cmd.run:
-    - name: |
-        cephadm --image {{ pillar['ceph-salt']['container']['images']['ceph'] }} pull
+  ceph_salt.pull_image:
     - failhard: True
-{{ macros.end_step('Download ceph container image') }}
 
 {{ macros.end_stage('Prepare to bootstrap the Ceph cluster') }}
 

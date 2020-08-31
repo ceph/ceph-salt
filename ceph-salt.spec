@@ -57,6 +57,7 @@ Requires:       iperf
 Requires:       iputils
 Requires:       lsof
 Requires:       podman
+Requires:       python3-filelock
 Requires:       rsync
 Requires:       salt-master >= 3000
 Requires:       procps

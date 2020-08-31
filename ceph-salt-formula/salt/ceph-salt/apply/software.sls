@@ -9,6 +9,7 @@ install required packages:
       - iputils
       - lsof
       - podman
+      - python3-filelock
       - rsync
     - failhard: True
 
