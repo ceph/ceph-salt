@@ -43,7 +43,15 @@ def set_reboot_needed(name, force=False):
         else:
             ret['comment'] = 'Unsupported distribution: Unable to check if reboot is needed'
             return ret
+    reboot_needed_step = "Reboot is needed" if needs_reboot else "Reboot is not needed"
+    __salt__['event.send']('ceph-salt/step/start',
+                               data={'desc': reboot_needed_step})
     __salt__['grains.set']('ceph-salt:execution:reboot_needed', needs_reboot)
+    __salt__['event.send']('ceph-salt/step/end',
+                               data={'desc': reboot_needed_step})
+    # Try to guarantee that event reaches master before job finish
+    time.sleep(5)
+
     ret['result'] = True
     return ret
 
@@ -63,6 +71,7 @@ def reboot_if_needed(name):
             ret['result'] = True
             return ret
         __salt__['event.send']('ceph-salt/minion_reboot', data={'desc': 'Rebooting...'})
+        # Try to guarantee that event reaches master before job finish
         time.sleep(5)
         __salt__['system.reboot']()
     ret['result'] = True
