@@ -33,19 +33,37 @@ def end_step(name):
     return _send_event('ceph-salt/step/end', data={'desc': name})
 
 
-def set_reboot_needed(name):
+def set_reboot_needed(name, force=False):
     ret = {'name': name, 'changes': {}, 'comment': '', 'result': False}
-    if __grains__.get('os_family') == 'Suse':
-        needs_reboot = __salt__['cmd.run_all']('zypper ps')['retcode'] > 0
+    if force:
+        needs_reboot = True
     else:
-        ret['comment'] = 'Unsupported distribution: Unable to check if reboot is needed'
-        return ret
+        if __grains__.get('os_family') == 'Suse':
+            cmd_ret = __salt__['cmd.run_all']('zypper ps')
+            needs_reboot = cmd_ret['stdout'].find('No processes using deleted files found') < 0
+        else:
+            ret['comment'] = 'Unsupported distribution: Unable to check if reboot is needed'
+            return ret
+    reboot_needed_step = "Reboot is not needed"
+    if needs_reboot:
+        if __grains__.get('os_family') == 'Suse':
+            reboot_needed_step = "Reboot is needed because some processes are using deleted files"
+        else:
+            reboot_needed_step = "Reboot is needed"
+
+    __salt__['event.send']('ceph-salt/step/start',
+                               data={'desc': reboot_needed_step})
     __salt__['grains.set']('ceph-salt:execution:reboot_needed', needs_reboot)
+    __salt__['event.send']('ceph-salt/step/end',
+                               data={'desc': reboot_needed_step})
+    # Try to guarantee that event reaches master before job finish
+    time.sleep(5)
+
     ret['result'] = True
     return ret
 
 
-def reboot_if_needed(name, ignore_running_services):
+def reboot_if_needed(name):
     """
     Requires the following grains to be set:
       - ceph-salt:execution:reboot_needed
@@ -55,18 +73,12 @@ def reboot_if_needed(name, ignore_running_services):
     if needs_reboot:
         is_master = __salt__['service.status']('salt-master')
         if is_master:
-            ret['comment'] = 'Salt master must be rebooted manually'
+            __salt__['event.send']('ceph-salt/stage/warning',
+                                   data={'desc': "Salt master must be rebooted manually"})
+            ret['result'] = True
             return ret
-        if not ignore_running_services:
-            running_ceph_containers = len(subprocess.check_output(['podman',
-                                                                   'ps',
-                                                                   '--filter',
-                                                                   'label=ceph=True',
-                                                                   '-q']).splitlines())
-            if running_ceph_containers > 0:
-                ret['comment'] = 'Running ceph containers found, please reboot manually'
-                return ret
         __salt__['event.send']('ceph-salt/minion_reboot', data={'desc': 'Rebooting...'})
+        # Try to guarantee that event reaches master before job finish
         time.sleep(5)
         __salt__['system.reboot']()
     ret['result'] = True
