@@ -39,11 +39,18 @@ def set_reboot_needed(name, force=False):
         needs_reboot = True
     else:
         if __grains__.get('os_family') == 'Suse':
-            needs_reboot = __salt__['cmd.run_all']('zypper ps')['retcode'] > 0
+            cmd_ret = __salt__['cmd.run_all']('zypper ps')
+            needs_reboot = cmd_ret['stdout'].find('No processes using deleted files found') < 0
         else:
             ret['comment'] = 'Unsupported distribution: Unable to check if reboot is needed'
             return ret
-    reboot_needed_step = "Reboot is needed" if needs_reboot else "Reboot is not needed"
+    reboot_needed_step = "Reboot is not needed"
+    if needs_reboot:
+        if __grains__.get('os_family') == 'Suse':
+            reboot_needed_step = "Reboot is needed because some processes are using deleted files"
+        else:
+            reboot_needed_step = "Reboot is needed"
+
     __salt__['event.send']('ceph-salt/step/start',
                                data={'desc': reboot_needed_step})
     __salt__['grains.set']('ceph-salt:execution:reboot_needed', needs_reboot)
