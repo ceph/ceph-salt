@@ -180,3 +180,28 @@ def wait_for_ceph_orch_host_ok_to_stop(name, if_grain, timeout=36000):
                                data={'desc': "Wait for 'ceph orch host ok-to-stop {}'".format(host)})
     ret['result'] = True
     return ret
+
+
+def pull_image(name, timeout=1800):
+    ret = {'name': name, 'changes': {}, 'comment': '', 'result': False}
+    ceph_image = __pillar__['ceph-salt']['container']['images']['ceph']
+    # Pull image in background to make sure salt master will not timeout
+    cmd_ret = __salt__['cmd.run_all']("cephadm --image {} pull".format(ceph_image), bg=True)
+    pid = cmd_ret['pid']
+    # Wait while background process is still running
+    starttime = time.time()
+    timelimit = starttime + timeout
+    while pid != "":
+        is_timedout = time.time() > timelimit
+        if is_timedout:
+            ret['comment'] = 'Timeout value reached.'
+            return ret
+        pid = __salt__['cmd.run']("ps -p {} -o pid=".format(pid))
+        logger.info("Waiting for PID '{}' to finish".format(pid))
+        time.sleep(5)
+    # Check if image pull succeeded
+    if __salt__['cmd.run']("podman images {} -q".format(ceph_image)) == "":
+        ret['comment'] = 'Failed to pull image {}'.format(ceph_image)
+        return ret
+    ret['result'] = True
+    return ret
