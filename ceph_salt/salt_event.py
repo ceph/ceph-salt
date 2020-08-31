@@ -66,6 +66,12 @@ class EventListener:
             event (CephSaltEvent): the salt event
         """
 
+    def handle_warning_stage(self, event: CephSaltEvent):
+        """Handle warning stage ceph-salt event
+        Args:
+            event (CephSaltEvent): the salt event
+        """
+
     def handle_end_stage(self, event: CephSaltEvent):
         """Handle end stage ceph-salt event
         Args:
@@ -195,6 +201,8 @@ class SaltEventProcessor(threading.Thread):
                         listener.handle_end_step(wrapper)
                     elif event['tag'] == 'ceph-salt/minion_reboot':
                         listener.handle_minion_reboot(wrapper)
+                    elif event['tag'] == 'ceph-salt/stage/warning':
+                        listener.handle_warning_stage(wrapper)
                 elif event['tag'] == 'minion_start':
                     listener.handle_minion_start(wrapper)
                 elif fnmatch.fnmatch(event['tag'], 'salt/job/*/ret/*'):

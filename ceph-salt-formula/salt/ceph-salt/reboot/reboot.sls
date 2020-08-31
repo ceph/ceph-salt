@@ -37,5 +37,4 @@ wait for ceph orch ok-to-stop:
 
 reboot:
    ceph_salt.reboot_if_needed:
-     - ignore_running_services: True
      - failhard: True

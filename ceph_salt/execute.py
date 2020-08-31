@@ -59,6 +59,7 @@ class CursesScreen:
     COLOR_MENU = 7
     COLOR_SUCCESS = 8
     COLOR_ERROR = 9
+    COLOR_WARNING = 10
 
     def __init__(self, num_rows=1000):
         self.num_rows = num_rows
@@ -117,6 +118,7 @@ class CursesScreen:
         curses.init_pair(self.COLOR_MENU, curses.COLOR_BLACK, curses.COLOR_GREEN)
         curses.init_pair(self.COLOR_SUCCESS, curses.COLOR_GREEN, -1)
         curses.init_pair(self.COLOR_ERROR, curses.COLOR_RED, -1)
+        curses.init_pair(self.COLOR_WARNING, curses.COLOR_YELLOW, -1)
 
         curses.noecho()
         curses.cbreak()
@@ -347,6 +349,7 @@ class Stage:
         self.current_step = None
         self.end_time = None
         self.success = None
+        self.warning = False
         log_msg = "STAGE [BEGIN] \"{}\" on minion {}".format(self.desc, self.minion)
         logger.info(log_msg)
 
@@ -422,6 +425,7 @@ class MinionExecution:
         self.begin_time = datetime.datetime.utcnow()
         self.end_time = None
         self.rebooting = False
+        self.warnings = []
         self.success = None
 
     @property
@@ -456,6 +460,10 @@ class MinionExecution:
         self.stages[desc].end(timestamp)
         self.current_stage = None
         return True
+
+    def stage_warn(self, desc):
+        self.stages[desc].warning = True
+        self.warnings.append(desc)
 
     def step_begin(self, desc, timestamp):
         """
@@ -540,6 +548,9 @@ class CephSaltModel:
 
     def minions_succeeded(self) -> int:
         return len([m for m in self._minions.values() if m.success])
+
+    def minions_with_warnings(self) -> int:
+        return len([m for m in self._minions.values() if m.warnings])
 
     def minions_failed(self) -> int:
         return len(self._minions) - self.minions_succeeded()
@@ -650,6 +661,14 @@ class CephSaltController(EventListener):
             self.model.pillar['ceph-salt'].pop('force-reboot', None)
         executor = CephSaltExecutorThread(self, event.minion)
         executor.start()
+
+    def handle_warning_stage(self, event):
+        minion = self.model.get_minion(event.minion)
+        minion.stage_begin(event.desc, event.stamp)
+        self.renderer.minion_update(event.minion)
+        minion.stage_warn(event.desc)
+        minion.stage_end(event.desc, event.stamp)
+        self.renderer.minion_update(event.minion)
 
     def handle_state_apply_return(self, event):
         if not event.success:
@@ -804,14 +823,20 @@ class CursesRenderer(Renderer, ScreenKeyListener):
             finished_minions = self.model.minions_finished()
             finished_str = "Finished: {}/{}".format(finished_minions, total_minions)
             succeded_str = "Succeeded: {}".format(self.model.minions_succeeded())
+            warning_str = "Warnings: {}".format(self.model.minions_with_warnings())
             failed_str = "Failed: {}".format(self.model.minions_failed())
             total_time_str = "Duration: {}".format(
                 self.ftime(self.model.end_time - self.model.begin_time))
 
             self.screen.write_header(1, finished_str, CursesScreen.COLOR_MENU, False, False, True)
-            self.screen.write_header(len(finished_str) + 3, succeded_str,
+            self.screen.write_header(len(finished_str) + 3,
+                                     succeded_str,
                                      CursesScreen.COLOR_MENU, False, False, True)
-            self.screen.write_header(len(finished_str) + len(succeded_str) + 5, failed_str,
+            self.screen.write_header(len(finished_str) + len(succeded_str) + 5,
+                                     warning_str,
+                                     CursesScreen.COLOR_MENU, False, False, True)
+            self.screen.write_header(len(finished_str) + len(warning_str) + len(succeded_str) + 7,
+                                     failed_str,
                                      CursesScreen.COLOR_MENU, False, False, True)
 
         else:
@@ -899,9 +924,11 @@ class CursesRenderer(Renderer, ScreenKeyListener):
                                    color, False, selected, True)
         else:
             color = CursesScreen.COLOR_MINION if selected else (
-                CursesScreen.COLOR_SUCCESS if minion.success else CursesScreen.COLOR_ERROR)
+                CursesScreen.COLOR_WARNING if minion.warnings else (
+                    CursesScreen.COLOR_SUCCESS if minion.success else CursesScreen.COLOR_ERROR))
+            icon = "⚠" if minion.warnings else ("✓" if minion.success else "╳")
             self.screen.write_body(row, 3 + len(minion.name) + 1 + dots_len + 2,
-                                   "✓" if minion.success else "╳", color, False, selected,
+                                   icon, color, False, selected,
                                    True)
             color = CursesScreen.COLOR_MINION if selected else CursesScreen.COLOR_MARKER
             self.screen.write_body(row, self.screen.body_width - len(timer_str), timer_str,
@@ -918,9 +945,11 @@ class CursesRenderer(Renderer, ScreenKeyListener):
         else:
             timer_str = " "
         if stage.finished():
-            color = CursesScreen.COLOR_SUCCESS if stage.success else CursesScreen.COLOR_ERROR
+            color = CursesScreen.COLOR_WARNING if stage.warning else (
+                CursesScreen.COLOR_SUCCESS if stage.success else CursesScreen.COLOR_ERROR)
+            icon = "⚠" if stage.warning else ("✓" if stage.success else "╳")
             self.screen.write_body(row, col + len(stage.desc) + 1 + dots_len + 2,
-                                   "✓" if stage.success else "╳", color)
+                                   icon, color)
         else:
             self.screen.write_body(row, col + len(stage.desc) + 1 + dots_len + 2,
                                    self.loading.loading_string(), CursesScreen.COLOR_STAGE)
@@ -1197,7 +1226,15 @@ class CursesRenderer(Renderer, ScreenKeyListener):
             PP.println("An error occurred in the UI, please check "
                        "'{}' for further details.".format(LoggingUtil.log_file))
         else:
-            PP.println("Finished. Log file may be found at '{}'.".format(LoggingUtil.log_file))
+            if self.model.minions_with_warnings():
+                PP.println()
+                for minion in self.model.minions_list():
+                    for warning in minion.warnings:
+                        PP.pl_orange('WARNING: {} - {}'.format(minion.name, warning))
+                PP.println()
+            PP.println("{}. Log file may be found at '{}'.".format(
+                "Finished with warnings" if self.model.minions_with_warnings() else "Finished",
+                LoggingUtil.log_file))
 
 
 class TerminalRenderer(Renderer):
@@ -1236,11 +1273,18 @@ class TerminalRenderer(Renderer):
 
     def execution_stopped(self):
         super(TerminalRenderer, self).execution_stopped()
+        if self.model.minions_with_warnings():
+            PP.println()
+            for minion in self.model.minions_list():
+                for warning in minion.warnings:
+                    PP.println('WARNING: {} - {}'.format(minion.name, warning))
         PP.println()
         PP.println("Finished execution of {} formula".format(self.model.state))
         PP.println()
-        PP.println("Summary: Total={} Succeeded={} Failed={}"
-                   .format(self.model.minions_total(), self.model.minions_succeeded(),
+        PP.println("Summary: Total={} Succeeded={} Warnings={} Failed={}"
+                   .format(self.model.minions_total(),
+                           self.model.minions_succeeded(),
+                           self.model.minions_with_warnings(),
                            self.model.minions_failed()))
 
 

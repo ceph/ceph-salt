@@ -16,6 +16,7 @@ class PrettyPrinter:
         """
         RED = '\x1B[38;5;196m'
         GREEN = '\x1B[38;5;83m'
+        ORANGE = '\x1B[38;5;214m'
         ENDC = '\x1B[0m'
 
     @classmethod
@@ -45,6 +46,13 @@ class PrettyPrinter:
         """
         return PrettyPrinter._format(PrettyPrinter.Colors.RED, text)
 
+    @staticmethod
+    def orange(text):
+        """
+        Formats text as orange
+        """
+        return PrettyPrinter._format(PrettyPrinter.Colors.ORANGE, text)
+
     @classmethod
     def println(cls, text=None):
         """
@@ -70,6 +78,13 @@ class PrettyPrinter:
         Prints text formatted as red
         """
         cls.println(cls.red(text))
+
+    @classmethod
+    def pl_orange(cls, text):
+        """
+        Prints text formatted as orange
+        """
+        cls.println(cls.orange(text))
 
 
 def check_root_privileges(func):

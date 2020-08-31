@@ -48,7 +48,7 @@ def set_reboot_needed(name, force=False):
     return ret
 
 
-def reboot_if_needed(name, ignore_running_services):
+def reboot_if_needed(name):
     """
     Requires the following grains to be set:
       - ceph-salt:execution:reboot_needed
@@ -58,17 +58,10 @@ def reboot_if_needed(name, ignore_running_services):
     if needs_reboot:
         is_master = __salt__['service.status']('salt-master')
         if is_master:
-            ret['comment'] = 'Salt master must be rebooted manually'
+            __salt__['event.send']('ceph-salt/stage/warning',
+                                   data={'desc': "Salt master must be rebooted manually"})
+            ret['result'] = True
             return ret
-        if not ignore_running_services:
-            running_ceph_containers = len(subprocess.check_output(['podman',
-                                                                   'ps',
-                                                                   '--filter',
-                                                                   'label=ceph=True',
-                                                                   '-q']).splitlines())
-            if running_ceph_containers > 0:
-                ret['comment'] = 'Running ceph containers found, please reboot manually'
-                return ret
         __salt__['event.send']('ceph-salt/minion_reboot', data={'desc': 'Rebooting...'})
         time.sleep(5)
         __salt__['system.reboot']()
