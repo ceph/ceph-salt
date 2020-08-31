@@ -37,14 +37,6 @@ create bootstrap ceph conf:
 {% endfor %}
     - failhard: True
 
-{{ macros.begin_step('Wait for other minions') }}
-wait for other minions:
-  ceph_salt.wait_for_grain:
-    - grain: ceph-salt:execution:provisioned
-    - hosts: {{ pillar['ceph-salt']['minions']['all'] }}
-    - failhard: True
-{{ macros.end_step('Wait for other minions') }}
-
 {{ macros.begin_step('Run "cephadm bootstrap"') }}
 
 {% set dashboard_username = pillar['ceph-salt']['dashboard']['username'] %}
