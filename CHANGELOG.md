@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [15.2.10] - 2020-08-31
+### Added
+- Add 'ceph-salt reboot [--force] [minion_id]' command (#325)
+- Write INFO message to log when stage/step begins/ends (#344)
+- Test on Python 3.8 instead of 3.7 (#338)
+- Add 'network' runner (#329)
+- Check for running jobs when failing to re-apply formula (#332)
+### Removed
+- Remove '/system_update' config option (#345)
+### Fixed
+- More meaningful SSH key comment (#337)
+
 ## [15.2.9] - 2020-08-10
 ### Added
 - Add 'ceph-salt update [--reboot] [minion_id]' command (#303)
@@ -211,7 +223,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal README.
 - The CHANGELOG file.
 
-[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.9...HEAD
+[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.10...HEAD
+[15.2.10]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.10
 [15.2.9]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.9
 [15.2.8]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.8
 [15.2.7]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.7
