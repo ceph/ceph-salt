@@ -1368,7 +1368,7 @@ class CephSaltExecutor:
     @staticmethod
     def ping_minions():
         # verify that all minions are alive
-        PP.println("Checking if all minions respond to ping...")
+        PP.println("Checking if minions respond to ping...")
         all_minions = PillarManager.get('ceph-salt:minions:all', [])
         minion_count = len(all_minions)
         PP.println("Pinging {} minions...".format(minion_count))
@@ -1388,6 +1388,41 @@ class CephSaltExecutor:
                 PP.pl_red("{} did not respond to ping".format(minion))
                 logger.error(log_msg)
                 retval = 8
+        return retval
+
+    @staticmethod
+    def check_dns():
+        retval = None
+        PP.println("Checking if minions have functioning DNS...")
+        minion_hostnames = PillarManager.get('ceph-salt:minions:all', [])
+        minion_count = len(minion_hostnames)
+        PP.println("Running DNS lookups on {} minions...".format(minion_count))
+        salt_result = SaltClient.local().cmd(
+            'ceph-salt:member',
+            'ceph_salt.probe_dns',
+            minion_hostnames,
+            tgt_type='grain')
+        log_msg = "probe_dns returned: {}".format(salt_result)
+        logger.info(log_msg)
+        if all(salt_result.values()):
+            logger.info("All minion hostnames are resolvable on all minions")
+            retval = 0
+        else:
+            bad_dns_list = []
+            for hostname, result in salt_result.items():
+                if result:
+                    log_msg = ("All minion hostnames are resolvable on host {}"
+                               .format(hostname))
+                    logger.info(log_msg)
+                else:
+                    log_msg = ("All minion hostnames are NOT resolvable on host {}"
+                               .format(hostname))
+                    logger.error(log_msg)
+                    bad_dns_list.append(hostname)
+            PP.pl_red("DNS issues detected on host(s) {}".format(", ".join(bad_dns_list)))
+            PP.pl_red("One or more minions cannot resolve the fully-qualified hostnames "
+                      "of other minions. Please fix this issue and try again.")
+            retval = 9
         return retval
 
     @staticmethod
@@ -1455,8 +1490,13 @@ class CephSaltExecutor:
         if retcode > 0:
             return retcode
 
-        # check formula
+        # check formula and sync_all
         retcode = CephSaltExecutor.check_formula(state)
+        if retcode > 0:
+            return retcode
+
+        # check dns
+        retcode = CephSaltExecutor.check_dns()
         if retcode > 0:
             return retcode
 
