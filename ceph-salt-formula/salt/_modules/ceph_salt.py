@@ -3,6 +3,10 @@ import json
 import socket
 import time
 
+import logging
+
+log = logging.getLogger(__name__)
+
 
 def _send_event(tag, data):
     __salt__['event.send'](tag, data=data)
@@ -56,7 +60,6 @@ def get_remote_grain(host, grain):
 def probe_ntp(ahost):
     import ntplib
     conn = ntplib.NTPClient()
-    success = False
     try:
         conn.request(ahost, version=3)
         return 0
@@ -74,3 +77,21 @@ def is_safety_disengaged():
     if safety_disengage_time and safety_disengage_time + 60 > time.time():
         return True
     return False
+
+
+def probe_dns(*hostnames):
+    """
+    given a list of hostnames, verify that all can be resolved to IP addresses
+    """
+    ret_status = True
+    for hostname in hostnames:
+        log_msg = "probe_dns: attempting to resolve minion hostname ->{}<-".format(hostname)
+        log.info(log_msg)
+        try:
+            socket.gethostbyname(hostname)
+        except Exception as exc:
+            log.error(exc)
+            ret_status = False
+        if not ret_status:
+            break
+    return ret_status
