@@ -126,6 +126,12 @@ class CephNodeManager:
         PillarManager.set('ceph-salt:minions:cephadm',
                           [n.minion_id for n in cls._ceph_salt_nodes.values()
                            if 'cephadm' in n.roles])
+        PillarManager.set('ceph-salt:minions:latency',
+                          [n.minion_id for n in cls._ceph_salt_nodes.values()
+                           if 'latency' in n.roles])
+        PillarManager.set('ceph-salt:minions:throughput',
+                          [n.minion_id for n in cls._ceph_salt_nodes.values()
+                           if 'throughput' in n.roles])
 
     @classmethod
     def ceph_salt_nodes(cls):

@@ -365,6 +365,22 @@ CEPH_SALT_OPTIONS = {
                         'handler': RoleHandler('cephadm'),
                         'help': 'List of minions with Cephadm role'
                     },
+                    'tuned': {
+                        'type': 'group',
+                        'help': 'Tunes roles',
+                        'options': {
+                            'latency': {
+                                'type': 'minions',
+                                'handler': RoleHandler('latency'),
+                                'help': 'List of minions with Latency role'
+                            },
+                            'throughput': {
+                                'type': 'minions',
+                                'handler': RoleHandler('throughput'),
+                                'help': 'List of minions with Throughput role'
+                            },
+                        }
+                    },
                 }
             },
         }

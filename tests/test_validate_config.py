@@ -118,6 +118,31 @@ PBVw2pLCZsH5ol3VJ1/DETsGRMzFubFeTUNOC3MzhhG+V"""
         self.assertEqual(validate_config(False),
                          "Minion 'node3.ceph.com' has 'admin' role but not 'cephadm' role")
 
+    def test_latency_without_cephadm_role(self):
+        PillarManager.set('ceph-salt:bootstrap_minion', 'node2.ceph.com')
+        PillarManager.set('ceph-salt:minions:admin', ['node2.ceph.com'])
+        PillarManager.set('ceph-salt:minions:cephadm', ['node2.ceph.com'])
+        PillarManager.set('ceph-salt:minions:latency', ['node3.ceph.com'])
+        self.assertEqual(validate_config(False),
+                         "Minion 'node3.ceph.com' has 'latency' role but not 'cephadm' role")
+
+    def test_throughput_without_cephadm_role(self):
+        PillarManager.set('ceph-salt:bootstrap_minion', 'node2.ceph.com')
+        PillarManager.set('ceph-salt:minions:admin', ['node2.ceph.com'])
+        PillarManager.set('ceph-salt:minions:cephadm', ['node2.ceph.com'])
+        PillarManager.set('ceph-salt:minions:throughput', ['node3.ceph.com'])
+        self.assertEqual(validate_config(False),
+                         "Minion 'node3.ceph.com' has 'throughput' role but not 'cephadm' role")
+
+    def test_latency_and_throughput_roles(self):
+        PillarManager.set('ceph-salt:bootstrap_minion', 'node2.ceph.com')
+        PillarManager.set('ceph-salt:minions:admin', ['node2.ceph.com'])
+        PillarManager.set('ceph-salt:minions:cephadm', ['node2.ceph.com'])
+        PillarManager.set('ceph-salt:minions:latency', ['node2.ceph.com'])
+        PillarManager.set('ceph-salt:minions:throughput', ['node2.ceph.com'])
+        self.assertEqual(validate_config(False),
+                         "Minion 'node2.ceph.com' has both 'latency' and 'throughput' roles")
+
     def test_incomplete_registry_auth(self):
         PillarManager.set('ceph-salt:container:auth:username', 'testuser')
         self.assertEqual(validate_config(False), "Registry auth configuration is incomplete")
