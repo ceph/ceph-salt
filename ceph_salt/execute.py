@@ -1366,6 +1366,31 @@ class CephSaltExecutor:
         return 0
 
     @staticmethod
+    def ping_minions():
+        # verify that all minions are alive
+        PP.println("Checking if all minions respond to ping...")
+        all_minions = PillarManager.get('ceph-salt:minions:all', [])
+        minion_count = len(all_minions)
+        PP.println("Pinging {} minions...".format(minion_count))
+        result = SaltClient.local_cmd('ceph-salt:member', 'test.ping', tgt_type='grain')
+        # result will be something like {'node3.ses7.test': True, 'master.ses7.test': True,
+        # 'node2.ses7.test': True, 'node1.ses7.test': True}
+        minions_responding = 0
+        retval = 0
+        for minion, response in result.items():
+            log_msg = "ping_minions: minion {} ".format(minion)
+            if isinstance(response, bool) and response:
+                minions_responding += 1
+                log_msg += "responded to ping"
+                logger.info(log_msg)
+            else:
+                log_msg += "DID NOT RESPOND TO PING"
+                PP.pl_red("{} did not respond to ping".format(minion))
+                logger.error(log_msg)
+                retval = 8
+        return retval
+
+    @staticmethod
     def check_external_time_servers(ts_minion, external_ts_list):
         PP.println("Installing python3-ntplib on time server node...")
         salt_result = SaltClient.local().cmd(
@@ -1424,6 +1449,11 @@ class CephSaltExecutor:
             logger.error(error_msg)
             PP.pl_red(error_msg)
             return 2
+
+        # ping minions
+        retcode = CephSaltExecutor.ping_minions()
+        if retcode > 0:
+            return retcode
 
         # check formula
         retcode = CephSaltExecutor.check_formula(state)
