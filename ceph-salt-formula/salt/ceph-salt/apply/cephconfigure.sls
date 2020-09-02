@@ -26,12 +26,13 @@ copy ceph.conf and keyring from an admin node:
 {{ macros.begin_stage('Ensure cephadm MGR module is enabled') }}
 
 {% set ssh_user = pillar['ceph-salt']['ssh']['user'] %}
+{% set home = '/home/' ~ssh_user if ssh_user != 'root' else '/root' %}
 
 enable cephadm mgr module:
   cmd.run:
     - name: |
-        ceph config-key set mgr/cephadm/ssh_identity_key -i /tmp/ceph-salt-ssh-id_rsa
-        ceph config-key set mgr/cephadm/ssh_identity_pub -i /tmp/ceph-salt-ssh-id_rsa.pub
+        ceph config-key set mgr/cephadm/ssh_identity_key -i {{ home }}/.ssh/id_rsa
+        ceph config-key set mgr/cephadm/ssh_identity_pub -i {{ home }}/.ssh/id_rsa.pub
         ceph config-key set mgr/cephadm/ssh_user {{ ssh_user }}
         ceph mgr module enable cephadm && \
         ceph orch set backend cephadm

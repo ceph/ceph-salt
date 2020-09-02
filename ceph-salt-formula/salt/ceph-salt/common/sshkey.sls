@@ -33,10 +33,12 @@ create ssh dir:
     - makedirs: True
     - failhard: True
 
+{% set home = '/home/' ~ssh_user if ssh_user != 'root' else '/root' %}
+
 # private key
 create ceph-salt-ssh-id_rsa:
   file.managed:
-    - name: /tmp/ceph-salt-ssh-id_rsa
+    - name: {{ home }}/.ssh/id_rsa
     - user: {{ ssh_user }}
     - group: {{ ssh_user_group }}
     - mode: '0600'
@@ -46,7 +48,7 @@ create ceph-salt-ssh-id_rsa:
 # public key
 create ceph-salt-ssh-id_rsa.pub:
   file.managed:
-    - name: /tmp/ceph-salt-ssh-id_rsa.pub
+    - name: {{ home }}/.ssh/id_rsa.pub
     - user: {{ ssh_user }}
     - group: {{ ssh_user_group }}
     - mode: '0644'
