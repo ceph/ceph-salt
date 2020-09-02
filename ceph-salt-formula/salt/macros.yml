@@ -26,17 +26,14 @@
 {%- endmacro %}
 
 {% macro sudoers(name) -%}
-{%- set ssh_user = pillar['ceph-salt']['ssh']['user'] %}
-{% if ssh_user != 'root' %}
 {{name}}:
   file.append:
-    - name: /etc/sudoers.d/{{ssh_user}}
+    - name: /etc/sudoers.d/cephadm
     - text:
-      - "{{ssh_user}} ALL=NOPASSWD: /usr/bin/ceph -s"
-      - "{{ssh_user}} ALL=NOPASSWD: /usr/bin/ceph orch host add *"
-      - "{{ssh_user}} ALL=NOPASSWD: /usr/bin/ceph orch host ok-to-stop *"
-      - "{{ssh_user}} ALL=NOPASSWD: /usr/bin/ceph orch status --format=json"
-      - "{{ssh_user}} ALL=NOPASSWD: /usr/bin/python3"
-      - "{{ssh_user}} ALL=NOPASSWD: /usr/bin/rsync"
-{% endif %}
+      - "cephadm ALL=NOPASSWD: /usr/bin/ceph -s"
+      - "cephadm ALL=NOPASSWD: /usr/bin/ceph orch host add *"
+      - "cephadm ALL=NOPASSWD: /usr/bin/ceph orch host ok-to-stop *"
+      - "cephadm ALL=NOPASSWD: /usr/bin/ceph orch status --format=json"
+      - "cephadm ALL=NOPASSWD: /usr/bin/python3"
+      - "cephadm ALL=NOPASSWD: /usr/bin/rsync"
 {%- endmacro %}

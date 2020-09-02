@@ -2,45 +2,36 @@
 
 {{ macros.begin_stage('Distribute SSH keys') }}
 
-{% set ssh_user = pillar['ceph-salt']['ssh']['user'] %}
-{% set ssh_user_group = 'root' if ssh_user == 'root' else 'users' %}
-
-{% if ssh_user != 'root' %}
-
 create ssh user group:
   group.present:
-    - name: {{ ssh_user_group }}
+    - name: users
 
 create ssh user:
   user.present:
-    - name: {{ ssh_user }}
-    - home: /home/{{ssh_user}}
+    - name: cephadm
+    - home: /home/cephadm
     - groups:
-      - {{ ssh_user_group }}
+      - users
     - failhard: True
-
-{% endif %}
 
 {{ macros.sudoers('configure sudoers') }}
 
 # make sure .ssh is present with the right permissions
 create ssh dir:
   file.directory:
-    - name: /home/{{ ssh_user }}/.ssh
-    - user: {{ ssh_user }}
-    - group: {{ ssh_user_group }}
+    - name: /home/cephadm/.ssh
+    - user: cephadm
+    - group: users
     - mode: '0700'
     - makedirs: True
     - failhard: True
 
-{% set home = '/home/' ~ssh_user if ssh_user != 'root' else '/root' %}
-
 # private key
 create ceph-salt-ssh-id_rsa:
   file.managed:
-    - name: {{ home }}/.ssh/id_rsa
-    - user: {{ ssh_user }}
-    - group: {{ ssh_user_group }}
+    - name: /home/cephadm/.ssh/id_rsa
+    - user: cephadm
+    - group: users
     - mode: '0600'
     - contents_pillar: ceph-salt:ssh:private_key
     - failhard: True
@@ -48,9 +39,9 @@ create ceph-salt-ssh-id_rsa:
 # public key
 create ceph-salt-ssh-id_rsa.pub:
   file.managed:
-    - name: {{ home }}/.ssh/id_rsa.pub
-    - user: {{ ssh_user }}
-    - group: {{ ssh_user_group }}
+    - name: /home/cephadm/.ssh/id_rsa.pub
+    - user: cephadm
+    - group: users
     - mode: '0644'
     - contents_pillar: ceph-salt:ssh:public_key
     - failhard: True
@@ -58,7 +49,7 @@ create ceph-salt-ssh-id_rsa.pub:
 # add public key to authorized_keys
 install ssh key:
     ssh_auth.present:
-      - user: {{ ssh_user }}
+      - user: cephadm
       - comment: ssh_key_created_by_ceph_salt
       - config: /%h/.ssh/authorized_keys
       - name: {{ pillar['ceph-salt']['ssh']['public_key'] }}

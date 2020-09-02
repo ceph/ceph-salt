@@ -46,9 +46,6 @@ def validate_config(deployed):
                    "role".format(admin_minion)
 
     # ssh
-    user = PillarManager.get('ceph-salt:ssh:user')
-    if not user:
-        return "No SSH user specified in config"
     priv_key = PillarManager.get('ceph-salt:ssh:private_key')
     if not priv_key:
         return "No SSH private key specified in config"
