@@ -517,10 +517,6 @@ add location=172.17.0.1:5000/docker.io prefix=docker.io insecure=false
                 'help': "SSH RSA public key",
                 'handler': SshPublicKeyHandler()
             },
-            'user': {
-                'help': 'SSH user',
-                'handler': PillarHandler('ceph-salt:ssh:user', 'ceph-salt')
-            },
         }
     },
     'time_server': {

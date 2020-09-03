@@ -92,8 +92,6 @@ create bootstrap ceph conf:
 
 {% set dashboard_username = pillar['ceph-salt']['dashboard']['username'] %}
 {% set dashboard_password = pillar['ceph-salt']['dashboard']['password'] %}
-{% set ssh_user = pillar['ceph-salt']['ssh']['user'] %}
-{% set home = '/home/' ~ssh_user if ssh_user != 'root' else '/root' %}
 {% set auth = pillar['ceph-salt'].get('container', {}).get('auth', {}) %}
 
 {# --mon-ip is still required, even though we're also putting the Mon IP      #}
@@ -119,9 +117,9 @@ run cephadm bootstrap:
                 --skip-monitoring-stack \
                 --skip-prepare-host \
                 --skip-pull \
-                --ssh-private-key {{ home }}/.ssh/id_rsa \
-                --ssh-public-key {{ home }}/.ssh/id_rsa.pub \
-                --ssh-user {{ ssh_user }} \
+                --ssh-private-key /home/cephadm/.ssh/id_rsa \
+                --ssh-public-key /home/cephadm/.ssh/id_rsa.pub \
+                --ssh-user cephadm \
 {%- for arg, value in pillar['ceph-salt'].get('bootstrap_arguments', {}).items() %}
                 --{{ arg }} {{ value if value is not none else '' }} \
 {%- endfor %}

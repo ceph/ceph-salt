@@ -24,10 +24,6 @@ class ValidateConfigTest(SaltMockTestCase):
         self.assertEqual(validate_config(False), "Bootstrap minion must be 'Admin'")
         self.assertEqual(validate_config(True), None)
 
-    def test_ssh_no_user(self):
-        PillarManager.reset('ceph-salt:ssh:user')
-        self.assertEqual(validate_config(False), "No SSH user specified in config")
-
     def test_ssh_no_private_key(self):
         PillarManager.reset('ceph-salt:ssh:private_key')
         self.assertEqual(validate_config(False), "No SSH private key specified in config")
@@ -208,7 +204,6 @@ SCzirUzUKN2oge2WieNI7MQ=
         PillarManager.set('ceph-salt:minions:admin', ['node1.ceph.com'])
         PillarManager.set('ceph-salt:container:registries_enabled', True)
         PillarManager.set('ceph-salt:container:images:ceph', 'docker.io/ceph/daemon-base:latest')
-        PillarManager.set('ceph-salt:ssh:user', 'root')
         PillarManager.set('ceph-salt:ssh:public_key', """ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQ\
 ClF4wYDBN6wC9Amp4xouZTDbOqZdkXxUezgbFrG1Nd+YtK7rF3sMdcE7ypKWkxwq3a/ZdWxnlAgQaCq2onXVo02/HhXrkaOf\
 fH2GKzhEIw6sW0FnZ+y6XpBh6nvlD87mD8mrQbnhsjFjX+odS8gmNJOZOBxHdeWy86PHUesjttAUYwi42fWB6LkJrz74nbkp\

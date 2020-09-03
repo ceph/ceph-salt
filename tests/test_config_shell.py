@@ -219,12 +219,6 @@ class ConfigShellTest(SaltMockTestCase):
                                 'ceph-salt:ssh:public_key',
                                 'mypublickey')
 
-    def test_ssh_user(self):
-        self.assertValueOption('/ssh/user',
-                               'ceph-salt:ssh:user',
-                               'myuser',
-                               'ceph-salt')
-
     def test_time_server(self):
         self.assertFlagOption('/time_server',
                               'ceph-salt:time_server:enabled',
@@ -274,9 +268,6 @@ class ConfigShellTest(SaltMockTestCase):
                 'all': ['node1.ceph.com', 'node2.ceph.com'],
                 'admin': ['node1.ceph.com'],
                 'cephadm': ['node1.ceph.com', 'node2.ceph.com']
-            },
-            'ssh': {
-                'user': 'ceph-salt'
             },
             'time_server': {
                 'enabled': True,
