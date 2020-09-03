@@ -34,21 +34,33 @@ def end_step(name):
     return _send_event('ceph-salt/step/end', data={'desc': name})
 
 
+def ssh(host, cmd):
+    return __salt__['cmd.run_all']("ssh -o StrictHostKeyChecking=no "
+                                   "-i /home/cephadm/.ssh/id_rsa "
+                                   "cephadm@{} \"{}\"".format(host, cmd))
+
+def sudo_rsync(src, dest):
+    return __salt__['cmd.run_all']("sudo rsync --rsync-path='sudo rsync' "
+                                   "-e 'ssh -o StrictHostKeyChecking=no "
+                                   "-i /home/cephadm/.ssh/id_rsa' "
+                                   "{} {} ".format(src, dest))
+
 def get_remote_grain(host, grain):
     """
     Reads remote host grain by accessing '/etc/salt/grains' file directly.
     """
-    ret = __salt__['cmd.run_all']("ssh -o StrictHostKeyChecking=no "
-                                  "-i /home/cephadm/.ssh/id_rsa cephadm@{} "
-                                  "\"sudo python3 - <<EOF\n"
-                                  "import json\n"
-                                  "import salt.utils.data\n"
-                                  "import yaml\n"
-                                  "with open('/etc/salt/grains') as grains_file:\n"
-                                  "    grains = yaml.full_load(grains_file)\n"
-                                  "val = salt.utils.data.traverse_dict_and_list(grains, '{}')\n"
-                                  "print(json.dumps({{'local': val}}))\n"
-                                  "EOF\"".format(host, grain))
+    python_script = '''
+import json
+import salt.utils.data
+import yaml
+with open('/etc/salt/grains') as grains_file:
+    grains = yaml.full_load(grains_file)
+val = salt.utils.data.traverse_dict_and_list(grains, '{}')
+print(json.dumps({{'local': val}}))
+'''.format(grain)
+    ret = __salt__['ceph_salt.ssh'](
+                   host,
+                   "sudo python3 - <<EOF\n{}\nEOF".format(python_script))
     if ret['retcode'] != 0:
         return None
     return json.loads(ret['stdout'])['local']
