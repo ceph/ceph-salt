@@ -36,12 +36,16 @@ def end_step(name):
 
 def ssh(host, cmd):
     return __salt__['cmd.run_all']("ssh -o StrictHostKeyChecking=no "
+                                   "-o UserKnownHostsFile=/dev/null "
+                                   "-o ConnectTimeout=30 "
                                    "-i /home/cephadm/.ssh/id_rsa "
                                    "cephadm@{} \"{}\"".format(host, cmd))
 
 def sudo_rsync(src, dest):
     return __salt__['cmd.run_all']("sudo rsync --rsync-path='sudo rsync' "
                                    "-e 'ssh -o StrictHostKeyChecking=no "
+                                   "-o UserKnownHostsFile=/dev/null "
+                                   "-o ConnectTimeout=30 "
                                    "-i /home/cephadm/.ssh/id_rsa' "
                                    "{} {} ".format(src, dest))
 
