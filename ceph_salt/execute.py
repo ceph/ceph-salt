@@ -1426,6 +1426,44 @@ class CephSaltExecutor:
         return retval
 
     @staticmethod
+    def check_time_sync():
+        retval = None
+        PP.println("/time_server is disabled. Will check if minions have a time_sync "
+                   "service enabled and running...")
+        minion_hostnames = PillarManager.get('ceph-salt:minions:all', [])
+        minion_count = len(minion_hostnames)
+        PP.println("Checking time sync service on {} minions...".format(minion_count))
+        salt_result = SaltClient.local().cmd(
+            'ceph-salt:member',
+            'ceph_salt.probe_time_sync',
+            [],
+            tgt_type='grain')
+        log_msg = "probe_time_sync returned: {}".format(salt_result)
+        logger.info(log_msg)
+        if all(salt_result.values()):
+            logger.info("Time sync service is enabled and running on all minions")
+            retval = 0
+        else:
+            bad_time_sync_list = []
+            for hostname, result in salt_result.items():
+                if result:
+                    log_msg = ("Time sync service is enabled and running on host {}"
+                               .format(hostname))
+                    logger.info(log_msg)
+                else:
+                    log_msg = ("Time sync service is NOT enabled and running on host {}"
+                               .format(hostname))
+                    logger.error(log_msg)
+                    bad_time_sync_list.append(hostname)
+            PP.pl_red("Time sync issues detected on host(s) {}"
+                      .format(", ".join(bad_time_sync_list)))
+            PP.pl_red("/time_server is disabled. In that case, a time sync service "
+                      "must be enabled and running on all minions. Please fix this "
+                      "issue and try again.")
+            retval = 10
+        return retval
+
+    @staticmethod
     def check_external_time_servers(ts_minion, external_ts_list):
         PP.println("Installing python3-ntplib on time server node...")
         salt_result = SaltClient.local().cmd(
@@ -1519,6 +1557,10 @@ class CephSaltExecutor:
                     )
                     if retcode > 0:
                         return retcode
+            else:
+                retcode = CephSaltExecutor.check_time_sync()
+                if retcode > 0:
+                    return retcode
 
         PP.println("Ready to start!")
         return 0
