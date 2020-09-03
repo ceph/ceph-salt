@@ -14,7 +14,16 @@ create ssh user:
       - users
     - failhard: True
 
-{{ macros.sudoers('configure sudoers') }}
+configure sudoers:
+  file.append:
+    - name: /etc/sudoers.d/ceph-salt
+    - text:
+      - "cephadm ALL=NOPASSWD: /usr/bin/ceph -s"
+      - "cephadm ALL=NOPASSWD: /usr/bin/ceph orch host add *"
+      - "cephadm ALL=NOPASSWD: /usr/bin/ceph orch host ok-to-stop *"
+      - "cephadm ALL=NOPASSWD: /usr/bin/ceph orch status --format=json"
+      - "cephadm ALL=NOPASSWD: /usr/bin/python3"
+      - "cephadm ALL=NOPASSWD: /usr/bin/rsync"
 
 # make sure .ssh is present with the right permissions
 create ssh dir:

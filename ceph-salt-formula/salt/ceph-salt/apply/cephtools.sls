@@ -16,9 +16,6 @@ install cephadm:
 {% endif %}
     - failhard: True
 
-# in case any package instalation re-writes sudoers /etc/sudoers.d/<ssh_user>
-{{ macros.sudoers('configure sudoers after package instalation') }}
-
 {{ macros.end_step('Install cephadm and other packages') }}
 
 {{ macros.begin_step('Run "cephadm check-host"') }}

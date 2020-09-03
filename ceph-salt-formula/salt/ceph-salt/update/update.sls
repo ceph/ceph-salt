@@ -13,9 +13,6 @@ update packages:
     - name: pkg.upgrade
     - failhard: True
 
-# in case any package update re-writes sudoers /etc/sudoers.d/<ssh_user>
-{{ macros.sudoers('configure sudoers after package update') }}
-
 {{ macros.end_stage('Update all packages') }}
 
 {% if pillar['ceph-salt'].get('execution', {}).get('reboot-if-needed', False) %}

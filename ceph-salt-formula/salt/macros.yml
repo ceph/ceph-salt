@@ -24,16 +24,3 @@
 {% macro end_step(desc) -%}
 {{ send_event('end', 'step', desc) }}
 {%- endmacro %}
-
-{% macro sudoers(name) -%}
-{{name}}:
-  file.append:
-    - name: /etc/sudoers.d/cephadm
-    - text:
-      - "cephadm ALL=NOPASSWD: /usr/bin/ceph -s"
-      - "cephadm ALL=NOPASSWD: /usr/bin/ceph orch host add *"
-      - "cephadm ALL=NOPASSWD: /usr/bin/ceph orch host ok-to-stop *"
-      - "cephadm ALL=NOPASSWD: /usr/bin/ceph orch status --format=json"
-      - "cephadm ALL=NOPASSWD: /usr/bin/python3"
-      - "cephadm ALL=NOPASSWD: /usr/bin/rsync"
-{%- endmacro %}
