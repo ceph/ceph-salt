@@ -45,6 +45,7 @@ class SaltEventStream:
 class TestEventListener(EventListener):
     ceph_salt_events: List[CephSaltEvent] = []
     begin_stage_events = []
+    warning_stage_events = []
     end_stage_events = []
     begin_step_events = []
     end_step_events = []
@@ -58,6 +59,9 @@ class TestEventListener(EventListener):
 
     def handle_begin_stage(self, event: CephSaltEvent):
         self.begin_stage_events.append(event)
+
+    def handle_warning_stage(self, event: CephSaltEvent):
+        self.warning_stage_events.append(event)
 
     def handle_end_stage(self, event: CephSaltEvent):
         self.end_stage_events.append(event)
