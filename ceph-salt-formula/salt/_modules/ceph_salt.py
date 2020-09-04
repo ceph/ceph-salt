@@ -108,3 +108,52 @@ def probe_dns(*hostnames):
         if not ret_status:
             break
     return ret_status
+
+
+def probe_time_sync():
+    units = [
+        'chrony.service',  # 18.04 (at least)
+        'chronyd.service', # el / opensuse
+        'systemd-timesyncd.service',
+        'ntpd.service', # el7 (at least)
+        'ntp.service',  # 18.04 (at least)
+    ]
+    if not _check_units(units):
+        log_msg = ('No time sync service is running; checked for: '
+                   .format(', '.join(units)))
+        log.warning(log_msg)
+        return False
+    return True
+
+
+def _check_units(units):
+    for unit in units:
+        (enabled, installed, state) = __check_unit(unit)
+        if enabled and state == 'running':
+            log.info('Unit %s is enabled and running' % unit)
+            return True
+    return False
+
+
+def __check_unit(unit_name):
+    # NOTE: we ignore the exit code here because systemctl outputs
+    # various exit codes based on the state of the service, but the
+    # string result is more explicit (and sufficient).
+    enabled = False
+    installed = False
+    cmd_ret = __salt__['cmd.run_all']("systemctl is-enabled {}".format(unit_name))
+    if cmd_ret['retcode'] == 0:
+        enabled = True
+        installed = True
+    elif cmd_ret['stdout'] and "disabled" in cmd_ret['stdout']:
+        installed = True
+    state = 'unknown'
+    cmd_ret = __salt__['cmd.run_all']("systemctl is-active {}".format(unit_name))
+    out = cmd_ret.get('stdout', '').strip()
+    if out in ['active']:
+        state = 'running'
+    elif out in ['inactive']:
+        state = 'stopped'
+    elif out in ['failed', 'auto-restart']:
+        state = 'error'
+    return (enabled, installed, state)
