@@ -162,8 +162,9 @@ class SaltLocalClientMock:
         self.logger = logging.getLogger(SaltLocalClientMock.__name__)
         self.grains = defaultdict(SaltGrainsMock)
 
-    def cmd(self, target, module, args=None, tgt_type=None):
-        self.logger.info('cmd %s, %s, %s, tgt_type=%s', target, module, args, tgt_type)
+    def cmd(self, target, module, args=None, tgt_type=None, full_return=False):
+        self.logger.info('cmd %s, %s, %s, tgt_type=%s, full_return=%s',
+                         target, module, args, tgt_type, full_return)
 
         if args is None:
             args = []

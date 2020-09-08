@@ -10,7 +10,7 @@ import salt.client
 import salt.minion
 from salt.exceptions import SaltException
 
-from .exceptions import SaltCallException, PillarFileNotPureYaml
+from .exceptions import CephSaltException, SaltCallException, PillarFileNotPureYaml
 
 
 logger = logging.getLogger(__name__)
@@ -54,16 +54,22 @@ class SaltClient:
         return pillar_dirs[0]
 
     @classmethod
-    def local_cmd(cls, target, func, args=None, tgt_type='glob'):
+    def local_cmd(cls, target, func, args=None, tgt_type='glob', full_return=False):
         """
         Equal to `local().cmd(...)`, but with proper error checking.
         """
         if args is None:
             args = []
         try:
-            result = cls.local().cmd(target, func, args, tgt_type=tgt_type)
+            result = cls.local().cmd(target, func, args, tgt_type=tgt_type,
+                                     full_return=full_return)
             if result is None or not isinstance(result, dict):
                 raise SaltCallException(target, func, result)
+            # Result example when full_return, but minion is down: {'node1': False, ...}
+            if full_return:
+                for value in result.values():
+                    if not isinstance(value, dict):
+                        raise SaltCallException(target, func, result)
             if isinstance(target, str) \
                     and tgt_type == 'glob' \
                     and not any(c in target for c in '*?[]') \
@@ -314,18 +320,31 @@ class CephOrch:
 
     @staticmethod
     def host_ls():
-        result = SaltClient.local().cmd('ceph-salt:roles:admin', 'ceph_orch.configured',
-                                        tgt_type='grain')
+        result = SaltClient.local_cmd('ceph-salt:roles:admin', 'ceph_orch.configured',
+                                      full_return=True,
+                                      tgt_type='grain')
         for minion, value in result.items():
-            if value is True:
-                return SaltClient.local_cmd(minion, 'ceph_orch.host_ls')[minion]
+            if value.get('retcode') > 0:
+                raise CephSaltException("Failed to check if ceph orch is configured "
+                                        "on minion '{}'".format(minion))
+            if value.get('ret') is True:
+                host_ls_result = SaltClient.local_cmd(minion, 'ceph_orch.host_ls',
+                                                      full_return=True)[minion]
+                if value.get('retcode') > 0:
+                    raise CephSaltException("Failed to list ceph orch hosts "
+                                            "on minion '{}'".format(minion))
+                return host_ls_result.get('ret')
         return []
 
     @staticmethod
     def deployed():
-        result = SaltClient.local().cmd('ceph-salt:roles:admin', 'ceph_orch.ceph_configured',
-                                        tgt_type='grain')
-        for value in result.values():
-            if value is True:
+        result = SaltClient.local_cmd('ceph-salt:roles:admin', 'ceph_orch.ceph_configured',
+                                      full_return=True,
+                                      tgt_type='grain')
+        for minion, value in result.items():
+            if value.get('retcode') > 0:
+                raise CephSaltException("Failed to check if ceph is configured "
+                                        "on minion '{}'".format(minion))
+            if value.get('ret') is True:
                 return True
         return False
