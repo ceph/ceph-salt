@@ -1,6 +1,6 @@
 {% import 'macros.yml' as macros %}
 
-{{ macros.begin_stage('Distribute SSH keys') }}
+{{ macros.begin_stage('Ensure SSH keys are configured') }}
 
 create ssh user group:
   group.present:
@@ -64,4 +64,4 @@ install ssh key:
       - name: {{ pillar['ceph-salt']['ssh']['public_key'] }}
       - failhard: True
 
-{{ macros.end_stage('Distribute SSH keys') }}
+{{ macros.end_stage('Ensure SSH keys are configured') }}
