@@ -30,18 +30,15 @@ def set_admin_host(name, if_grain=None, timeout=1800):
                 if failed:
                     ret['comment'] = 'One or more admin minions failed.'
                     return ret
-                provisioned = __salt__['ceph_salt.get_remote_grain'](admin_host,
-                                                                     'ceph-salt:execution:provisioned')
-                if provisioned:
-                    status_ret = __salt__['ceph_salt.ssh'](
-                        admin_host,
-                        "if [[ -f /etc/ceph/ceph.conf "
-                        "&& -f /etc/ceph/ceph.client.admin.keyring ]]; "
-                        "then timeout 60 sudo ceph -s; "
-                        "else (exit 1); fi")
-                    if status_ret['retcode'] == 0:
-                        configured_admin_host = admin_host
-                        break
+                status_ret = __salt__['ceph_salt.ssh'](
+                    admin_host,
+                    "if [[ -f /etc/ceph/ceph.conf "
+                    "&& -f /etc/ceph/ceph.client.admin.keyring ]]; "
+                    "then timeout 60 sudo ceph -s; "
+                    "else (exit 1); fi")
+                if status_ret['retcode'] == 0:
+                    configured_admin_host = admin_host
+                    break
 
         __salt__['event.send']('ceph-salt/stage/end',
                                data={'desc': "Find an admin host"})

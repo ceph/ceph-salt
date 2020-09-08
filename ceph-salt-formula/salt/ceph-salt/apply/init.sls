@@ -1,7 +1,7 @@
 {% if 'ceph-salt' in grains and grains['ceph-salt']['member'] %}
 
 include:
-    - .provision-begin
+    - .apply-begin
     - ..common.sshkey
     - .software
     - .container
@@ -9,12 +9,11 @@ include:
     - .time-prep
     - .time-sync
     - .cephtools
-    - .provision-end
     - .cephbootstrap
     - .cephconfigure
     - .cephorch
     - .ceph-admin
-    - .cleanup
+    - .apply-end
 
 {% else %}
 
