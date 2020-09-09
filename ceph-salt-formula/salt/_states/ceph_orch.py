@@ -24,6 +24,12 @@ def set_admin_host(name, if_grain=None, timeout=1800):
                 ret['comment'] = 'Timeout value reached.'
                 return ret
             time.sleep(15)
+            bootstrap_minion = __pillar__['ceph-salt'].get('bootstrap_minion')
+            if bootstrap_minion:
+                failed = __salt__['ceph_salt.get_remote_grain'](bootstrap_minion, 'ceph-salt:execution:failed')
+                if failed:
+                    ret['comment'] = 'Bootstrap minion failed.'
+                    return ret
             admin_hosts = __pillar__['ceph-salt']['minions']['admin']
             for admin_host in admin_hosts:
                 failed = __salt__['ceph_salt.get_remote_grain'](admin_host, 'ceph-salt:execution:failed')
@@ -111,7 +117,7 @@ def rm_clusters(name):
     return ret
 
 
-def copy_ceph_conf_and_keyring(name):
+def copy_ceph_conf_and_keyring_from_admin(name):
     """
     Requires the following grains to be set:
       - ceph-salt:execution:admin_host
@@ -120,7 +126,26 @@ def copy_ceph_conf_and_keyring(name):
     admin_host = __salt__['grains.get']('ceph-salt:execution:admin_host')
     cmd_ret = __salt__['ceph_salt.sudo_rsync'](
                        "cephadm@{}:/etc/ceph/{{ceph.conf,ceph.client.admin.keyring}}".format(admin_host),
-                       "/etc/ceph/")
+                       "/etc/ceph/",
+                       False)
+    if cmd_ret['retcode'] == 0:
+        ret['result'] = True
+    return ret
+
+
+def copy_ceph_conf_and_keyring_to_any_admin(name):
+    ret = {'name': name, 'changes': {}, 'comment': '', 'result': False}
+    admin_host = __pillar__['ceph-salt']['minions']['admin'][0]
+    cmd_ret = __salt__['ceph_salt.sudo_rsync'](
+                       "/tmp/ceph.client.admin.keyring",
+                       "cephadm@{}:/etc/ceph/ceph.client.admin.keyring".format(admin_host),
+                       True)
+    if cmd_ret['retcode'] == 0:
+        ret['result'] = True
+    cmd_ret = __salt__['ceph_salt.sudo_rsync'](
+                       "/etc/ceph/ceph.conf",
+                       "cephadm@{}:/etc/ceph/".format(admin_host),
+                       True)
     if cmd_ret['retcode'] == 0:
         ret['result'] = True
     return ret

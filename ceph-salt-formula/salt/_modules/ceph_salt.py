@@ -41,13 +41,14 @@ def ssh(host, cmd):
                                    "-i /home/cephadm/.ssh/id_rsa "
                                    "cephadm@{} \"{}\"".format(host, cmd))
 
-def sudo_rsync(src, dest):
+def sudo_rsync(src, dest, ignore_existing):
+    ignore_existing_option = '--ignore-existing ' if ignore_existing else ''
     return __salt__['cmd.run_all']("sudo rsync --rsync-path='sudo rsync' "
                                    "-e 'ssh -o StrictHostKeyChecking=no "
                                    "-o UserKnownHostsFile=/dev/null "
                                    "-o ConnectTimeout=30 "
                                    "-i /home/cephadm/.ssh/id_rsa' "
-                                   "{} {} ".format(src, dest))
+                                   "{}{} {} ".format(ignore_existing_option, src, dest))
 
 def get_remote_grain(host, grain):
     """

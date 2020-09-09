@@ -13,8 +13,8 @@ find an admin host:
 
 {{ macros.begin_stage('Ensure ceph.conf and keyring are present') }}
 
-copy ceph.conf and keyring from an admin node:
-  ceph_orch.copy_ceph_conf_and_keyring:
+copy ceph.conf and keyring from admin node:
+  ceph_orch.copy_ceph_conf_and_keyring_from_admin:
     - failhard: True
 
 {{ macros.end_stage('Ensure ceph.conf and keyring are present') }}

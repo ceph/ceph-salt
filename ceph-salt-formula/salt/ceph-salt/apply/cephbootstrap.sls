@@ -110,7 +110,7 @@ run cephadm bootstrap:
                 --initial-dashboard-password {{ dashboard_password }} \
                 --initial-dashboard-user {{ dashboard_username }} \
                 --output-config /etc/ceph/ceph.conf \
-                --output-keyring /etc/ceph/ceph.client.admin.keyring \
+                --output-keyring /tmp/ceph.client.admin.keyring \
 {%- if auth %}
                 --registry-json /tmp/ceph-salt-registry-json \
 {%- endif %}
@@ -128,10 +128,18 @@ run cephadm bootstrap:
       - NOTIFY_SOCKET: ''
     - creates:
       - /etc/ceph/ceph.conf
-      - /etc/ceph/ceph.client.admin.keyring
     - failhard: True
 
 {{ macros.end_step('Run "cephadm bootstrap"') }}
+
+copy ceph.conf and keyring to any admin node:
+  ceph_orch.copy_ceph_conf_and_keyring_to_any_admin:
+    - failhard: True
+
+remove temporary keyring:
+  file.absent:
+    - name: /tmp/ceph.client.admin.keyring
+    - failhard: True
 
 {{ macros.end_stage('Bootstrap the Ceph cluster') }}
 

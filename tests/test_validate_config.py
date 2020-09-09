@@ -19,9 +19,14 @@ class ValidateConfigTest(SaltMockTestCase):
         self.assertEqual(validate_config(False), "No bootstrap minion specified in config")
         self.assertEqual(validate_config(True), None)
 
-    def test_bootstrap_minion_is_not_admin(self):
+    def test_no_admin_minion(self):
         PillarManager.set('ceph-salt:minions:admin', [])
-        self.assertEqual(validate_config(False), "Bootstrap minion must be 'Admin'")
+        self.assertEqual(validate_config(False), "No admin minion specified in config")
+
+    def test_bootstrap_minion_is_not_cephadm(self):
+        PillarManager.set('ceph-salt:minions:admin', ['node2.ceph.com'])
+        PillarManager.set('ceph-salt:minions:cephadm', ['node2.ceph.com'])
+        self.assertEqual(validate_config(False), "Bootstrap minion must have 'cephadm' role")
         self.assertEqual(validate_config(True), None)
 
     def test_ssh_no_private_key(self):
@@ -104,12 +109,13 @@ PBVw2pLCZsH5ol3VJ1/DETsGRMzFubFeTUNOC3MzhhG+V"""
             not_minion_err.format('external time servers'))
 
     def test_cephadm_not_cluster_minion(self):
-        PillarManager.set('ceph-salt:minions:cephadm', ['node4.ceph.com'])
+        PillarManager.set('ceph-salt:minions:cephadm', ['node1.ceph.com', 'node4.ceph.com'])
         self.assertEqual(validate_config(False),
                          "Minion 'node4.ceph.com' has 'cephadm' role but is not a cluster minion")
 
     def test_admin_without_cephadm_role(self):
-        PillarManager.set('ceph-salt:bootstrap_minion', 'node3.ceph.com')
+        PillarManager.set('ceph-salt:bootstrap_minion', 'node2.ceph.com')
+        PillarManager.set('ceph-salt:minions:cephadm', ['node2.ceph.com'])
         PillarManager.set('ceph-salt:minions:admin', ['node3.ceph.com'])
         self.assertEqual(validate_config(False),
                          "Minion 'node3.ceph.com' has 'admin' role but not 'cephadm' role")
