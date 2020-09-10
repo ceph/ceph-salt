@@ -44,6 +44,19 @@ def validate_config(deployed):
         if admin_minion not in cephadm_minions:
             return "Minion '{}' has 'admin' role but not 'cephadm' "\
                    "role".format(admin_minion)
+    latency_minions = PillarManager.get('ceph-salt:minions:latency', [])
+    throughput_minions = PillarManager.get('ceph-salt:minions:throughput', [])
+    for latency_minion in latency_minions:
+        if latency_minion not in cephadm_minions:
+            return "Minion '{}' has 'latency' role but not 'cephadm' "\
+                   "role".format(latency_minion)
+        if latency_minion in throughput_minions:
+            return "Minion '{}' has both 'latency' and 'throughput' "\
+                   "roles".format(latency_minion)
+    for throughput_minion in throughput_minions:
+        if throughput_minion not in cephadm_minions:
+            return "Minion '{}' has 'throughput' role but not 'cephadm' "\
+                   "role".format(throughput_minion)
 
     # ssh
     priv_key = PillarManager.get('ceph-salt:ssh:private_key')

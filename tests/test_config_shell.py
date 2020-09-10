@@ -267,7 +267,9 @@ class ConfigShellTest(SaltMockTestCase):
             'minions': {
                 'all': ['node1.ceph.com', 'node2.ceph.com'],
                 'admin': ['node1.ceph.com'],
-                'cephadm': ['node1.ceph.com', 'node2.ceph.com']
+                'cephadm': ['node1.ceph.com', 'node2.ceph.com'],
+                'latency': [],
+                'throughput': []
             },
             'time_server': {
                 'enabled': True,
@@ -287,7 +289,10 @@ class ConfigShellTest(SaltMockTestCase):
         self.fs.create_file('/config.json', contents=json.dumps({
             'minions': {
                 'all': ['node1.ceph.com', 'node2.ceph.com'],
-                'admin': ['node1.ceph.com']
+                'admin': ['node1.ceph.com'],
+                'cephadm': [],
+                'latency': [],
+                'throughput': []
             },
             'time_server': {
                 'server_host': 'node1.ceph.com',
@@ -306,6 +311,9 @@ class ConfigShellTest(SaltMockTestCase):
         self.assertEqual(PillarManager.get('ceph-salt:minions:all'), ['node1.ceph.com',
                                                                       'node2.ceph.com'])
         self.assertEqual(PillarManager.get('ceph-salt:minions:admin'), ['node1.ceph.com'])
+        self.assertEqual(PillarManager.get('ceph-salt:minions:latency'), [])
+        self.assertEqual(PillarManager.get('ceph-salt:minions:cephadm'), [])
+        self.assertEqual(PillarManager.get('ceph-salt:minions:throughput'), [])
         self.assertIsNone(PillarManager.get('ceph-salt:bootstrap_minion'))
         self.assertEqual(PillarManager.get('ceph-salt:time_server:server_host'), 'node1.ceph.com')
         self.assertEqual(PillarManager.get('ceph-salt:time_server:subnet'), '10.20.188.0/24')
