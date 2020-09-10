@@ -59,6 +59,7 @@ Requires:       lsof
 Requires:       podman
 Requires:       rsync
 Requires:       salt-master >= 3000
+Requires:       sudo
 Requires:       procps
 
 Conflicts:      deepsea
