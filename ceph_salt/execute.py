@@ -1347,6 +1347,10 @@ class CephSaltExecutor:
     @staticmethod
     def check_cluster(state, minion_id, deployed):
         PP.println("Checking if there is an existing Ceph cluster...")
+        if deployed:
+            PP.println("Ceph cluster already exists")
+        else:
+            PP.println("No Ceph cluster deployed yet")
 
         # day 1, but minion_id specified
         if state in ['ceph-salt', 'ceph-salt.apply']:
