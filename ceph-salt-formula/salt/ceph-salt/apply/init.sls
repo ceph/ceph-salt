@@ -3,6 +3,9 @@
 include:
     - .apply-begin
     - ..common.sshkey
+    - .tuned-off
+    - .tuned-latency
+    - .tuned-throughput
     - .software
     - .container
     - .apparmor
