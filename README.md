@@ -138,7 +138,7 @@ Finally we need to set the Ceph container image absolute path (relative path is
 not supported):
 
 ```
-/containers/images/ceph set docker.io/ceph/ceph:v15.2.2
+/cephadm_bootstrap/ceph_image_path set docker.io/ceph/ceph:v15.2.2
 ```
 
 Afterwards, you can exit the `ceph-salt` configuration shell by typing `exit`

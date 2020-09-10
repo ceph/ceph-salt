@@ -110,11 +110,6 @@ class ConfigShellTest(SaltMockTestCase):
 
         self.shell.run_cmdline('/ceph_cluster/minions remove node1.ceph.com')
 
-    def test_containers_images_ceph(self):
-        self.assertValueOption('/containers/images/ceph',
-                               'ceph-salt:container:images:ceph',
-                               'myvalue')
-
     def test_containers_registries_conf(self):
         self.assertFlagOption('/containers/registries_conf',
                               'ceph-salt:container:registries_enabled',
@@ -174,6 +169,11 @@ class ConfigShellTest(SaltMockTestCase):
     def test_cephadm_bootstrap_ceph_conf(self):
         self.assertConfigOption('/cephadm_bootstrap/ceph_conf',
                                 'ceph-salt:bootstrap_ceph_conf')
+
+    def test_cephadm_bootstrap_ceph_image_path(self):
+        self.assertValueOption('/cephadm_bootstrap/ceph_image_path',
+                               'ceph-salt:container:images:ceph',
+                               'myvalue')
 
     def test_cephadm_bootstrap_dashboard_force_password_update(self):
         self.assertFlagOption('/cephadm_bootstrap/dashboard/force_password_update',

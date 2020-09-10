@@ -389,8 +389,7 @@ CEPH_SALT_OPTIONS = {
         'help': '''
                 Container Options Configuration
                 ====================================
-                Options to control the configuration of the Ceph containers used
-                for deployment.
+                Options to control the configuration of containers.
                 ''',
         'options': {
             'registry_auth': {
@@ -408,18 +407,6 @@ CEPH_SALT_OPTIONS = {
                     'registry': {
                         'help': 'URL of registry to login to',
                         'handler': PillarHandler('ceph-salt:container:auth:registry')
-                    },
-                }
-            },
-            'images': {
-                'type': 'group',
-                'help': "Container images paths",
-                'options': {
-                    'ceph': {
-                        'help': 'Full path of Ceph container image',
-                        'default_text': 'no image path',
-                        'required': True,
-                        'handler': PillarHandler('ceph-salt:container:images:ceph')
                     },
                 }
             },
@@ -479,6 +466,12 @@ add location=172.17.0.1:5000/docker.io prefix=docker.io insecure=false
                 'type': 'conf',
                 'help': 'Bootstrap Ceph configuration',
                 'handler': PillarHandler('ceph-salt:bootstrap_ceph_conf')
+            },
+            'ceph_image_path': {
+                'help': 'Full path of Ceph container image',
+                'default_text': 'no image path',
+                'required': True,
+                'handler': PillarHandler('ceph-salt:container:images:ceph')
             },
             'dashboard': {
                 'type': 'group',
