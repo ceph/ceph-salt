@@ -8,12 +8,12 @@ def validate_config(deployed):
     """
     all_minions = PillarManager.get('ceph-salt:minions:all', [])
     bootstrap_minion = PillarManager.get('ceph-salt:bootstrap_minion')
-    admin_minions = PillarManager.get('ceph-salt:minions:admin', [])
+    cephadm_minions = PillarManager.get('ceph-salt:minions:cephadm', [])
     if not deployed:
         if not bootstrap_minion:
             return "No bootstrap minion specified in config"
-        if bootstrap_minion not in admin_minions:
-            return "Bootstrap minion must be 'Admin'"
+        if bootstrap_minion not in cephadm_minions:
+            return "Bootstrap minion must have 'cephadm' role"
         dashboard_username = PillarManager.get('ceph-salt:dashboard:username')
         if not dashboard_username:
             return "No dashboard username specified in config"
@@ -40,11 +40,13 @@ def validate_config(deployed):
             return "A relative image path was given, but only absolute image paths are supported"
 
     # roles
-    cephadm_minions = PillarManager.get('ceph-salt:minions:cephadm', [])
     for cephadm_minion in cephadm_minions:
         if cephadm_minion not in all_minions:
             return "Minion '{}' has 'cephadm' role but is not a cluster "\
                    "minion".format(cephadm_minion)
+    admin_minions = PillarManager.get('ceph-salt:minions:admin', [])
+    if not admin_minions:
+        return "No admin minion specified in config"
     for admin_minion in admin_minions:
         if admin_minion not in cephadm_minions:
             return "Minion '{}' has 'admin' role but not 'cephadm' "\
