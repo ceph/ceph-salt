@@ -3,30 +3,40 @@
 
 {% if 'latency' not in grains['ceph-salt']['roles'] and 'throughput' not in grains['ceph-salt']['roles'] %}
 
-{{ macros.begin_stage('Disabling tuned') }}
+{{ macros.begin_stage('Disable tuned') }}
 
 stop tuned:
   service.dead:
     - name: tuned
     - enable: False
-    - failhard: true
+    - failhard: True
 
-/etc/tuned/ceph-latency/:
-  file.absent
+remove tuned ceph latency:
+  file.absent:
+    - name: /etc/tuned/ceph-latency/
+    - failhard: True
 
-/etc/tuned/ceph-throughput/:
-  file.absent
+remove tuned ceph throughput:
+  file.absent:
+    - name: /etc/tuned/ceph-throughput/
+    - failhard: True
 
-/etc/tuned/ceph-mon/:
-  file.absent
+remove tuned ceph mon:
+  file.absent:
+    - name: /etc/tuned/ceph-mon/
+    - failhard: True
 
-/etc/tuned/ceph-mgr/:
-  file.absent
+remove tuned ceph mgr:
+  file.absent:
+    - name: /etc/tuned/ceph-mgr/
+    - failhard: True
 
-/etc/tuned/ceph-osd/:
-  file.absent
+remove tuned ceph osd:
+  file.absent:
+    - name: /etc/tuned/ceph-osd/
+    - failhard: True
 
-{{ macros.end_stage('Disabling tuned') }}
+{{ macros.end_stage('Disable tuned') }}
 
 {% endif %}
 

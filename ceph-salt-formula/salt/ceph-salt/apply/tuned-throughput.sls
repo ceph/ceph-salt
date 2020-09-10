@@ -3,13 +3,13 @@
 
 {% if 'throughput' in grains['ceph-salt']['roles'] %}
 
-{{ macros.begin_stage('Configuring tuned throughput') }}
+{{ macros.begin_stage('Configure tuned throughput') }}
 
 install tuned:
   pkg.installed:
     - pkgs:
       - tuned
-    - failhard: true
+    - failhard: True
 
 /etc/tuned/ceph-throughput/tuned.conf:
   file.managed:
@@ -19,20 +19,20 @@ install tuned:
     - user: root
     - group: root
     - mode: 644
-    - failhard: true
+    - failhard: True
 
 start tuned for throughput profile:
   service.running:
     - name: tuned
     - enable: True
-    - failhard: true
+    - failhard: True
 
 apply throughput profile:
   cmd.run:
     - name: 'tuned-adm profile ceph-throughput'
-    - failhard: true
+    - failhard: True
 
-{{ macros.end_stage('Configuring tuned throughput') }}
+{{ macros.end_stage('Configure tuned throughput') }}
 
 {% endif %}
 

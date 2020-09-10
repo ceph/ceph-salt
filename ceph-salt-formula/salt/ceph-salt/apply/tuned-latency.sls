@@ -3,13 +3,13 @@
 
 {% if 'latency' in grains['ceph-salt']['roles'] %}
 
-{{ macros.begin_stage('Configuring tuned latency') }}
+{{ macros.begin_stage('Configure tuned latency') }}
 
 install tuned:
   pkg.installed:
     - pkgs:
       - tuned
-    - failhard: true
+    - failhard: True
 
 /etc/tuned/ceph-latency/tuned.conf:
   file.managed:
@@ -19,20 +19,20 @@ install tuned:
     - user: root
     - group: root
     - mode: 644
-    - failhard: true
+    - failhard: True
 
 start tuned for latency profile:
   service.running:
     - name: tuned
     - enable: True
-    - failhard: true
+    - failhard: True
 
 apply latency profile:
   cmd.run:
     - name: 'tuned-adm profile ceph-latency'
-    - failhard: true
+    - failhard: True
 
-{{ macros.end_stage('Configuring tuned latency') }}
+{{ macros.end_stage('Configure tuned latency') }}
 
 {% endif %}
 
