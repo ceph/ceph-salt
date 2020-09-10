@@ -33,6 +33,11 @@ def validate_config(deployed):
             return "No bootstrap Mon IP specified in config"
         if bootstrap_mon_ip in ['127.0.0.1', '::1']:
             return 'Mon IP cannot be the loopback interface IP'
+        ceph_container_image_path = PillarManager.get('ceph-salt:container:images:ceph')
+        if not ceph_container_image_path:
+            return "No Ceph container image path specified in config"
+        if '.' not in ceph_container_image_path.split('/')[0]:
+            return "A relative image path was given, but only absolute image paths are supported"
 
     # roles
     cephadm_minions = PillarManager.get('ceph-salt:minions:cephadm', [])
@@ -80,11 +85,6 @@ def validate_config(deployed):
             return not_minion_err.format('external time servers')
 
     # container
-    ceph_container_image_path = PillarManager.get('ceph-salt:container:images:ceph')
-    if not ceph_container_image_path:
-        return "No Ceph container image path specified in config"
-    if '.' not in ceph_container_image_path.split('/')[0]:
-        return "A relative image path was given, but only absolute image paths are supported"
     auth = PillarManager.get('ceph-salt:container:auth')
     if auth:
         username = auth.get('username')
