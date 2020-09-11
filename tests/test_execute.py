@@ -331,10 +331,10 @@ class ApplyTest(SaltMockTestCase):
     def test_check_formula_exists2(self):
         self.assertEqual(CephSaltExecutor.check_formula('ceph-salt'), 4)
 
-    def test_check_formula_exists3(self):
+    def test_check_sync_all(self):
         SaltUtilMock.sync_all_result = False
         self.fs.create_file(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
-        self.assertEqual(CephSaltExecutor.check_formula('ceph-salt'), 5)
+        self.assertEqual(CephSaltExecutor.check_sync_all(), 5)
         SaltUtilMock.sync_all_result = True
         self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
 

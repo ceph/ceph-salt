@@ -20,6 +20,7 @@ from .salt_utils import SaltClient, GrainsManager, CephOrch, PillarManager
 from .terminal_utils import PrettyPrinter as PP
 from .validate.config import validate_config
 from .validate.salt_master import check_salt_master_status
+from .validate.salt_minion import sync_all
 
 
 # pylint: disable=C0103
@@ -1333,15 +1334,17 @@ class CephSaltExecutor:
                           "is installed".format(state))
             return 4
 
+        return 0
+
+    @staticmethod
+    def check_sync_all():
         PP.println("Syncing minions with the master...")
-        result = SaltClient.local_cmd('ceph-salt:member', 'saltutil.sync_all', tgt_type='grain')
-        for minion, value in result.items():
-            if not value:
-                logger.error("saltutil.sync_all failed to sync in minion: %s", minion)
-                PP.pl_red("Sync failed, please run: "
-                          "\"salt -G 'ceph-salt:member' saltutil.sync_all\" manually and fix "
-                          "the problems reported")
-                return 5
+        try:
+            sync_all()
+        except ValidationException as e:
+            logger.error(e)
+            PP.pl_red(e)
+            return 5
         return 0
 
     @staticmethod
@@ -1511,42 +1514,51 @@ class CephSaltExecutor:
         return 0
 
     @staticmethod
-    def check_prerequisites(minion_id, state, deployed):
+    def check_prerequisites(minion_id, state):
+        deployed = None
+
         # check salt master is configured
         try:
             check_salt_master_status()
         except ValidationException as e:
             logger.error(e)
             PP.pl_red(e)
-            return 1
+            return 1, deployed
+
+        # sync_all
+        retcode = CephSaltExecutor.check_sync_all()
+        if retcode > 0:
+            return retcode, deployed
+
+        deployed = CephOrch.deployed()
 
         # check config is valid
         error_msg = validate_config(deployed)
         if error_msg:
             logger.error(error_msg)
             PP.pl_red(error_msg)
-            return 2
+            return 2, deployed
 
         # ping minions
         retcode = CephSaltExecutor.ping_minions()
         if retcode > 0:
-            return retcode
+            return retcode, deployed
 
-        # check formula and sync_all
+        # check formula
         retcode = CephSaltExecutor.check_formula(state)
         if retcode > 0:
-            return retcode
+            return retcode, deployed
 
         # check dns
         retcode = CephSaltExecutor.check_dns()
         if retcode > 0:
-            return retcode
+            return retcode, deployed
 
         # check cluster
         if state not in ['ceph-salt.purge']:
             retcode = CephSaltExecutor.check_cluster(state, minion_id, deployed)
             if retcode > 0:
-                return retcode
+                return retcode, deployed
 
         # check external time servers, if any
         if state in ['ceph-salt', 'ceph-salt.apply']:
@@ -1560,20 +1572,19 @@ class CephSaltExecutor:
                         ext_time_servers
                     )
                     if retcode > 0:
-                        return retcode
+                        return retcode, deployed
             else:
                 retcode = CephSaltExecutor.check_time_sync()
                 if retcode > 0:
-                    return retcode
+                    return retcode, deployed
 
         PP.println("Ready to start!")
-        return 0
+        return 0, deployed
 
     def run(self):
-        deployed = CephOrch.deployed()
 
         # validate
-        retcode = self.check_prerequisites(self.minion_id, self.state, deployed)
+        retcode, deployed = self.check_prerequisites(self.minion_id, self.state)
         if retcode > 0:
             return retcode
 
