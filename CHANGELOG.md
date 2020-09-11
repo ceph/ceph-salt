@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [15.2.11] - 2020-09-11
+### Added
+- Ask user confirmation before restarting 'salt-master' service (#392)
+- Execute salt sync-all on 'ceph-salt' config and status commands (#391)
+- Support bootstrap minion without admin role (#383)
+- Ignore 'cephbootstrap' salt state when ceph cluster already running (#385)
+- Add tuned 'latency' and 'throughput' roles (#361, #364, #387)
+- Improve SSH keys stage description (#376)
+- Remove 'ceph-salt:execution:provisioned' grain (#374)
+- Sanity-check time sync services when /time_server is disabled (#367)
+- Always use SSH 'cephadm' user (#363)
+- Use salt module for SSH executions (#363)
+- Set 'UserKnownHostsFile' and 'ConnectTimeout' on SSH connections (#363)
+- Verify whether minion nodes can resolve hostnames (#356)
+- Install ceph-salt ssh keys on admin minions (#257)
+- Add 'test.ping' sanity check (#354)
+### Changed
+- Move ceph image path config to bootstrap section (#386)
+- Only pull ceph image on bootstrap minion (#353)
+### Fixed
+- Install 'sudo' package (#384)
+- Fix reboot in parallel with cluster running (#380)
+- Rename '/etc/sudoers.d' file to avoid collision with cephadm (#363)
+- Bootstrap minion don't need to wait for other minions (#351)
+
 ## [15.2.10] - 2020-08-31
 ### Added
 - Add 'ceph-salt reboot [--force] [minion_id]' command (#325)
@@ -223,7 +248,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal README.
 - The CHANGELOG file.
 
-[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.10...HEAD
+[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.11...HEAD
+[15.2.11]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.11
 [15.2.10]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.10
 [15.2.9]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.9
 [15.2.8]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.8
