@@ -26,6 +26,7 @@ from .salt_utils import GrainsManager, PillarManager, CephOrch
 from .terminal_utils import PrettyPrinter as PP
 from .validate.config import validate_config
 from .validate.salt_master import check_salt_master_status, CephSaltPillarNotConfigured
+from .validate.salt_minion import sync_all
 
 
 logger = logging.getLogger(__name__)
@@ -1212,11 +1213,9 @@ class CephSaltConfigShell(configshell.ConfigShell):
 def check_config_prerequesites():
     try:
         check_salt_master_status()
-        return True
     except CephSaltPillarNotConfigured:
         try:
             PillarManager.install_pillar()
-            return True
         except PillarFileNotPureYaml:
             PP.println("""
 ceph-salt pillar file is not installed yet, and we can't add it automatically
@@ -1233,7 +1232,9 @@ base:
     - match: grain
     - ceph-salt
 """)
-    return False
+            return False
+    sync_all()
+    return True
 
 
 def run_status():
