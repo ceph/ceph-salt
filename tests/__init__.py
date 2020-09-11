@@ -112,7 +112,7 @@ class SaltUtilMock:
 
     @classmethod
     def running(cls):
-        return True
+        return False
 
 
 class StateMock:

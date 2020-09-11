@@ -318,29 +318,32 @@ class ApplyTest(SaltMockTestCase):
         self.assertEqual(step.failure['state'],
                          'file_|-/etc/chrony.conf_|-/etc/chrony.conf_|-managed')
 
+    def _prompt_proceed(self, msg, default):
+        pass
+
     def test_check_formula_ok(self):
         self.fs.create_file(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
-        self.assertEqual(CephSaltExecutor.check_formula('ceph-salt'), 0)
+        self.assertEqual(CephSaltExecutor.check_formula('ceph-salt', self._prompt_proceed), 0)
         self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
 
     def test_check_formula_exists1(self):
         ServiceMock.restart_result = False
-        self.assertEqual(CephSaltExecutor.check_formula('ceph-salt'), 3)
+        self.assertEqual(CephSaltExecutor.check_formula('ceph-salt', self._prompt_proceed), 6)
         ServiceMock.restart_result = True
 
     def test_check_formula_exists2(self):
-        self.assertEqual(CephSaltExecutor.check_formula('ceph-salt'), 4)
+        self.assertEqual(CephSaltExecutor.check_formula('ceph-salt', self._prompt_proceed), 7)
 
     def test_check_sync_all(self):
         SaltUtilMock.sync_all_result = False
         self.fs.create_file(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
-        self.assertEqual(CephSaltExecutor.check_sync_all(), 5)
+        self.assertEqual(CephSaltExecutor.check_sync_all(), 2)
         SaltUtilMock.sync_all_result = True
         self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
 
     def test_check_cluster_day1_with_minion(self):
         self.fs.create_file(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
-        self.assertEqual(CephSaltExecutor.check_cluster('ceph-salt', 'node1.ceph.com', []), 6)
+        self.assertEqual(CephSaltExecutor.check_cluster('ceph-salt', 'node1.ceph.com', []), 9)
         self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))
 
     def test_check_minion_not_found(self):
@@ -348,6 +351,6 @@ class ApplyTest(SaltMockTestCase):
         host_ls_result = [{'hostname': 'node1'}]
         CephOrchMock.host_ls_result = host_ls_result
         self.assertEqual(CephSaltExecutor.check_cluster('ceph-salt',
-                                                        'node9.ceph.com', host_ls_result), 7)
+                                                        'node9.ceph.com', host_ls_result), 10)
         CephOrchMock.host_ls_result = []
         self.fs.remove_object(os.path.join(self.states_fs_path(), 'ceph-salt.sls'))

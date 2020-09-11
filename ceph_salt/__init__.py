@@ -93,6 +93,16 @@ def import_config(config_file):
         sys.exit(1)
 
 
+def _prompt_proceed(msg, default):
+    really_want_to = click.prompt(
+        '{} (y/n):'.format(msg),
+        type=str,
+        default=default,
+    )
+    if really_want_to.lower()[0] != 'y':
+        raise click.Abort()
+
+
 @cli.command(name='apply')
 @click.option('-n', '--non-interactive', is_flag=True, default=False,
               help='Apply config in non-interactive mode')
@@ -102,19 +112,9 @@ def apply(non_interactive, minion_id):
     Apply configuration by running ceph-salt formula
     """
     executor = CephSaltExecutor(not non_interactive, minion_id,
-                                'ceph-salt', {})
+                                'ceph-salt', {}, _prompt_proceed)
     retcode = executor.run()
     sys.exit(retcode)
-
-
-def _prompt_proceed(msg, default):
-    really_want_to = click.prompt(
-        '{} (y/n):'.format(msg),
-        type=str,
-        default=default,
-    )
-    if really_want_to.lower()[0] != 'y':
-        raise click.Abort()
 
 
 @cli.command(name='disengage-safety')
@@ -156,7 +156,7 @@ def update(non_interactive, reboot, minion_id):
                                             'reboot-if-needed': reboot
                                         }
                                     }
-                                })
+                                }, _prompt_proceed)
     retcode = executor.run()
     sys.exit(retcode)
 
@@ -176,7 +176,7 @@ def reboot_cmd(non_interactive, force, minion_id):
                                     'ceph-salt': {
                                         'force-reboot': force
                                     }
-                                })
+                                }, _prompt_proceed)
     retcode = executor.run()
     sys.exit(retcode)
 

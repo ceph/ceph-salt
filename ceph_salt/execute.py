@@ -1290,7 +1290,8 @@ class TerminalRenderer(Renderer):
 
 
 class CephSaltExecutor:
-    def __init__(self, interactive, minion_id, state, pillar):
+    def __init__(self, interactive, minion_id, state, pillar, prompt_proceed):
+        self.prompt_proceed = prompt_proceed
         self.pillar = pillar
         self.state = state
         self.minion_id = minion_id
@@ -1302,37 +1303,39 @@ class CephSaltExecutor:
         self.executor = None
 
     @staticmethod
-    def check_formula(state):
+    def check_formula(state, prompt_proceed):
         # verify that ceph-salt formula is available
         PP.println("Checking if {} formula is available...".format(state))
         result = SaltClient.local_cmd('ceph-salt:member', 'state.sls_exists', [state],
                                       tgt_type='grain')
         if not all(result.values()):
-            # FIXME: check whether we are running under SUMA. If so, then we
-            # cannot restart the salt-master
-            PP.println("salt-master will be restarted to load {} formula".format(state))
-            logger.info('restarting salt-master service')
-            result = SaltClient.caller_cmd('service.restart', ['salt-master'])
-            if not result:
-                logger.warning('failed to restart salt-master process')
-                PP.pl_red('Failed to restart salt-master service, please restart it manually')
-                return 3
-
-        # check ceph-salt formula again after salt-master restart
-        result = SaltClient.local_cmd('ceph-salt:member', 'state.sls_exists', [state],
-                                      tgt_type='grain')
-        if not all(result.values()):
-            logger.error("%s formula still not found: checking for running Salt jobs", state)
+            # check running jobs
+            logger.error("%s formula not found: checking for running Salt jobs", state)
             result = SaltClient.local_cmd('ceph-salt:member', 'saltutil.running', tgt_type='grain')
             if any(result.values()):
                 logger.error("Running Salt jobs detected: refusing to apply Salt Formula")
                 PP.pl_red("Running Salt jobs detected. The safest thing to do in this case is "
                           "wait. Once the jobs complete or time out, you will be able to apply "
                           "the Salt Formula again.")
-            else:
-                PP.pl_red("Could not find {} formula. Please check if ceph-salt-formula package "
-                          "is installed".format(state))
-            return 4
+                return 5
+            # reboot salt-master
+            prompt_proceed("Formula not found. Do you want to "
+                           "restart 'salt-master' to load '{}' formula? ".format(state), 'n')
+            PP.println("Restarting 'salt-master' to load '{}' formula...".format(state))
+            logger.info('restarting salt-master service')
+            result = SaltClient.caller_cmd('service.restart', ['salt-master'])
+            if not result:
+                logger.warning('failed to restart salt-master process')
+                PP.pl_red('Failed to restart salt-master service, please restart it manually')
+                return 6
+
+        # check ceph-salt formula again after salt-master restart
+        result = SaltClient.local_cmd('ceph-salt:member', 'state.sls_exists', [state],
+                                      tgt_type='grain')
+        if not all(result.values()):
+            PP.pl_red("Could not find {} formula. Please check if ceph-salt-formula package "
+                      "is installed".format(state))
+            return 7
 
         return 0
 
@@ -1344,7 +1347,7 @@ class CephSaltExecutor:
         except ValidationException as e:
             logger.error(e)
             PP.pl_red(e)
-            return 5
+            return 2
         return 0
 
     @staticmethod
@@ -1362,14 +1365,14 @@ class CephSaltExecutor:
                 PP.pl_red("Ceph cluster is not deployed yet, please apply the config to "
                           "all minions at the same time to bootstrap a new Ceph cluster: "
                           "\"ceph-salt apply\"")
-                return 6
+                return 9
         # Invalid minion_id
         if minion_id is not None:
             salt_minions = CephNodeManager.list_all_minions()
             if minion_id not in salt_minions:
                 logger.error("cannot find minion: %s", minion_id)
                 PP.pl_red("Cannot find minion '{}'".format(minion_id))
-                return 7
+                return 10
         return 0
 
     @staticmethod
@@ -1394,7 +1397,7 @@ class CephSaltExecutor:
                 log_msg += "DID NOT RESPOND TO PING"
                 PP.pl_red("{} did not respond to ping".format(minion))
                 logger.error(log_msg)
-                retval = 8
+                retval = 4
         return retval
 
     @staticmethod
@@ -1429,7 +1432,7 @@ class CephSaltExecutor:
             PP.pl_red("DNS issues detected on host(s) {}".format(", ".join(bad_dns_list)))
             PP.pl_red("One or more minions cannot resolve the fully-qualified hostnames "
                       "of other minions. Please fix this issue and try again.")
-            retval = 9
+            retval = 8
         return retval
 
     @staticmethod
@@ -1467,7 +1470,7 @@ class CephSaltExecutor:
             PP.pl_red("/time_server is disabled. In that case, a time sync service "
                       "must be enabled and running on all minions. Please fix this "
                       "issue and try again.")
-            retval = 10
+            retval = 14
         return retval
 
     @staticmethod
@@ -1499,22 +1502,22 @@ class CephSaltExecutor:
                         "Hostname '{}' could not be resolved to IP address (is it valid?)"
                         .format(external_ts)
                     )
-                    return 2
+                    return 12
                 PP.pl_red(
                     "Problem communicating with external time server '{}' (check the log?)"
                     .format(external_ts)
                 )
-                return 3
+                return 13
             else:  # inner loop terminated without break
                 PP.pl_red(
                     "External time server '{}' did not respond to probe"
                     .format(external_ts)
                 )
-                return 1
+                return 11
         return 0
 
     @staticmethod
-    def check_prerequisites(minion_id, state):
+    def check_prerequisites(minion_id, state, prompt_proceed):
         deployed = None
 
         # check salt master is configured
@@ -1537,7 +1540,7 @@ class CephSaltExecutor:
         if error_msg:
             logger.error(error_msg)
             PP.pl_red(error_msg)
-            return 2, deployed
+            return 3, deployed
 
         # ping minions
         retcode = CephSaltExecutor.ping_minions()
@@ -1545,7 +1548,7 @@ class CephSaltExecutor:
             return retcode, deployed
 
         # check formula
-        retcode = CephSaltExecutor.check_formula(state)
+        retcode = CephSaltExecutor.check_formula(state, prompt_proceed)
         if retcode > 0:
             return retcode, deployed
 
@@ -1584,7 +1587,8 @@ class CephSaltExecutor:
     def run(self):
 
         # validate
-        retcode, deployed = self.check_prerequisites(self.minion_id, self.state)
+        retcode, deployed = self.check_prerequisites(self.minion_id, self.state,
+                                                     self.prompt_proceed)
         if retcode > 0:
             return retcode
 
@@ -1654,5 +1658,5 @@ def run_purge(non_interactive, yes_i_really_really_mean_it, prompt_proceed):
                                             'fsid': fsid
                                         }
                                     }
-                                })
+                                }, prompt_proceed)
     return executor.run()
