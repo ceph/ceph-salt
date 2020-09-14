@@ -5,6 +5,7 @@
 install required packages:
   pkg.installed:
     - pkgs:
+      - catatonit
       - hostname
       - iperf
       - iputils

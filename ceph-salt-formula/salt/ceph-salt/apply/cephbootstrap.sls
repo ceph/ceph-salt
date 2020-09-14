@@ -106,6 +106,7 @@ run cephadm bootstrap:
                 --allow-fqdn-hostname \
                 --apply-spec {{ bootstrap_spec_yaml_tmpfile }} \
                 --config {{ bootstrap_ceph_conf_tmpfile }} \
+                --container-init \
 {%- if not pillar['ceph-salt']['dashboard']['password_update_required'] %}
                 --dashboard-password-noupdate \
 {%- endif %}
