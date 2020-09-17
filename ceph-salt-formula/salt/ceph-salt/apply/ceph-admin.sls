@@ -16,6 +16,7 @@ configure cephadm mgr module:
         ceph cephadm registry-login -i /tmp/ceph-salt-registry-json
 {%- endif %}
         ceph config set mgr mgr/cephadm/manage_etc_ceph_ceph_conf true
+        ceph config set mgr mgr/cephadm/use_repo_digest true --force
     - failhard: True
 
 {{ macros.end_stage('Ensure cephadm MGR module is configured') }}
