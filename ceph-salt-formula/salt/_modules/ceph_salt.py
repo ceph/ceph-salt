@@ -34,12 +34,29 @@ def end_step(name):
     return _send_event('ceph-salt/step/end', data={'desc': name})
 
 
-def ssh(host, cmd):
-    return __salt__['cmd.run_all']("ssh -o StrictHostKeyChecking=no "
-                                   "-o UserKnownHostsFile=/dev/null "
-                                   "-o ConnectTimeout=30 "
-                                   "-i /home/cephadm/.ssh/id_rsa "
-                                   "cephadm@{} \"{}\"".format(host, cmd))
+def ssh(host, cmd, attempts=1):
+    assert attempts > 0
+    attempts_count = 0
+    retry = True
+    while retry:
+        ret = __salt__['cmd.run_all']("ssh -o StrictHostKeyChecking=no "
+                                      "-o UserKnownHostsFile=/dev/null "
+                                      "-o ConnectTimeout=30 "
+                                      "-i /home/cephadm/.ssh/id_rsa "
+                                      "cephadm@{} \"{}\"".format(host, cmd))
+        attempts_count += 1
+        retcode = ret['retcode']
+        # 255: Connection closed by remote host
+        if retcode in [255]:
+            retry = attempts_count < attempts
+            if retry:
+                log.info("Retrying SSH execution after failure with retcode '%s' (%s/%s)",
+                         retcode, attempts_count, attempts - 1)
+                time.sleep(5)
+        else:
+            retry = False
+    return ret
+
 
 def sudo_rsync(src, dest, ignore_existing):
     ignore_existing_option = '--ignore-existing ' if ignore_existing else ''
@@ -49,6 +66,7 @@ def sudo_rsync(src, dest, ignore_existing):
                                    "-o ConnectTimeout=30 "
                                    "-i /home/cephadm/.ssh/id_rsa' "
                                    "{}{} {} ".format(ignore_existing_option, src, dest))
+
 
 def get_remote_grain(host, grain):
     """

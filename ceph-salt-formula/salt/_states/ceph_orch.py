@@ -89,7 +89,8 @@ def add_host(name, host):
     admin_host = __salt__['grains.get']('ceph-salt:execution:admin_host')
     cmd_ret = __salt__['ceph_salt.ssh'](
                        admin_host,
-                       "sudo ceph orch host add {}".format(host))
+                       "sudo ceph orch host add {}".format(host),
+                       attempts=10)
     if cmd_ret['retcode'] == 0:
         ret['result'] = True
     return ret
