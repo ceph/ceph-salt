@@ -2,7 +2,7 @@ from ..core import SshKeyManager
 from ..salt_utils import PillarManager
 
 
-def validate_config(deployed):
+def validate_config(deployed, ceph_nodes):
     """
     :return: Error message if config is invalid, otherwise "None"
     """
@@ -33,6 +33,13 @@ def validate_config(deployed):
             return "No bootstrap Mon IP specified in config"
         if bootstrap_mon_ip in ['127.0.0.1', '::1']:
             return 'Mon IP cannot be the loopback interface IP'
+        bootstrap_node = ceph_nodes.get(bootstrap_minion)
+        if bootstrap_node is None:
+            return "Cannot find minion '{}'".format(bootstrap_minion)
+        if bootstrap_mon_ip not in bootstrap_node.ipsv4 and \
+                bootstrap_mon_ip not in bootstrap_node.ipsv6:
+            return "Mon IP '{}' is not an IP of the bootstrap minion " \
+                   "'{}'".format(bootstrap_mon_ip, bootstrap_minion)
         ceph_container_image_path = PillarManager.get('ceph-salt:container:images:ceph')
         if not ceph_container_image_path:
             return "No Ceph container image path specified in config"
