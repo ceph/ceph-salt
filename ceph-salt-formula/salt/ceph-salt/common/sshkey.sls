@@ -14,6 +14,12 @@ create ssh user:
       - users
     - failhard: True
 
+install sudo:
+  pkg.installed:
+    - pkgs:
+      - sudo
+    - failhard: True
+
 configure sudoers:
   file.append:
     - name: /etc/sudoers.d/ceph-salt
