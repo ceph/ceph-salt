@@ -123,7 +123,7 @@ run cephadm bootstrap:
 {%- for arg, value in pillar['ceph-salt'].get('bootstrap_arguments', {}).items() %}
                 --{{ arg }} {{ value if value is not none else '' }} \
 {%- endfor %}
-                > /var/log/ceph/cephadm.log 2>&1
+                > /var/log/ceph/cephadm.out 2>&1
     - env:
       - NOTIFY_SOCKET: ''
     - creates:
