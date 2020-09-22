@@ -3,8 +3,8 @@
 include:
     - ..reset
     - ..common.sshkey
-    - .update
-    - .update-end
+    - .stop
+    - .stop-end
 
 {% else %}
 

@@ -103,12 +103,6 @@ def rm_clusters(name):
     """
     ret = {'name': name, 'changes': {}, 'comment': '', 'result': False}
     fsid = __salt__['pillar.get']('ceph-salt:execution:fsid')
-    if not fsid:
-        ret['comment'] = "No cluster FSID provided. Ceph cluster FSID " \
-                         "must be provided via custom Pillar value, e.g.: " \
-                         "\"salt -G ceph-salt:member state.apply ceph-salt.purge " \
-                         "pillar='{\"ceph-salt\": {\"execution\": {\"fsid\": \"$FSID\"}}}'\""
-        return ret
     __salt__['ceph_salt.begin_stage']("Remove cluster {}".format(fsid))
     cmd_ret = __salt__['cmd.run_all']("cephadm rm-cluster --fsid {} "
                                       "--force".format(fsid))
@@ -182,4 +176,71 @@ def wait_for_ceph_orch_host_ok_to_stop(name, if_grain, timeout=36000):
         __salt__['event.send']('ceph-salt/stage/end',
                                data={'desc': "Wait for 'ceph orch host ok-to-stop {}'".format(host)})
     ret['result'] = True
+    return ret
+
+
+def stop_service(name, service):
+    ret = {'name': name, 'changes': {}, 'comment': '', 'result': False}
+    cmd_ret = __salt__['cmd.run_all'](
+                       "ceph orch stop {}".format(service))
+    if cmd_ret['retcode'] == 0:
+        ret['result'] = True
+    else:
+        ret['comment'] = cmd_ret.get('stderr')
+    return ret
+
+
+def wait_until_service_stopped(name, service, timeout=1800):
+    ret = {'name': name, 'changes': {}, 'comment': '', 'result': False}
+    service_stopped = False
+    starttime = time.time()
+    timelimit = starttime + timeout
+    while not service_stopped:
+        is_timedout = time.time() > timelimit
+        if is_timedout:
+            ret['comment'] = 'Timeout value reached.'
+            return ret
+        cmd_ret = __salt__['cmd.run_all'](
+                           "ceph orch ls --service-type {} --format json".format(service))
+        if cmd_ret['retcode'] != 0:
+            ret['comment'] = cmd_ret.get('stderr')
+            return ret
+        try:
+            status = json.loads(cmd_ret['stdout'])[0]['status']
+            service_stopped = status['running'] == 0
+        except json.decoder.JSONDecodeError as exc:
+            if 'No services reported' in cmd_ret['stdout']:
+                service_stopped = True
+            else:
+                raise exc
+    ret['result'] = True
+    return ret
+
+
+def stop_ceph_fsid(name):
+    """
+    Requires the following pillar to be set:
+      - ceph-salt:execution:fsid
+    """
+    ret = {'name': name, 'changes': {}, 'comment': '', 'result': False}
+    fsid = __salt__['pillar.get']('ceph-salt:execution:fsid')
+    service = 'ceph-{}.target'.format(fsid)
+    __salt__['ceph_salt.begin_stage']("Stop '{}'".format(service))
+    cmd_ret = __salt__['cmd.run_all']("systemctl stop {} ".format(service))
+    if cmd_ret['retcode'] == 0:
+        __salt__['ceph_salt.end_stage']("Stop '{}'".format(service))
+        ret['result'] = True
+    else:
+        ret['comment'] = cmd_ret.get('stderr')
+    return ret
+
+
+def set_osd_flag(name, flag):
+    ret = {'name': name, 'changes': {}, 'comment': '', 'result': False}
+    cmd_ret = __salt__['cmd.run_all'](
+                       "ceph osd set {}".format(flag))
+    if cmd_ret['retcode'] == 0:
+        ret['result'] = True
+    else:
+        ret['comment'] = cmd_ret.get('stderr')
     return ret
