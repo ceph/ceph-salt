@@ -12,7 +12,7 @@ from typing import Dict, List
 
 import yaml
 
-from .core import CephNodeManager
+from .core import CephNode, CephNodeManager
 from .exceptions import MinionDoesNotExistInConfiguration, ValidationException
 from .logging_utils import LoggingUtil
 from .salt_event import EventListener, SaltEventProcessor
@@ -1536,7 +1536,11 @@ class CephSaltExecutor:
         deployed = CephOrch.deployed()
 
         # check config is valid
-        error_msg = validate_config(deployed)
+        all = PillarManager.get('ceph-salt:minions:all', [])
+        nodes = {}
+        for minion in all:
+            nodes[minion] = CephNode(minion)
+        error_msg = validate_config(deployed, nodes)
         if error_msg:
             logger.error(error_msg)
             PP.pl_red(error_msg)

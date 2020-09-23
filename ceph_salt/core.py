@@ -7,7 +7,7 @@ from Cryptodome.PublicKey import RSA
 import salt
 
 from .exceptions import CephNodeHasRolesException
-from .salt_utils import SaltClient, GrainsManager, PillarManager
+from .salt_utils import GrainsManager, PillarManager, SaltClient
 
 
 logger = logging.getLogger(__name__)
@@ -19,12 +19,28 @@ CEPH_SALT_GRAIN_KEY = 'ceph-salt'
 class CephNode:
     def __init__(self, minion_id):
         self.minion_id = minion_id
+        self._ipsv4 = None
+        self._ipsv6 = None
         self._hostname = None
         self._roles = None
         self._execution = None
         self._public_ip = None
         self._subnets = None
         self._public_subnet = None
+
+    @property
+    def ipsv4(self):
+        if self._ipsv4 is None:
+            result = GrainsManager.get_grain(self.minion_id, 'ipv4')
+            self._ipsv4 = result[self.minion_id]
+        return self._ipsv4
+
+    @property
+    def ipsv6(self):
+        if self._ipsv6 is None:
+            result = GrainsManager.get_grain(self.minion_id, 'ipv6')
+            self._ipsv6 = result[self.minion_id]
+        return self._ipsv6
 
     @property
     def hostname(self):
