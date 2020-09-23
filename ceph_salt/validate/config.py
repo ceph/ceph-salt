@@ -115,5 +115,12 @@ def validate_config(deployed, ceph_nodes):
         if username or password or registry:
             if not username or not password or not registry:
                 return "Registry auth configuration is incomplete"
+    registries = PillarManager.get('ceph-salt:container:registries', [])
+    for reg1 in registries:
+        for reg2 in registries:
+            if reg2.get('location') == reg1.get('location') and \
+                    reg2.get('insecure') != reg1.get('insecure'):
+                return "Registry '{}' is defined multiple times " \
+                       "with conflicting 'insecure' setting".format(reg1.get('location'))
 
     return None
