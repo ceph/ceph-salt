@@ -33,13 +33,18 @@ service_reload:
 
 {{ macros.end_step('Configure chrony service') }}
 
-{{ macros.begin_step('Start chrony service') }}
+{{ macros.begin_step('Restart chrony service') }}
+stop chronyd:
+  service.dead:
+    - name: chronyd
+    - failhard: True
+
 start chronyd:
   service.running:
     - name: chronyd
     - enable: True
     - failhard: True
-{{ macros.end_step('Start chrony service') }}
+{{ macros.end_step('Restart chrony service') }}
 
 {{ macros.end_stage('Prepare cluster for time synchronization') }}
 
