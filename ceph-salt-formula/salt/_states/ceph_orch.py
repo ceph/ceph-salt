@@ -93,6 +93,8 @@ def add_host(name, host):
                        attempts=10)
     if cmd_ret['retcode'] == 0:
         ret['result'] = True
+    else:
+        ret['comment'] = cmd_ret.get('stderr')
     return ret
 
 
@@ -115,6 +117,8 @@ def rm_clusters(name):
     if cmd_ret['retcode'] == 0:
         __salt__['ceph_salt.end_stage']("Remove cluster {}".format(fsid))
         ret['result'] = True
+    else:
+        ret['comment'] = cmd_ret.get('stderr')
     return ret
 
 
@@ -131,6 +135,8 @@ def copy_ceph_conf_and_keyring_from_admin(name):
                        False)
     if cmd_ret['retcode'] == 0:
         ret['result'] = True
+    else:
+        ret['comment'] = cmd_ret.get('stderr')
     return ret
 
 
@@ -141,14 +147,17 @@ def copy_ceph_conf_and_keyring_to_any_admin(name):
                        "/tmp/ceph.client.admin.keyring",
                        "cephadm@{}:/etc/ceph/ceph.client.admin.keyring".format(admin_host),
                        True)
-    if cmd_ret['retcode'] == 0:
-        ret['result'] = True
+    if cmd_ret['retcode'] != 0:
+        ret['comment'] = cmd_ret.get('stderr')
+        return ret
     cmd_ret = __salt__['ceph_salt.sudo_rsync'](
                        "/etc/ceph/ceph.conf",
                        "cephadm@{}:/etc/ceph/".format(admin_host),
                        True)
-    if cmd_ret['retcode'] == 0:
-        ret['result'] = True
+    if cmd_ret['retcode'] != 0:
+        ret['comment'] = cmd_ret.get('stderr')
+        return ret
+    ret['result'] = True
     return ret
 
 

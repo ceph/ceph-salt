@@ -1056,7 +1056,7 @@ class CursesRenderer(Renderer, ScreenKeyListener):
             self.screen.write_body(row + line_num, col, "Error Description: ",
                                    CursesScreen.COLOR_MARKER)
             line_num += 1
-            for line in failure['changes']['stderr'].split('\n'):
+            for line in failure['changes'].get('stderr', '').split('\n'):
                 line_width = self.screen.body_width - col - 4
                 for sline in self.break_lines(line, line_width):
                     self.screen.write_body(row + line_num, col + 3, sline,
@@ -1067,7 +1067,7 @@ class CursesRenderer(Renderer, ScreenKeyListener):
                                    CursesScreen.COLOR_MARKER)
             line_num += 1
             line_width = self.screen.body_width - col - 4
-            for line in failure['comment'].split('\n'):
+            for line in failure.get('comment', '').split('\n'):
                 for sline in self.break_lines(line, line_width):
                     self.screen.write_body(row + line_num, col + 3, sline, CursesScreen.COLOR_ERROR)
                     line_num += 1
