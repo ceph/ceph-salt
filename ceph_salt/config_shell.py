@@ -1310,8 +1310,6 @@ def run_import(config_file):
         if minion not in salt_minions:
             PP.pl_red("Cannot find minion '{}'".format(minion))
             return False
-    # Update pillar
-    PillarManager.set('ceph-salt', config)
     # Update grains
     minions = GrainsManager.filter_by('ceph-salt', 'member')
     if minions:
@@ -1323,5 +1321,7 @@ def run_import(config_file):
         if minion in minions_config.get('cephadm', []):
             node.add_role('cephadm')
         node.save()
+    # Update pillar
+    PillarManager.set('ceph-salt', config)
     PP.pl_green('Configuration imported.')
     return True

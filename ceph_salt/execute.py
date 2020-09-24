@@ -1640,7 +1640,7 @@ def run_purge(non_interactive, yes_i_really_really_mean_it, prompt_proceed):
         return 2
     fsid = None
     for minion in admin_minions:
-        fsid = SaltClient.local().cmd(minion, 'ceph_orch.fsid')[minion]
+        fsid = SaltClient.local_cmd(minion, 'ceph_orch.fsid', full_return=True)[minion].get('ret')
         if fsid is not None:
             break
     if not fsid:

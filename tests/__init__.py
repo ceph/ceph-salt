@@ -182,21 +182,28 @@ class SaltLocalClientMock:
         for tgt in targets:
             mod, func = ModuleUtil.parse_module(module)
             if mod == 'grains':
-                result[tgt] = getattr(self.grains[tgt], func)(*args)
+                ret = getattr(self.grains[tgt], func)(*args)
             elif mod == 'test':
-                result[tgt] = getattr(TestMock, func)(*args)
+                ret = getattr(TestMock, func)(*args)
             elif mod == 'saltutil':
-                result[tgt] = getattr(SaltUtilMock, func)(*args)
+                ret = getattr(SaltUtilMock, func)(*args)
             elif mod == 'state':
-                result[tgt] = getattr(StateMock, func)(*args)
+                ret = getattr(StateMock, func)(*args)
             elif mod == 'service':
-                result[tgt] = getattr(ServiceMock, func)(*args)
+                ret = getattr(ServiceMock, func)(*args)
             elif mod == 'ceph_orch':
-                result[tgt] = getattr(CephOrchMock, func)(*args)
+                ret = getattr(CephOrchMock, func)(*args)
             elif mod == 'network':
-                result[tgt] = getattr(NetworkMock, func)(*args)
+                ret = getattr(NetworkMock, func)(*args)
             else:
                 raise NotImplementedError()
+            if full_return:
+                result[tgt] = {
+                    'ret': ret,
+                    'retcode': 0
+                }
+            else:
+                result[tgt] = ret
 
         self.logger.info("Grains: %s", self.grains)
 
