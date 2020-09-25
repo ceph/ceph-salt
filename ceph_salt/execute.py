@@ -1585,7 +1585,6 @@ class CephSaltExecutor:
                 if retcode > 0:
                     return retcode, deployed
 
-        PP.println("Ready to start!")
         return 0, deployed
 
     def run(self):
@@ -1595,6 +1594,26 @@ class CephSaltExecutor:
                                                      self.prompt_proceed)
         if retcode > 0:
             return retcode
+
+        # Reset minions to make sure that all of them start the execution at the same state.
+        # For instance, ceph-salt relies on 'ceph-salt:execution:*' grains for the orchestration
+        # so we need to ensure that those grains are reset beforehand
+        PP.println("Reseting execution grains...")
+        if self.minion_id:
+            logger.info("Calling: salt '%s' state.apply ceph-salt.reset", self.minion_id)
+            returns = SaltClient.local().cmd(self.minion_id, 'state.apply',
+                                             ['ceph-salt.reset'])
+        else:
+            logger.info("Calling: salt -G 'ceph-salt:member' state.apply ceph-salt.reset")
+            returns = SaltClient.local().cmd('ceph-salt:member', 'state.apply',
+                                             ['ceph-salt.reset'],
+                                             tgt_type='grain')
+        for minion, data in returns.items():
+            for state, ret in data.items():
+                if not ret['result']:
+                    logger.error("%s - %s - %s", minion, state, ret)
+                    PP.pl_red('Failed to reset execution grains on {}'.format(minion))
+                    return 100
 
         # init
         self.model = CephSaltModel(self.minion_id, self.state, self.pillar)
@@ -1615,6 +1634,7 @@ class CephSaltExecutor:
         self.executor = CephSaltExecutorThread(self.controller, self.minion_id)
 
         # start
+        PP.println("Starting...")
         self.event_proc.start()
         self.executor.start()
         self.renderer.run()
@@ -1644,19 +1664,51 @@ def run_purge(non_interactive, yes_i_really_really_mean_it, prompt_proceed):
         if fsid is not None:
             break
     if not fsid:
-        PP.pl_red("Unable to find cluster FSID. Is ceph cluster deployed?")
+        PP.pl_red("Unable to find cluster FSID. Is ceph cluster running?")
         return 3
     if not yes_i_really_really_mean_it:
         if non_interactive:
-            PP.pl_red("This command would completely remove ceph cluster '{}' and all the data "
+            PP.pl_red("This command would completely REMOVE ceph cluster '{}' and all the data "
                       "it contains. If you are really sure you want to do that, include the "
                       "'--yes-i-really-really-mean-it' option.".format(fsid))
             return 4
-        prompt_proceed("You are about to permanently remove ceph cluster '{}'. "
+        prompt_proceed("You are about to permanently REMOVE ceph cluster '{}'. "
                        "Proceed?".format(fsid), 'n')
         prompt_proceed("Proceed, even though this may destroy valuable data?", 'n')
     executor = CephSaltExecutor(not non_interactive, None,
                                 'ceph-salt.purge', {
+                                    'ceph-salt': {
+                                        'execution': {
+                                            'fsid': fsid
+                                        }
+                                    }
+                                }, prompt_proceed)
+    return executor.run()
+
+
+def run_stop(non_interactive, yes_i_really_really_mean_it, prompt_proceed):
+    admin_minions = PillarManager.get('ceph-salt:minions:admin', [])
+    if not admin_minions:
+        PP.pl_red("No ceph-salt admin minions found.")
+        return 1
+    admin_minion = admin_minions[0]
+    fsid = SaltClient.local_cmd(admin_minion, 'ceph_orch.fsid',
+                                full_return=True)[admin_minion].get('ret')
+    if not fsid:
+        PP.pl_red("Unable to find cluster FSID. Is ceph cluster running?")
+        return 2
+    if not yes_i_really_really_mean_it:
+        if non_interactive:
+            PP.pl_red("This command will STOP ceph cluster '{}'. "
+                      "If you are really sure you want to do that, include the "
+                      "'--yes-i-really-really-mean-it' option.".format(fsid))
+            return 4
+        prompt_proceed("You are about to STOP ceph cluster '{}'. "
+                       "Proceed?".format(fsid), 'n')
+        prompt_proceed("Before proceeding, make sure any clients accessing the cluster are "
+                       "shut down or disconnected. Proceed?", 'n')
+    executor = CephSaltExecutor(not non_interactive, None,
+                                'ceph-salt.stop', {
                                     'ceph-salt': {
                                         'execution': {
                                             'fsid': fsid

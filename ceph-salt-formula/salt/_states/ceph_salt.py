@@ -154,11 +154,26 @@ def wait_for_ancestor_minion_grain(name, grain, if_grain, timeout=36000):
     ret['result'] = True
     return ret
 
+
 def check_safety(name):
     ret = {'name': name, 'changes': {}, 'comment': '', 'result': False}
     cmd_ret = __salt__['ceph_salt.is_safety_disengaged']()
     if cmd_ret is not True:
         ret['comment'] = "Safety is not disengaged. Run 'ceph-salt disengage-safety' to disable protection against dangerous operations."
+        return ret
+    ret['result'] = True
+    return ret
+
+
+def check_fsid(name, formula):
+    ret = {'name': name, 'changes': {}, 'comment': '', 'result': False}
+    fsid = __salt__['pillar.get']('ceph-salt:execution:fsid')
+    if not fsid:
+        ret['comment'] = "No cluster FSID provided. Ceph cluster FSID " \
+                         "must be provided via custom Pillar value, e.g.: " \
+                         "\"salt -G ceph-salt:member state.apply {} " \
+                         "pillar='{{\"ceph-salt\": {{\"execution\": " \
+                         "{{\"fsid\": \"$FSID\"}}}}}}'\"".format(formula)
         return ret
     ret['result'] = True
     return ret

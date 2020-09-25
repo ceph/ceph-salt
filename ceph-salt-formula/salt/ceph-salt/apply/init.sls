@@ -1,7 +1,7 @@
 {% if 'ceph-salt' in grains and grains['ceph-salt']['member'] %}
 
 include:
-    - .apply-begin
+    - ..reset
     - ..common.sshkey
     - .tuned-off
     - .tuned-latency
