@@ -57,6 +57,10 @@ class SaltClient:
     def local_cmd(cls, target, func, args=None, tgt_type='glob', full_return=False):
         """
         Equal to `local().cmd(...)`, but with proper error checking.
+
+        Note that Salt 'salt.client.LocalClient().cmd(...)' will return 'False' when minion is
+        down, so if we need to distinguish between "'False' because return value is 'False'"
+        and "'False' because minion is down" we need to use 'full_return=True'
         """
         if args is None:
             args = []
@@ -110,7 +114,9 @@ class GrainsManager:
         target, tgt_type = cls._format_target(target)
         cls.logger.debug("Adding '%s = %s' grain to %s", key, val, target)
         with contextlib.redirect_stdout(None):
-            result = SaltClient.local().cmd(target, 'grains.setval', [key, val], tgt_type=tgt_type)
+            ret = SaltClient.local_cmd(target, 'grains.setval', [key, val], tgt_type=tgt_type,
+                                       full_return=True)
+        result = {minion: data.get('ret') for minion, data in ret.items()}
         cls.logger.info("Added '%s = %s' grain to %s: result=%s", key, val, target, result)
 
     @classmethod
@@ -118,16 +124,17 @@ class GrainsManager:
         target, tgt_type = cls._format_target(target)
         cls.logger.debug("Deleting '%s' grain from %s", key, target)
         with contextlib.redirect_stdout(None):
-            result = SaltClient.local().cmd(target, 'grains.delkey', [key], tgt_type=tgt_type)
+            ret = SaltClient.local_cmd(target, 'grains.delkey', [key], tgt_type=tgt_type,
+                                       full_return=True)
+        result = {minion: data.get('ret') for minion, data in ret.items()}
         cls.logger.info("Deleted '%s' grain from %s: result=%s", key, target, result)
 
     @classmethod
     def filter_by(cls, key, val=None):
         condition = '{}:{}'.format(key, val if val else '*')
         with contextlib.redirect_stdout(None):
-            result = SaltClient.local().cmd(condition, 'test.true', tgt_type='grain')
-            if result is None or not isinstance(result, dict):
-                raise SaltCallException(condition, 'test.true', result)
+            result = SaltClient.local_cmd(condition, 'test.true', tgt_type='grain',
+                                          full_return=True)
         logger.debug("list of minions that match '%s': %s", condition, list(result))
         return list(result)
 
@@ -136,7 +143,9 @@ class GrainsManager:
         target, tgt_type = cls._format_target(target)
         cls.logger.debug("Getting '%s' grain from %s", key, target)
         with contextlib.redirect_stdout(None):
-            result = SaltClient.local().cmd(target, 'grains.get', [key], tgt_type=tgt_type)
+            ret = SaltClient.local_cmd(target, 'grains.get', [key], tgt_type=tgt_type,
+                                       full_return=True)
+        result = {minion: data.get('ret') for minion, data in ret.items()}
         cls.logger.info("Got '%s' grain from %s: result=%s", key, target, result)
         return result
 
