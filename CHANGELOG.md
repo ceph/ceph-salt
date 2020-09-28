@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [15.2.12] - 2020-09-28
+### Added
+- Convert tags to repo_digest (#397)
+- Add 'ceph-salt stop' command (#404)
+- Validate duplicated registries (#403)
+- Validate '/cephadm_bootstrap/mon_ip' (#401)
+- Retry SSH 'host add' execution on connection closed (#398)
+### Changed
+- Change cephadm bootstrap output redirect file (#395)
+### Fixed
+- Handle unresponsive minions properly (#411)
+- Display 'stderr' on stage/step failure (#408)
+- Restart 'chronyd' service to apply chrony config (#407)
+- Install 'sudo' before 'sudoers' configuration (#400)
+- Fix salt warn when 'ceph-salt config' is executed for the first time (#399)
+
 ## [15.2.11] - 2020-09-11
 ### Added
 - Ask user confirmation before restarting 'salt-master' service (#392)
@@ -248,7 +264,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal README.
 - The CHANGELOG file.
 
-[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.11...HEAD
+[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.12...HEAD
+[15.2.12]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.12
 [15.2.11]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.11
 [15.2.10]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.10
 [15.2.9]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.9
