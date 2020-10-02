@@ -145,9 +145,12 @@ Salt Formula to deploy Ceph clusters.
 %dir %attr(0755, root, salt) %{fdir}/states/
 %dir %attr(0755, root, salt) %{fdir}/metadata/
 %dir %attr(0755, root, root) %{_datadir}/%{fname}
+%dir %attr(0755, salt, salt) %{_datadir}/%{fname}/pillar
+%doc %attr(0644, salt, salt) %{_datadir}/%{fname}/pillar.conf.example
+%attr(0600, salt, salt) %{_datadir}/%{fname}/pillar/ceph-salt.sls
+%attr(0644, salt, salt) %{_datadir}/%{fname}/pillar/top.sls
 %{fdir}/states/
 %{fdir}/metadata/
-%{_datadir}/%{fname}
 
 
 %changelog
