@@ -102,6 +102,7 @@ run cephadm bootstrap:
         CEPHADM_IMAGE={{ pillar['ceph-salt']['container']['images']['ceph'] }} \
         cephadm --verbose bootstrap \
                 --mon-ip {{ pillar['ceph-salt']['bootstrap_mon_ip'] }} \
+                --allow-fqdn-hostname \
                 --apply-spec {{ bootstrap_spec_yaml_tmpfile }} \
                 --config {{ bootstrap_ceph_conf_tmpfile }} \
 {%- if not pillar['ceph-salt']['dashboard']['password_update_required'] %}
