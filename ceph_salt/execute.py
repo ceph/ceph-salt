@@ -1517,6 +1517,49 @@ class CephSaltExecutor:
         return 0
 
     @staticmethod
+    def check_fqdn():
+        """
+        Check all minions for FQDN environment. Either all must be FQDN or all
+        must be non-FQDN. Mixed FQDN/non-FQDN is not supported.
+        """
+
+        def __all_yes(vals):
+            for val in vals:
+                if val != 'YES':
+                    return False
+            return True
+
+        def __all_no(vals):
+            for val in vals:
+                if val != 'NO':
+                    return False
+            return True
+
+        minion_hostnames = PillarManager.get('ceph-salt:minions:all', [])
+        minion_count = len(minion_hostnames)
+        PP.println("Checking for FQDN environment on {} minions...".format(minion_count))
+        salt_result = SaltClient.local().cmd(
+            'ceph-salt:member',
+            'ceph_salt.probe_fqdn',
+            [],
+            tgt_type='grain')
+        log_msg = "probe_fqdn returned: {}".format(salt_result)
+        logger.info(log_msg)
+        if __all_yes(salt_result.values()):
+            PP.println(
+                "All {} minions have FQDN environment. Good."
+                .format(minion_count))
+            return 0
+        if __all_no(salt_result.values()):
+            PP.println(
+                "All {} minions have non-FQDN environment. Good."
+                .format(minion_count))
+            return 0
+        # mixed environment or failure in module
+        PP.pl_red('Mixed FQDN/non-FQDN environment detected. Bailing out!')
+        return 15
+
+    @staticmethod
     def check_prerequisites(minion_id, state, prompt_proceed):
         deployed = None
 
@@ -1585,6 +1628,10 @@ class CephSaltExecutor:
                 if retcode > 0:
                     return retcode, deployed
 
+        # check FQDN
+        retcode = CephSaltExecutor.check_fqdn()
+        if retcode > 0:
+            return retcode, deployed
         return 0, deployed
 
     def run(self):

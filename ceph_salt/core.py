@@ -21,7 +21,6 @@ class CephNode:
         self.minion_id = minion_id
         self._ipsv4 = None
         self._ipsv6 = None
-        self._hostname = None
         self._roles = None
         self._execution = None
         self._public_ip = None
@@ -41,13 +40,6 @@ class CephNode:
             result = GrainsManager.get_grain(self.minion_id, 'ipv6')
             self._ipsv6 = result[self.minion_id]
         return self._ipsv6
-
-    @property
-    def hostname(self):
-        if self._hostname is None:
-            result = GrainsManager.get_grain(self.minion_id, 'host')
-            self._hostname = result[self.minion_id]
-        return self._hostname
 
     @property
     def public_ip(self):

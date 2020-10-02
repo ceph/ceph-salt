@@ -5,6 +5,7 @@
 install required packages:
   pkg.installed:
     - pkgs:
+      - hostname
       - iperf
       - iputils
       - lsof
