@@ -263,6 +263,7 @@ class PillarManager:
                 file.write(content)
             file.write("\n")
         shutil.chown(full_path, "salt", "salt")
+        os.chmod(full_path, 0o600)
 
     @classmethod
     def _load(cls):
