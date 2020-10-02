@@ -5,7 +5,7 @@
 {{ macros.begin_stage('Add host to ceph orchestrator') }}
 add host to ceph orch:
   ceph_orch.add_host:
-    - host: {{ grains['host'] }}
+    - host: {{ grains['fqdn'] }}
     - failhard: True
 {{ macros.end_stage('Add host to ceph orchestrator') }}
 

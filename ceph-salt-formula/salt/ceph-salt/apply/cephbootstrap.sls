@@ -67,14 +67,14 @@ create static bootstrap yaml:
         echo -en "service_name: mgr\n" >> {{ bootstrap_spec_yaml_tmpfile }}
         echo -en "placement:\n" >> {{ bootstrap_spec_yaml_tmpfile }}
         echo -en "    hosts:\n" >> {{ bootstrap_spec_yaml_tmpfile }}
-        echo -en "        - '{{ grains['host'] }}'\n" >> {{ bootstrap_spec_yaml_tmpfile }}
+        echo -en "        - '{{ grains['fqdn'] }}'\n" >> {{ bootstrap_spec_yaml_tmpfile }}
         >> foo
         echo -en "---\n" >> {{ bootstrap_spec_yaml_tmpfile }}
         echo -en "service_type: mon\n" >> {{ bootstrap_spec_yaml_tmpfile }}
         echo -en "service_name: mon\n" >> {{ bootstrap_spec_yaml_tmpfile }}
         echo -en "placement:\n" >> {{ bootstrap_spec_yaml_tmpfile }}
         echo -en "    hosts:\n" >> {{ bootstrap_spec_yaml_tmpfile }}
-        echo -en "        - '{{ grains['host'] }}:{{ pillar['ceph-salt']['bootstrap_mon_ip'] }}'\n" >> {{ bootstrap_spec_yaml_tmpfile }}
+        echo -en "        - '{{ grains['fqdn'] }}:{{ pillar['ceph-salt']['bootstrap_mon_ip'] }}'\n" >> {{ bootstrap_spec_yaml_tmpfile }}
 
 create bootstrap ceph conf:
   cmd.run:
