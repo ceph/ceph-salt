@@ -63,6 +63,7 @@ Requires:       sudo
 Requires:       procps
 
 Conflicts:      deepsea
+Conflicts:      deepsea-cli
 
 %description
 ceph-salt is a CLI tool for deploying Ceph clusters starting from version
