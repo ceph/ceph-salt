@@ -1598,7 +1598,7 @@ class CephSaltExecutor:
         # Reset minions to make sure that all of them start the execution at the same state.
         # For instance, ceph-salt relies on 'ceph-salt:execution:*' grains for the orchestration
         # so we need to ensure that those grains are reset beforehand
-        PP.println("Reseting execution grains...")
+        PP.println("Resetting execution grains...")
         if self.minion_id:
             logger.info("Calling: salt '%s' state.apply ceph-salt.reset", self.minion_id)
             returns = SaltClient.local().cmd(self.minion_id, 'state.apply',
