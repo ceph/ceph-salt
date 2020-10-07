@@ -58,6 +58,7 @@ download ceph container image:
 {% set bootstrap_ceph_conf = pillar['ceph-salt'].get('bootstrap_ceph_conf', {}) %}
 {% set bootstrap_ceph_conf_tmpfile = "/tmp/bootstrap-ceph.conf" %}
 {% set bootstrap_spec_yaml_tmpfile = "/tmp/bootstrap-spec.yaml" %}
+{% set my_hostname = salt['ceph_salt.hostname']() %}
 
 create static bootstrap yaml:
   cmd.run:
@@ -67,14 +68,14 @@ create static bootstrap yaml:
         echo -en "service_name: mgr\n" >> {{ bootstrap_spec_yaml_tmpfile }}
         echo -en "placement:\n" >> {{ bootstrap_spec_yaml_tmpfile }}
         echo -en "    hosts:\n" >> {{ bootstrap_spec_yaml_tmpfile }}
-        echo -en "        - '{{ grains['host'] }}'\n" >> {{ bootstrap_spec_yaml_tmpfile }}
+        echo -en "        - '{{ my_hostname }}'\n" >> {{ bootstrap_spec_yaml_tmpfile }}
         >> foo
         echo -en "---\n" >> {{ bootstrap_spec_yaml_tmpfile }}
         echo -en "service_type: mon\n" >> {{ bootstrap_spec_yaml_tmpfile }}
         echo -en "service_name: mon\n" >> {{ bootstrap_spec_yaml_tmpfile }}
         echo -en "placement:\n" >> {{ bootstrap_spec_yaml_tmpfile }}
         echo -en "    hosts:\n" >> {{ bootstrap_spec_yaml_tmpfile }}
-        echo -en "        - '{{ grains['host'] }}:{{ pillar['ceph-salt']['bootstrap_mon_ip'] }}'\n" >> {{ bootstrap_spec_yaml_tmpfile }}
+        echo -en "        - '{{ my_hostname }}:{{ pillar['ceph-salt']['bootstrap_mon_ip'] }}'\n" >> {{ bootstrap_spec_yaml_tmpfile }}
 
 create bootstrap ceph conf:
   cmd.run:
@@ -102,6 +103,7 @@ run cephadm bootstrap:
         CEPHADM_IMAGE={{ pillar['ceph-salt']['container']['images']['ceph'] }} \
         cephadm --verbose bootstrap \
                 --mon-ip {{ pillar['ceph-salt']['bootstrap_mon_ip'] }} \
+                --allow-fqdn-hostname \
                 --apply-spec {{ bootstrap_spec_yaml_tmpfile }} \
                 --config {{ bootstrap_ceph_conf_tmpfile }} \
 {%- if not pillar['ceph-salt']['dashboard']['password_update_required'] %}

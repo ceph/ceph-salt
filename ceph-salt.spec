@@ -53,6 +53,7 @@ Requires:       python3-netaddr
 %endif
 
 Requires:       ceph-salt-formula
+Requires:       hostname
 Requires:       iperf
 Requires:       iputils
 Requires:       lsof

@@ -176,3 +176,20 @@ def __check_unit(unit_name):
     elif out in ['failed', 'auto-restart']:
         state = 'error'
     return (enabled, installed, state)
+
+
+def hostname():
+    return socket.gethostname()
+
+
+def probe_fqdn():
+    """
+    Returns 'YES' if FQDN environment detected, 'NO' if not detected, or 'FAIL'
+    if detection was not possible.
+    """
+    retval = hostname()
+    if not retval:
+        return 'FAIL'
+    if '.' in retval:
+        return 'YES'
+    return 'NO'
