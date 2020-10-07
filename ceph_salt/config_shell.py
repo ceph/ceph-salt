@@ -715,7 +715,8 @@ class ImportValueOptionNode(OptionNode):
         '''
         if self._read_only():
             raise CephSaltException("Option {} cannot be modified".format(self.option_name))
-        if not Path(path).is_file():
+        path = Path(path).expanduser()
+        if not path.is_file():
             raise CephSaltException("File not found: '{}'".format(path))
         with open(path, 'r') as file:
             value = file.read()
@@ -727,7 +728,7 @@ class ImportValueOptionNode(OptionNode):
 
     # pylint: disable=unused-argument
     def ui_complete_import(self, parameters, text, current_param):
-        path = Path(text)
+        path = Path(text).expanduser()
         if path.is_dir():
             return [str(p) for p in path.iterdir()]
         return [str(p) for p in path.parent.glob('{}*'.format(path.name))]
