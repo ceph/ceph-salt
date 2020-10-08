@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [15.2.13] - 2020-10-08
+### Added
+- Use '--container-init' option on 'cephadm bootstrap' (#396)
+- Support FQDN environments (#422)
+### Fixed
+- Spell "Resetting" correctly (#423)
+- Add "Conflicts: deepsea-cli" to spec file (#421)
+- Expand the userpath during ssh key import (#425)
+- Reduce ceph-salt pillar file permissions (#415)
+
 ## [15.2.12] - 2020-09-28
 ### Added
 - Convert tags to repo_digest (#397)
@@ -264,7 +274,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal README.
 - The CHANGELOG file.
 
-[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.12...HEAD
+[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.13...HEAD
+[15.2.13]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.13
 [15.2.12]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.12
 [15.2.11]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.11
 [15.2.10]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.10
