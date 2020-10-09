@@ -54,6 +54,11 @@ class SaltClient:
         return pillar_dirs[0]
 
     @classmethod
+    def pki_minions_fs_path(cls):
+        pki_dir = cls._opts().get('pki_dir', '/etc/salt/pki/master')
+        return '{}/minions'.format(pki_dir)
+
+    @classmethod
     def local_cmd(cls, target, func, args=None, tgt_type='glob', full_return=False):
         """
         Equal to `local().cmd(...)`, but with proper error checking.

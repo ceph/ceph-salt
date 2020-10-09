@@ -1,5 +1,6 @@
 import copy
 import logging
+import os
 import base64
 import hashlib
 
@@ -166,7 +167,7 @@ class CephNodeManager:
 
     @classmethod
     def list_all_minions(cls):
-        return SaltClient.caller().cmd('minion.list')['minions']
+        return os.listdir(SaltClient.pki_minions_fs_path())
 
     @staticmethod
     def all_roles(ceph_salt_node):
