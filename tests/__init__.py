@@ -262,6 +262,10 @@ class SaltMockTestCase(TestCase):
     def states_fs_path():
         return '/srv/salt'
 
+    @staticmethod
+    def pki_minions_fs_path():
+        return '/etc/salt/pki/master/minions'
+
     def setUp(self):
         super(SaltMockTestCase, self).setUp()
         self.setUpPyfakefs()
@@ -292,6 +296,7 @@ class SaltMockTestCase(TestCase):
             self.addCleanup(patcher.stop)
         self.fs.create_dir(self.pillar_fs_path())
         self.fs.create_dir(self.states_fs_path())
+        self.fs.create_dir(self.pki_minions_fs_path())
         self.fs.create_file(os.path.join(self.pillar_fs_path(), 'ceph-salt.sls'))
 
     def tearDown(self):

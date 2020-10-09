@@ -20,6 +20,8 @@ class ConfigShellTest(SaltMockTestCase):
         generate_config_shell_tree(self.shell)
 
         self.salt_env.minions = ['node1.ceph.com', 'node2.ceph.com', 'node3.ceph.com']
+        for minion in self.salt_env.minions:
+            self.fs.create_file('{}/{}'.format(self.pki_minions_fs_path(), minion))
         GrainsManager.set_grain('node1.ceph.com', 'fqdn_ip4', ['10.20.39.201'])
         GrainsManager.set_grain('node2.ceph.com', 'fqdn_ip4', ['10.20.39.202'])
         GrainsManager.set_grain('node3.ceph.com', 'fqdn_ip4', ['10.20.39.203'])
@@ -27,6 +29,8 @@ class ConfigShellTest(SaltMockTestCase):
     def tearDown(self):
         super(ConfigShellTest, self).tearDown()
         PillarManager.reload()
+        for minion in self.salt_env.minions:
+            self.fs.remove_object('{}/{}'.format(self.pki_minions_fs_path(), minion))
 
     def test_ceph_cluster_minions(self):
         self.shell.run_cmdline('/ceph_cluster/minions add node1.ceph.com')
