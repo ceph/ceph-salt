@@ -1,11 +1,10 @@
 import subprocess
 
 from mock import patch
-from salt.exceptions import SaltException
 
 from ceph_salt.validate.salt_master import check_salt_master, SaltMasterNotInstalled, \
-    NoSaltMasterProcess, SaltMasterCommError, check_salt_master_communication, \
-    check_ceph_salt_pillar, NoPillarDirectoryConfigured, CephSaltPillarNotConfigured
+    NoSaltMasterProcess, check_ceph_salt_pillar, NoPillarDirectoryConfigured, \
+    CephSaltPillarNotConfigured
 
 from . import SaltMockTestCase
 
@@ -42,19 +41,6 @@ class ValidateSaltMasterTest(SaltMockTestCase):
     @patch('subprocess.check_output', return_value="1")
     def test_salt_master_ok(self, *args):
         check_salt_master()
-
-    def test_salt_master_comm_ping(self):
-        def cmd(*args, **kwargs):
-            raise SaltException('testing')
-        self.caller_client.cmd = cmd
-
-        with self.assertRaises(SaltMasterCommError) as ctx:
-            check_salt_master_communication()
-
-        self.assertEqual(str(ctx.exception), "Failed to communicate with salt-master: testing")
-
-    def test_salt_master_comm_ok(self):
-        check_salt_master_communication()
 
     def test_ceph_salt_pillar_directory(self):
         self.master_config.opts = {}

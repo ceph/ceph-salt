@@ -2,8 +2,6 @@ import logging
 import shutil
 import subprocess
 
-from salt.exceptions import SaltException
-
 from ..exceptions import ValidationException
 from ..salt_utils import SaltClient, PillarManager
 
@@ -55,17 +53,6 @@ def check_salt_master():
     raise NoSaltMasterProcess()
 
 
-def check_salt_master_communication():
-    try:
-        logger.info("running test.ping in salt-master")
-        result = SaltClient.caller(False).cmd('test.ping')
-        logger.info("test.ping result: %s", result)
-    except SaltException as ex:
-        logger.exception(ex)
-        logger.error("failed to run test.ping in salt-master")
-        raise SaltMasterCommError(str(ex))
-
-
 def check_ceph_salt_pillar():
     logger.info("checking if pillar directory is configured")
     if not SaltClient.pillar_fs_path():
@@ -80,5 +67,4 @@ def check_ceph_salt_pillar():
 
 def check_salt_master_status():
     check_salt_master()
-    check_salt_master_communication()
     check_ceph_salt_pillar()
