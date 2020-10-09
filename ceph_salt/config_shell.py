@@ -1140,6 +1140,22 @@ class MinionsOptionNode(OptionNode):
         return matching
 
 
+class SingleMsgPrinter():
+    """
+    Each message will only be printed one time
+    """
+
+    POPULATING_DEFAULT_VALUES = 'Populating default values...'
+
+    _printed = []
+
+    @classmethod
+    def print(cls, msg):
+        if msg not in cls._printed:
+            PP.println(msg)
+            cls._printed.append(msg)
+
+
 def _generate_option_node(option_name, option_dict, parent):
     if option_dict.get('type', None) == 'group':
         _generate_group_node(option_name, option_dict, parent)
@@ -1152,6 +1168,7 @@ def _generate_option_node(option_name, option_dict, parent):
 
     # persist default values
     if handler and handler.default() is not None and handler.value()[0] is None:
+        SingleMsgPrinter.print(SingleMsgPrinter.POPULATING_DEFAULT_VALUES)
         handler.save(handler.default())
 
     if option_dict.get('type', None) == 'flag':
@@ -1178,6 +1195,7 @@ def _generate_group_node(group_name, group_dict, parent):
 
     # persist default values
     if handler and handler.default() is not None and handler.value()[0] is None:
+        SingleMsgPrinter.print(SingleMsgPrinter.POPULATING_DEFAULT_VALUES)
         handler.save(handler.default())
 
     for option_name, option_dict in group_dict['options'].items():
