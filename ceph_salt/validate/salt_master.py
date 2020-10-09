@@ -19,12 +19,6 @@ class SaltMasterNotInstalled(ValidationException):
         super(SaltMasterNotInstalled, self).__init__('salt-master is not installed')
 
 
-class SaltMasterCommError(ValidationException):
-    def __init__(self, salt_exception_error):
-        super(SaltMasterCommError, self).__init__("Failed to communicate with salt-master: {}"
-                                                  .format(salt_exception_error))
-
-
 class NoPillarDirectoryConfigured(ValidationException):
     def __init__(self):
         super(NoPillarDirectoryConfigured, self).__init__(

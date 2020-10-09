@@ -26,7 +26,7 @@ from .salt_utils import GrainsManager, PillarManager, CephOrch
 from .terminal_utils import PrettyPrinter as PP
 from .validate.config import validate_config
 from .validate.salt_master import check_salt_master_status, CephSaltPillarNotConfigured
-from .validate.salt_minion import sync_all
+from .validate.salt_minion import sync_modules
 
 
 logger = logging.getLogger(__name__)
@@ -1211,7 +1211,7 @@ class CephSaltConfigShell(configshell.ConfigShell):
         self._parser = parser
 
 
-def check_config_prerequesites():
+def check_config_prerequesites(sync_modules_target=None):
     try:
         check_salt_master_status()
     except CephSaltPillarNotConfigured:
@@ -1234,12 +1234,13 @@ base:
     - ceph-salt
 """)
             return False
-    sync_all()
+    if sync_modules_target:
+        sync_modules(sync_modules_target)
     return True
 
 
 def run_status():
-    if not check_config_prerequesites():
+    if not check_config_prerequesites(sync_modules_target='ceph-salt:roles:admin'):
         return False
     status = {}
     result = True
@@ -1263,7 +1264,7 @@ def run_status():
 
 
 def run_config_shell():
-    if not check_config_prerequesites():
+    if not check_config_prerequesites(sync_modules_target=None):
         return False
     shell = CephSaltConfigShell()
     generate_config_shell_tree(shell)
@@ -1278,7 +1279,7 @@ def run_config_shell():
 
 
 def run_config_cmdline(cmdline):
-    if not check_config_prerequesites():
+    if not check_config_prerequesites(sync_modules_target=None):
         return False
     shell = CephSaltConfigShell()
     generate_config_shell_tree(shell)
