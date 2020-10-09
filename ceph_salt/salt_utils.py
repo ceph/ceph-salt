@@ -330,9 +330,10 @@ class CephOrch:
 
     @staticmethod
     def host_ls():
-        result = SaltClient.local_cmd('ceph-salt:roles:admin', 'ceph_orch.configured',
-                                      full_return=True,
-                                      tgt_type='grain')
+        with contextlib.redirect_stdout(None):
+            result = SaltClient.local_cmd('ceph-salt:roles:admin', 'ceph_orch.configured',
+                                          full_return=True,
+                                          tgt_type='grain')
         for minion, value in result.items():
             if value.get('retcode') > 0:
                 raise CephSaltException("Failed to check if ceph orch is configured "
@@ -348,9 +349,10 @@ class CephOrch:
 
     @staticmethod
     def deployed():
-        result = SaltClient.local_cmd('ceph-salt:roles:admin', 'ceph_orch.ceph_configured',
-                                      full_return=True,
-                                      tgt_type='grain')
+        with contextlib.redirect_stdout(None):
+            result = SaltClient.local_cmd('ceph-salt:roles:admin', 'ceph_orch.ceph_configured',
+                                          full_return=True,
+                                          tgt_type='grain')
         for minion, value in result.items():
             if value.get('retcode') > 0:
                 raise CephSaltException("Failed to check if ceph is configured "
