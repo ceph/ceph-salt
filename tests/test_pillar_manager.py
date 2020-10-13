@@ -46,11 +46,20 @@ class PillarManagerTest(SaltMockTestCase):
         self.fs.create_file('/srv/pillar/top.sls', contents='''
 {% set x = 2 %}'
 base:
-    'ceph-salt:member':
-        - ceph-salt
+{% include 'ceph-salt-top.sls' %}
+''')
+        self.fs.create_file('/srv/pillar/ceph-salt-top.sls',
+                            contents='''{% import_yaml "ceph-salt.sls" as ceph_salt %}
+{% set ceph_salt_minions = ceph_salt.get('ceph-salt', {}).get('minions', {}).get('all', []) %}
+{% if ceph_salt_minions %}
+  {{ ceph_salt_minions|join(',') }}:
+    - match: list
+    - ceph-salt
+{% endif %}
 ''')
         self.assertTrue(PillarManager.pillar_installed())
         self.fs.remove_object('/srv/pillar/top.sls')
+        self.fs.remove_object('/srv/pillar/ceph-salt-top.sls')
 
     def test_pillar_installed_top_without_base(self):
         self.fs.remove_object('/srv/pillar/ceph-salt.sls')
@@ -70,10 +79,20 @@ base:
     def test_pillar_installed(self):
         self.fs.create_file('/srv/pillar/top.sls', contents='''
 base:
-  'ceph-salt:member': [ceph-salt]
+  {% include 'ceph-salt-top.sls' %}
+''')
+        self.fs.create_file('/srv/pillar/ceph-salt-top.sls',
+                            contents='''{% import_yaml "ceph-salt.sls" as ceph_salt %}
+{% set ceph_salt_minions = ceph_salt.get('ceph-salt', {}).get('minions', {}).get('all', []) %}
+{% if ceph_salt_minions %}
+  {{ ceph_salt_minions|join(',') }}:
+    - match: list
+    - ceph-salt
+{% endif %}
 ''')
         self.assertTrue(PillarManager.pillar_installed())
         self.fs.remove_object('/srv/pillar/top.sls')
+        self.fs.remove_object('/srv/pillar/ceph-salt-top.sls')
 
     def test_pillar_install(self):
         self.fs.remove_object('/srv/pillar/ceph-salt.sls')

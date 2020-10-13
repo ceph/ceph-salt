@@ -1,4 +1,4 @@
-{% if 'ceph-salt' in grains and grains['ceph-salt']['member'] %}
+{% if grains['id'] in pillar['ceph-salt']['minions']['all'] %}
 
 include:
     - ..reset

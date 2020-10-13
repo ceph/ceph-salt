@@ -156,6 +156,17 @@ class GrainsManager:
 
 
 class PillarManager:
+
+    CS_TOP_FILE = "ceph-salt-top.sls"
+    CS_TOP_INCLUDE = "{% include 'ceph-salt-top.sls' %}"
+    CS_TOP_CONTENT = """{% import_yaml "ceph-salt.sls" as ceph_salt %}
+{% set ceph_salt_minions = ceph_salt.get('ceph-salt', {}).get('minions', {}).get('all', []) %}
+{% if ceph_salt_minions %}
+  {{ ceph_salt_minions|join(',') }}:
+    - match: list
+    - ceph-salt
+{% endif %}
+"""
     PILLAR_FILE = "ceph-salt.sls"
     pillar_data = {}
     logger = logging.getLogger(__name__ + '.pillar')
@@ -163,38 +174,46 @@ class PillarManager:
     @classmethod
     def pillar_installed(cls):
         pillar_base_path = SaltClient.pillar_fs_path()
+        # pillar
         if not os.path.exists(os.path.join(pillar_base_path, cls.PILLAR_FILE)):
             return False
-        try:
-            top_data = cls._load_yaml("top.sls")
-            if 'base' not in top_data:
-                return False
-            if 'ceph-salt:member' not in top_data['base']:
-                return False
-            if 'ceph-salt' not in top_data['base']['ceph-salt:member']:
-                return False
-        except PillarFileNotPureYaml:
-            with open(os.path.join(pillar_base_path, "top.sls"), "r") as top_file:
-                contents = top_file.read()
-            if 'ceph-salt:member' in contents and 'ceph-salt' in contents:
-                return True
+        # top.sls
+        if not os.path.exists(os.path.join(pillar_base_path, "top.sls")):
+            return False
+        with open(os.path.join(pillar_base_path, "top.sls"), "r") as top_file:
+            top_contents = top_file.read()
+        if cls.CS_TOP_INCLUDE not in top_contents:
+            return False
+        # ceph-salt-top.sls
+        if not os.path.exists(os.path.join(pillar_base_path, cls.CS_TOP_FILE)):
+            return False
+        with open(os.path.join(pillar_base_path, cls.CS_TOP_FILE), "r") as ceph_salt_top_file:
+            ceph_salt_top_contents = ceph_salt_top_file.read()
+        if cls.CS_TOP_CONTENT != ceph_salt_top_contents:
             return False
         return True
 
     @classmethod
     def install_pillar(cls):
         pillar_base_path = SaltClient.pillar_fs_path()
-
-        top_data = cls._load_yaml("top.sls")
-        if 'base' not in top_data:
-            top_data['base'] = {}
-        if 'ceph-salt:member' not in top_data['base']:
-            top_data['base']['ceph-salt:member'] = [{'match': 'grain'}, 'ceph-salt']
-        logger.info("writing top.sls file: %s", top_data)
-        cls._save_yaml(top_data, "top.sls")
-
+        try:
+            with open(os.path.join(pillar_base_path, "top.sls"), "r") as top_file:
+                top_contents = top_file.read()
+        except FileNotFoundError:
+            top_contents = ""
+        if cls.CS_TOP_INCLUDE not in top_contents:
+            if 'base:' in top_contents:
+                new_top_contents = top_contents.replace('base:',
+                                                        'base:\n{}'.format(cls.CS_TOP_INCLUDE))
+            else:
+                new_top_contents = 'base:\n{}\n{}'.format(cls.CS_TOP_INCLUDE, top_contents)
+            logger.info("writing top.sls file...\n[OLD]\n%s\n[NEW]\n%s",
+                        top_contents, new_top_contents)
+            cls._save_file(new_top_contents, "top.sls")
+        logger.info("writing %s file...", cls.CS_TOP_FILE)
+        cls._save_file(cls.CS_TOP_CONTENT, cls.CS_TOP_FILE)
         if not os.path.exists(os.path.join(pillar_base_path, cls.PILLAR_FILE)):
-            logger.info("creating ceph-salt.sls pillar file: %s", top_data)
+            logger.info("creating ceph-salt.sls pillar file...")
             cls._save_yaml({'ceph-salt': {}}, cls.PILLAR_FILE)
 
     @staticmethod
@@ -269,6 +288,15 @@ class PillarManager:
             file.write("\n")
         shutil.chown(full_path, "salt", "salt")
         os.chmod(full_path, 0o600)
+
+    @staticmethod
+    def _save_file(data, custom_file):
+        pillar_base_path = SaltClient.pillar_fs_path()
+        full_path = os.path.join(pillar_base_path, custom_file)
+        with open(full_path, 'w') as file:
+            file.write(data)
+        shutil.chown(full_path, "salt", "salt")
+        os.chmod(full_path, 0o644)
 
     @classmethod
     def _load(cls):
