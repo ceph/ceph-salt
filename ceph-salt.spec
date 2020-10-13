@@ -52,7 +52,6 @@ Requires:       python3-ntplib >= 0.3.3
 Requires:       python3-netaddr
 %endif
 
-Requires:       catatonit
 Requires:       ceph-salt-formula
 Requires:       hostname
 Requires:       iperf
