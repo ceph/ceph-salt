@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [15.2.14] - 2020-10-14
+### Added
+- Do not create ceph-salt pillar file during installation (#433)
+- Pillar targeting by minion id instead of grain (#432)
+- Optimize 'ceph-salt config' minion add (#430)
+- Inform user when default values are being populated (#431)
+- Fix salt warning on 'ceph-salt status' (#429)
+- Optimize 'ceph-salt config' load (#428)
+- Optimize 'ceph-salt status' (#428)
+
 ## [15.2.13] - 2020-10-08
 ### Added
 - Use '--container-init' option on 'cephadm bootstrap' (#396)
@@ -274,7 +284,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal README.
 - The CHANGELOG file.
 
-[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.13...HEAD
+[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.14...HEAD
+[15.2.14]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.14
 [15.2.13]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.13
 [15.2.12]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.12
 [15.2.11]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.11
