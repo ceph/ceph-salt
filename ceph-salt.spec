@@ -99,8 +99,18 @@ mkdir -p %{buildroot}%{_datadir}/%{fname}/pillar
 # pillar top sls file
 cat <<EOF > %{buildroot}%{_datadir}/%{fname}/pillar/top.sls
 base:
-    '*':
+{% include 'ceph-salt-top.sls' %}
+EOF
+
+# ceph-salt pillar top sls file
+cat <<EOF > %{buildroot}%{_datadir}/%{fname}/pillar/ceph-salt-top.sls
+{% import_yaml "ceph-salt.sls" as ceph_salt %}
+{% set ceph_salt_minions = ceph_salt.get('ceph-salt', {}).get('minions', {}).get('all', []) %}
+{% if ceph_salt_minions %}
+  {{ ceph_salt_minions|join(',') }}:
+    - match: list
     - ceph-salt
+{% endif %}
 EOF
 
 # empty ceph-salt.sls file
@@ -151,6 +161,7 @@ Salt Formula to deploy Ceph clusters.
 %dir %attr(0755, salt, salt) %{_datadir}/%{fname}/pillar
 %doc %attr(0644, salt, salt) %{_datadir}/%{fname}/pillar.conf.example
 %attr(0600, salt, salt) %{_datadir}/%{fname}/pillar/ceph-salt.sls
+%attr(0644, salt, salt) %{_datadir}/%{fname}/pillar/ceph-salt-top.sls
 %attr(0644, salt, salt) %{_datadir}/%{fname}/pillar/top.sls
 %{fdir}/states/
 %{fdir}/metadata/

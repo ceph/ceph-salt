@@ -18,7 +18,6 @@ from .core import CephNodeManager, SshKeyManager, CephNode
 from .exceptions import (
     CephSaltException,
     MinionDoesNotExistInConfiguration,
-    PillarFileNotPureYaml,
     ParamsException
 )
 from .params_helper import BooleanStringValidator, BooleanStringTransformer
@@ -1233,25 +1232,8 @@ def check_config_prerequesites(sync_modules_target=None):
     try:
         check_salt_master_status()
     except CephSaltPillarNotConfigured:
-        try:
-            PillarManager.install_pillar()
-        except PillarFileNotPureYaml:
-            PP.println("""
-ceph-salt pillar file is not installed yet, and we can't add it automatically
-because pillar's top.sls is probably using Jinja2 expressions.
-Please create a ceph-salt.sls file in salt's pillar directory with the following
-content:
-
-ceph-salt: {}
-
-and add the following pillar configuration to top.sls file:
-
-base:
-  'ceph-salt:member':
-    - match: grain
-    - ceph-salt
-""")
-            return False
+        PP.println('Configuring ceph-salt pillar...')
+        PillarManager.install_pillar()
     if sync_modules_target:
         sync_modules(sync_modules_target)
     return True
