@@ -3,6 +3,7 @@
 include:
     - ..reset
     - ..common.sshkey
+    - .sysctl
     - .tuned-off
     - .tuned-latency
     - .tuned-throughput
