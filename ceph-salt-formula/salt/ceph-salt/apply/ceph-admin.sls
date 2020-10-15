@@ -17,6 +17,7 @@ configure cephadm mgr module:
 {%- endif %}
         ceph config set mgr mgr/cephadm/manage_etc_ceph_ceph_conf true
         ceph config set mgr mgr/cephadm/use_repo_digest true --force
+        ceph config set mgr mgr/cephadm/container_init true
     - failhard: True
 
 {{ macros.end_stage('Ensure cephadm MGR module is configured') }}
