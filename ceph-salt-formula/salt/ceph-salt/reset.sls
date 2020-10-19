@@ -17,3 +17,8 @@ reset stopped:
   grains.present:
     - name: ceph-salt:execution:stopped
     - value: False
+
+reset stoptimeserversyncedped:
+  grains.present:
+    - name: ceph-salt:execution:timeserversynced
+    - value: False

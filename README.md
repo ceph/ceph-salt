@@ -109,7 +109,7 @@ sync its clock against one or more external servers (e.g. "pool.ntp.org"), and
 all other nodes in the cluster will sync their clocks against this node:
 
 ```
-/time_server/server_hostname set <minion id of the admin node>
+/time_server/servers add <minion id of the admin node>
 /time_server/external_servers add pool.ntp.org
 ```
 
@@ -118,7 +118,7 @@ can be useful when setting up a cluster at a site that already has a single
 source of time:
 
 ```
-/time_server/server_hostname set <hostname>
+/time_server/servers add <hostname>
 ```
 
 (In this case, the on-site time server is assumed to be already configured and

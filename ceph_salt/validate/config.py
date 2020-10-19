@@ -89,10 +89,10 @@ def validate_config(deployed, ceph_nodes):
     if not isinstance(time_server_enabled, bool):
         return "'ceph-salt:time_server:enabled' must be of type Boolean"
     if time_server_enabled:
-        time_server_host = PillarManager.get('ceph-salt:time_server:server_host')
-        if not time_server_host:
+        time_server_hosts = PillarManager.get('ceph-salt:time_server:server_hosts')
+        if not time_server_hosts:
             return 'No time server host specified in config'
-        time_server_is_minion = time_server_host in all_minions
+        time_server_is_minion = any(tsh in all_minions for tsh in time_server_hosts)
         time_server_subnet = PillarManager.get('ceph-salt:time_server:subnet')
         not_minion_err = ('Time server is not a minion: {} '
                           'setting will not have any effect')
