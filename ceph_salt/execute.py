@@ -1474,8 +1474,9 @@ class CephSaltExecutor:
         return retval
 
     @staticmethod
-    def check_external_time_servers(ts_minion, external_ts_list):
-        PP.println("Installing python3-ntplib on time server node...")
+    def check_external_time_servers(ts_minions, external_ts_list):
+        ts_minion = ts_minions[0]
+        PP.println("Installing python3-ntplib on {}...".format(ts_minion))
         salt_result = SaltClient.local().cmd(
             ts_minion, 'pkg.install', ["name='python3-ntplib'", "refresh=True"]
         )
@@ -1614,11 +1615,11 @@ class CephSaltExecutor:
         if state in ['ceph-salt', 'ceph-salt.apply']:
             time_server_enabled = PillarManager.get('ceph-salt:time_server:enabled')
             if time_server_enabled:
-                time_server_host = PillarManager.get('ceph-salt:time_server:server_host')
+                time_server_hosts = PillarManager.get('ceph-salt:time_server:server_hosts')
                 ext_time_servers = PillarManager.get('ceph-salt:time_server:external_time_servers')
                 if ext_time_servers:
                     retcode = CephSaltExecutor.check_external_time_servers(
-                        time_server_host,
+                        time_server_hosts,
                         ext_time_servers
                     )
                     if retcode > 0:

@@ -286,18 +286,18 @@ class TimeServerGroupHandler(FlagGroupHandler):
         super(TimeServerGroupHandler, self).__init__('ceph-salt:time_server:enabled', True)
 
     def enabled_value(self):
-        host = PillarManager.get('ceph-salt:time_server:server_host')
-        if host is None:
+        hosts = PillarManager.get('ceph-salt:time_server:server_hosts')
+        if not hosts:
             return "enabled, no server host set", False
         return super().enabled_value()
 
 
 class TimeServerHandler(PillarHandler):
     def __init__(self):
-        super().__init__('ceph-salt:time_server:server_host')
+        super().__init__('ceph-salt:time_server:server_hosts')
 
     def save(self, value):
-        node = CephNodeManager.ceph_salt_nodes().get(value)
+        node = CephNodeManager.ceph_salt_nodes().get(value[0]) if value else None
         if node:
             PillarManager.set('ceph-salt:time_server:subnet', node.public_subnet)
         else:
@@ -313,9 +313,9 @@ class TimeSubnetHandler(PillarHandler):
         super().__init__('ceph-salt:time_server:subnet')
 
     def possible_values(self):
-        time_server_host = PillarManager.get('ceph-salt:time_server:server_host')
-        if time_server_host:
-            node = CephNodeManager.ceph_salt_nodes().get(time_server_host)
+        time_server_hosts = PillarManager.get('ceph-salt:time_server:server_hosts')
+        if time_server_hosts:
+            node = CephNodeManager.ceph_salt_nodes().get(time_server_hosts[0])
             if node and node.subnets:
                 return node.subnets
         return []
@@ -541,8 +541,9 @@ add location=172.17.0.1:5000/docker.io prefix=docker.io insecure=false
                 'help': 'List of external NTP servers',
                 'handler': PillarHandler('ceph-salt:time_server:external_time_servers')
             },
-            'server_hostname': {
-                'help': 'minion id of time server node or hostname of external time server',
+            'servers': {
+                'type': 'list',
+                'help': 'Minion ids of time server nodes or hostnames of external time servers',
                 'handler': TimeServerHandler(),
                 'required': True
             },
@@ -813,6 +814,14 @@ class ListOptionNode(OptionNode):
         else:
             PP.pl_red('Value already exists.')
 
+    # pylint: disable=unused-argument
+    def ui_complete_add(self, parameters, text, current_param):
+        matching = []
+        for value in self.option_dict['handler'].possible_values():
+            if value.startswith(text):
+                matching.append(value)
+        return matching
+
     def ui_command_remove(self, value):
         if value in self.value:
             self.value.remove(value)
@@ -821,6 +830,14 @@ class ListOptionNode(OptionNode):
             PP.pl_green('Value removed.')
         else:
             PP.pl_red('Value not found.')
+
+    # pylint: disable=unused-argument
+    def ui_complete_remove(self, parameters, text, current_param):
+        matching = []
+        for param in self.value:
+            if param.startswith(text):
+                matching.append(param)
+        return matching
 
 
 class ListDictOptionNode(OptionNode):

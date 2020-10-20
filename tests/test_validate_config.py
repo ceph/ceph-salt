@@ -88,7 +88,7 @@ PBVw2pLCZsH5ol3VJ1/DETsGRMzFubFeTUNOC3MzhhG+V"""
         self.assertValidateConfig("'ceph-salt:time_server:enabled' must be of type Boolean")
 
     def test_no_time_server_host(self):
-        PillarManager.reset('ceph-salt:time_server:server_host')
+        PillarManager.reset('ceph-salt:time_server:server_hosts')
         self.assertValidateConfig("No time server host specified in config")
 
     def test_no_time_server_subnet(self):
@@ -102,7 +102,7 @@ PBVw2pLCZsH5ol3VJ1/DETsGRMzFubFeTUNOC3MzhhG+V"""
     def test_time_server_not_a_minion(self):
         not_minion_err = ('Time server is not a minion: {} '
                           'setting will not have any effect')
-        PillarManager.set('ceph-salt:time_server:server_host', 'foo.example.com')
+        PillarManager.set('ceph-salt:time_server:server_hosts', ['foo.example.com'])
         PillarManager.reset('ceph-salt:time_server:external_time_servers')
         self.assertValidateConfig(not_minion_err.format('time server subnet'))
         PillarManager.reset('ceph-salt:time_server:subnet')
@@ -259,7 +259,7 @@ SCzirUzUKN2oge2WieNI7MQ=
         PillarManager.set('ceph-salt:bootstrap_minion', 'node1.ceph.com')
         PillarManager.set('ceph-salt:bootstrap_mon_ip', '10.20.188.201')
         PillarManager.set('ceph-salt:time_server:enabled', True)
-        PillarManager.set('ceph-salt:time_server:server_host', 'node1.ceph.com')
+        PillarManager.set('ceph-salt:time_server:server_hosts', ['node1.ceph.com'])
         PillarManager.set('ceph-salt:time_server:external_time_servers', ['pool.ntp.org'])
         PillarManager.set('ceph-salt:time_server:subnet', '10.20.188.0/24')
         PillarManager.set('ceph-salt:minions:all', ['node1.ceph.com',
