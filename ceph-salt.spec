@@ -94,10 +94,15 @@ mkdir -p %{buildroot}%{fdir}/metadata/%{fname}/
 cp -R ceph-salt-formula/salt/* %{buildroot}%{fdir}/states/
 cp ceph-salt-formula/metadata/* %{buildroot}%{fdir}/metadata/%{fname}/
 
+# manpage
+mkdir -p %{buildroot}%{_mandir}/man8/
+cp ceph-salt.8 %{buildroot}%{_mandir}/man8/ceph-salt.8
+
 
 %files
 %license LICENSE
 %doc CHANGELOG.md README.md
+%doc %{_mandir}/man8/ceph-salt.8*
 %{python3_sitelib}/ceph_salt*/
 %{_bindir}/%{name}
 %dir %{_datadir}/%{name}
