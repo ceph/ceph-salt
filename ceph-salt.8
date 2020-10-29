@@ -1,0 +1,232 @@
+\" Man page for ceph-salt
+.TH "ceph-salt" "8" "" "" "ceph-salt"
+.SH "NAME"
+ceph\-salt \- deploy Ceph cluster using cephadm
+.SH "SYNOPSIS"
+.sp
+\fBceph-salt\fP [\fI\-\-global\-opts\fP] \fIcommand\fP
+[\fI\-\-command\-opts\fP] [\fIcommand\-arguments\fP]
+.sp
+\fBceph-salt\fP [\fIcommand\fP] \fB\-\-help\fP
+.sp
+\fBceph-salt\fP \fB\-\-help\fP
+.SH "DESCRIPTION"
+.sp
+ceph\-salt is a Salt\-based command\-line tool for deploying Ceph clusters
+managed by cephadm.
+.SH "COMMANDS"
+.sp
+ceph\-salt provides a number of commands. Each command accepts the options
+listed in the \fBGLOBAL OPTIONS\fP section. These options must be specified
+before the command name. In addition, many commands have specific options,
+which are listed in this section. These command-specific options must be
+specified after the name of the command and before any of the command arguments.
+.sp
+\fBapply\fP [\fIoptions\fP] \fI[minion_id]\fP
+.RS 4
+Applies a configuration by running ceph-salt formula in order to provision
+hosts so they can be used as Ceph cluster nodes. On first execution, a new
+Ceph cluster with a single MON and MGR will be deployed. Apply command is
+idempotent, so it can be executed multiple times.
+.sp
+\fB\-n\fP, \fB\-\-non\-interactive\fP
+.RS 4
+Executes without opening the interactive text-based user interface.
+.RE
+.sp
+\fBminion_id\fP
+.RS 4
+The minion that should be configured. If not specified, all ceph-salt minions
+will be configured.
+.RE
+.RE
+.sp
+\fBconfig\fP [\fIpath\fP] \fI[subcommand]\fP
+.RS 4
+Opens an interactive shell where you can manipulate ceph-salt's configuration.
+Each configuration option is present under a configuration group. You can
+navigate through the groups and options using the familiar \fBls\fP and
+\fBcd\fP commands similar to a regular shell. In each path you can type
+\fBhelp\fP to see the available commands. Different options might have
+different commands available. If both path and subcommand are provided, the
+subcommand will be directly executed without opening the interactive shell.
+.sp
+\fBpath\fP
+.RS 4
+Configuration path where subcommand should be executed.
+.RE
+.sp
+\fBsubcommand\fP
+.RS 4
+Subcommand to execute on configuration path.
+.RE
+.RE
+.RE
+.sp
+\fBdisengage-safety\fP
+.RS 4
+Disables safeguards so dangerous operations like purging the whole cluster can
+be performed. Safety will be automatically re-enabled after 60 seconds.
+.RE
+.sp
+\fBexport\fP [\fIoptions\fP]
+.RS 4
+Exports the configuration.
+.sp
+\fB\-p\fP, \fB\-\-pretty\fP
+.RS 4
+Pretty-prints JSON ouput.
+.RE
+.RE
+.sp
+\fBimport\fP \fIfile\fP
+.RS 4
+Imports a configuration.
+.sp
+\fBfile\fP
+.RS 4
+The file containing the previously exported JSON configuration.
+.RE
+.RE
+.sp
+\fBpurge\fP [\fIoptions\fP]
+.RS 4
+Destroys a Ceph cluster. Before being able to destroy a Ceph cluster, the
+\fBdisengage\-safety\fP command must be executed.
+.sp
+\fB\-n\fP, \fB\-\-non\-interactive\fP
+.RS 4
+Executes without opening the interactive text-based user interface.
+.RE
+.sp
+\fB\-\-yes\-i\-really\-really\-mean\-it\fP
+.RS 4
+Additional required confirmation to perform this dangerous operation.
+.RE
+.RE
+.sp
+\fBreboot\fP [\fIoptions\fP] \fIminion_id\fP
+.RS 4
+Reboots hosts if some processes are using deleted files, which may happen after
+a system update. If Ceph cluster is already deployed, nodes are rebooted
+sequentially in an orchestrated way, otherwise, they are rebooted in parallel.
+.sp
+\fB\-n\fP, \fB\-\-non\-interactive\fP
+.RS 4
+Executes without opening the interactive text-based user interface.
+.RE
+.sp
+\fB\-f\fP, \fB\-\-force\fP
+.RS 4
+Force reboot even if not needed.
+.RE
+.sp
+\fBminion_id\fP
+.RS 4
+The minion that should be rebooted. If not specified, all ceph-salt minions
+will be rebooted.
+.RE
+.RE
+.RE
+.sp
+\fBstatus\fP [\fIoptions\fP]
+.RS 4
+Displays ceph-salt status, including information about configuration errors and
+the number of hosts managed by cephadm.
+.sp
+\fB\-n\fP, \fB\-\-no\-color\fP
+.RS 4
+Output without colors.
+.RE
+.RE
+.sp
+\fBstop\fP [\fIoptions\fP]
+.RS 4
+Stops the Ceph cluster.
+.sp
+\fB\-n\fP, \fB\-\-non\-interactive\fP
+.RS 4
+Executes without opening the interactive text-based user interface.
+.RE
+.sp
+\fB\-\-yes\-i\-really\-really\-mean\-it\fP
+.RS 4
+Additional required confirmation to perform this dangerous operation.
+.RE
+.RE
+.sp
+\fBupdate\fP [\fIoptions\fP] \fI[minion_id]\fP
+.RS 4
+Updates all host operating system packages.
+.sp
+\fB\-n\fP, \fB\-\-non\-interactive\fP
+.RS 4
+Executes without opening the interactive text-based user interface.
+.RE
+.sp
+\fB\-r\fP, \fB\-\-reboot\fP
+.RS 4
+Reboot if, after update, some processes are using deleted files.
+.RE
+.sp
+\fBminion_id\fP
+.RS 4
+The minion that should be updated. If not specified, all ceph-salt minions will
+be updated.
+.SH "GLOBAL OPTIONS"
+.sp
+\fB\-l\fP, \fB\-\-log\-level\fP \fI[info|error|debug|silent]\fP
+.RS 4
+Specify the log level.
+.RE
+.sp
+\fB\-\-log\-file\fP \fIfile\fP
+.RS 4
+Specify the log file name.
+.SH "EXAMPLES"
+.sp
+\fBDay 1 - deploy a new Ceph cluster\fP
+.RS 4
+.sp
+$ \fBceph\-salt config\fP
+.RS 4
+Opens the interactive configuration shell that will be used to configure
+cluster.
+.RE
+.sp
+$ \fBceph\-salt status\fP
+.RS 4
+Checks if the provided configuration is valid.
+.RE
+.sp
+$ \fBceph\-salt update --reboot\fP
+.RS 4
+Ensures that the cluster is updated with latest patches.
+.RE
+.sp
+$ \fBceph\-salt apply\fP
+.RS 4
+Deploys a Ceph cluster based on the provided configuration.
+.RE
+.RE
+.sp
+\fBDay 2 - add a new host to an existing Ceph cluster\fP
+.RS 4
+.sp
+$ \fBceph\-salt config /ceph_cluster/minions add <new_minion_id>\fP
+.RS 4
+.sp
+Adds a new minion to the configuration, so it will be managed by ceph-salt.
+.RE
+.sp
+$ \fBceph\-salt config /ceph_cluster/roles/cephadm add <new_minion_id>\fP
+.RS 4
+.sp
+Assigns the cephadm role to the new minion, so it will be added to the Ceph
+cluster.
+.RE
+.sp
+$ \fBceph\-salt apply <new_minion_id>\fP
+.RS 4
+Applies configuration on the new minion.
+.RE

@@ -8,7 +8,6 @@ manage a Ceph cluster with cephadm:
 - Install required RPM dependencies
 - Bootstrap cephadm
 - Enhanced bootstrapping by defining roles for Salt minions
-- Work in progress: Migration from [DeepSea][deepsea] to cephadm
 
 # Components
 
@@ -149,7 +148,12 @@ or pressing `[Ctrl]+[d]`. Now use the `apply` command to start the
 ceph-salt apply
 ```
 
+Check man page for a full list of available commands:
+
+```
+man ceph-salt
+```
+
 [ceph]: https://ceph.io/
 [salt]: https://www.saltstack.com/
 [cephadm]: https://docs.ceph.com/docs/master/mgr/cephadm/
-[deepsea]: https://github.com/SUSE/DeepSea
