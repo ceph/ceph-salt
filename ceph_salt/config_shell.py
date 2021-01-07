@@ -4,9 +4,11 @@ import itertools
 import logging
 import fnmatch
 import json
+import os
 from pathlib import Path
 import random
 import string
+import sys
 
 
 from pyparsing import alphanums, OneOrMore, Optional, Regex, Suppress, Word, QuotedString
@@ -1227,8 +1229,26 @@ def generate_config_shell_tree(shell):
 class CephSaltConfigShell(configshell.ConfigShell):
     # pylint: disable=anomalous-backslash-in-string
     def __init__(self):
-        super(CephSaltConfigShell, self).__init__(
-            '~/.ceph_salt_config_shell')
+        #
+        # before initializing configshell_fb, check for zero-length prefs.bin
+        configshell_path = os.path.expanduser('~/.ceph_salt_config_shell')
+        prefs_bin_path = '{}/prefs.bin'.format(configshell_path)
+        if os.path.exists(prefs_bin_path):
+            logger.debug('%s exists', prefs_bin_path)
+            prefs_bin_filesize = os.path.getsize(prefs_bin_path)
+            if prefs_bin_filesize == 0:
+                logger.warning('%s has size 0; removing!', prefs_bin_path)
+                os.remove(prefs_bin_path)
+        else:
+            logger.debug('%s does not exist', prefs_bin_path)
+        #
+        # initialize configshell_fb
+        try:
+            super(CephSaltConfigShell, self).__init__(configshell_path)
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.exception("configshell_fb failed to initialize")
+            sys.exit("configshell_fb failed to initialize: {}".format(str(exc)))
+        #
         # Grammar of the command line
         command = locatedExpr(Word(alphanums + '_'))('command')
         var = QuotedString('"') | QuotedString("'") | Word(alphanums + '?;&*$!#,=_\+/.<>()~@:-%[]')
