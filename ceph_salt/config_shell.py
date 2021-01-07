@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import random
 import string
+import sys
 
 
 from pyparsing import alphanums, OneOrMore, Optional, Regex, Suppress, Word, QuotedString
@@ -1240,7 +1241,13 @@ class CephSaltConfigShell(configshell.ConfigShell):
                 os.remove(prefs_bin_path)
         else:
             logger.debug('%s does not exist', prefs_bin_path)
-        super(CephSaltConfigShell, self).__init__(configshell_path)
+        #
+        # initialize configshell_fb
+        try:
+            super(CephSaltConfigShell, self).__init__(configshell_path)
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.exception("configshell_fb failed to initialize")
+            sys.exit("configshell_fb failed to initialize: {}".format(str(exc)))
         #
         # Grammar of the command line
         command = locatedExpr(Word(alphanums + '_'))('command')
