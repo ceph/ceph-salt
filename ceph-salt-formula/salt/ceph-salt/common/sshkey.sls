@@ -14,10 +14,9 @@ create ssh user:
       - users
     - failhard: True
 
-install sudo:
-  pkg.installed:
-    - pkgs:
-      - sudo
+sudo sanity:
+  file.exists:
+    - name: /etc/sudoers.d
     - failhard: True
 
 configure sudoers:

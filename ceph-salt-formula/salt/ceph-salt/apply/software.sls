@@ -12,6 +12,7 @@ install required packages:
       - lsof
       - podman
       - rsync
+      - sudo
     - failhard: True
 
 /var/log/journal:

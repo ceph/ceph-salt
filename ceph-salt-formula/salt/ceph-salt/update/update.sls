@@ -2,10 +2,9 @@
 
 {{ macros.begin_stage('Update all packages') }}
 
-install required packages:
-  pkg.installed:
-    - pkgs:
-      - lsof
+lsof sanity:
+  file.exists:
+    - name: /usr/bin/lsof
     - failhard: True
 
 update packages:

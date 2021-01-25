@@ -1,9 +1,8 @@
 {% import 'macros.yml' as macros %}
 
-install required packages:
-  pkg.installed:
-    - pkgs:
-      - lsof
+lsof sanity:
+  file.exists:
+    - name: /usr/bin/lsof
     - failhard: True
 
 {{ macros.begin_stage('Check if reboot is needed') }}
