@@ -43,7 +43,8 @@ BuildRequires:  python3-setuptools
 %if 0%{?suse_version}
 Requires:       python3-click >= 6.7
 Requires:       python3-configshell-fb >= 1.1
-Requires:       python3-pycryptodomex >= 3.4.6
+Requires:       python3-distro >= 1.5.0
+Requires:       python3-pycryptodomex >= 3.9.8
 Requires:       python3-PyYAML >= 5.1.2
 Requires:       python3-setuptools
 Requires:       python3-salt >= 3000
