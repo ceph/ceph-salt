@@ -53,7 +53,7 @@ Requires:       python3-netaddr
 %endif
 
 Requires:       catatonit
-Requires:       ceph-salt-formula
+Requires:       ceph-salt-formula = %{version}
 Requires:       hostname
 Requires:       iperf
 Requires:       iputils
