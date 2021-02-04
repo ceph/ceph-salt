@@ -133,11 +133,10 @@ In this case, it is up to the user to ensure that some form of time syncing is
 configured and running on all machines in the cluster before triggering
 `ceph-salt apply`. This is because `cephadm` will refuse to run without it.
 
-Finally we need to set the Ceph container image absolute path (relative path is
-not supported):
+Finally we need to set the Ceph container image path:
 
 ```
-/cephadm_bootstrap/ceph_image_path set docker.io/ceph/ceph:v15.2.2
+/cephadm_bootstrap/ceph_image_path set registry.opensuse.org/filesystems/ceph/octopus/images/ceph/ceph
 ```
 
 Afterwards, you can exit the `ceph-salt` configuration shell by typing `exit`
