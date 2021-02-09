@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [15.2.15] - 2021-02-09
+### Added
+- Add support for Salt 3002 (#449)
+- Add man page (#440)
+- Support multiple time servers (#439)
+- Add ceph-osd sysctl settings (#438)
+
+### Fixed 
+- config_shell: remove 0-length prefs.bin before init and handle init failure (#444)
+- Pin version of ceph-salt-formula RPM (#442)
+- Ensure mgr/cephadm/container_init is set to true (#437)
+
 ## [15.2.14] - 2020-10-14
 ### Added
 - Do not create ceph-salt pillar file during installation (#433)
@@ -285,6 +297,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The CHANGELOG file.
 
 [Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.14...HEAD
+[15.2.15]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.15
 [15.2.14]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.14
 [15.2.13]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.13
 [15.2.12]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.12
