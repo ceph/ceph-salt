@@ -155,4 +155,4 @@ man ceph-salt
 
 [ceph]: https://ceph.io/
 [salt]: https://www.saltstack.com/
-[cephadm]: https://docs.ceph.com/docs/master/mgr/cephadm/
+[cephadm]: https://docs.ceph.com/en/octopus/cephadm/
