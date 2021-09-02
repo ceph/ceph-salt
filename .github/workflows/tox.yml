@@ -1,0 +1,51 @@
+name: "tox"
+
+on:
+  - pull_request
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+        - tox-env: py36
+          py-ver: 3.6
+        - tox-env: py38
+          py-ver: 3.8
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.py-ver }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.py-ver }}
+
+    - name: Install dependencies
+      run: |
+        python --version
+        python -m pip install --upgrade pip
+        pip install tox tox-gh-actions
+    - name: Test with tox
+      env:
+        TOXENV: ${{ matrix.tox-env }}
+      run: tox
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v1
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install tox tox-gh-actions
+    - name: Run lint with tox
+      env:
+        TOXENV: lint
+      run: tox
+
