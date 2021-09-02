@@ -19,10 +19,10 @@ jobs:
         pip install -r requirements.txt
     - name: Lint with pylint
       run: |
-        pylint sesboot
+        pylint ceph_salt
     - name: Lint with pycodestyle
       run: |
-        pycodestyle sesboot
+        pycodestyle ceph_salt
     - name: Lint tests with pylint
       run: |
         pylint tests
