@@ -80,7 +80,7 @@ def wait_until_ceph_orch_available(name, timeout=1800):
     ret['result'] = True
     return ret
 
-def add_host(name, host):
+def add_host(name, host, is_admin=False):
     """
     Requires the following grains to be set:
       - ceph-salt:execution:admin_host
@@ -89,7 +89,10 @@ def add_host(name, host):
     admin_host = __salt__['grains.get']('ceph-salt:execution:admin_host')
     cmd_ret = __salt__['ceph_salt.ssh'](
                        admin_host,
-                       "sudo ceph orch host add {}".format(host),
+                       "sudo ceph orch host add {}{}".format(
+                           host,
+                           ' --labels _admin' if is_admin else '',
+                        ),
                        attempts=10)
     if cmd_ret['retcode'] == 0:
         ret['result'] = True
