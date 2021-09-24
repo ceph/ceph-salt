@@ -120,8 +120,8 @@ run cephadm bootstrap:
                 --skip-monitoring-stack \
                 --skip-prepare-host \
                 --skip-pull \
-                --ssh-private-key /home/cephadm/.ssh/id_rsa \
-                --ssh-public-key /home/cephadm/.ssh/id_rsa.pub \
+                --ssh-private-key {{ salt['user.info']('cephadm').home }}/.ssh/id_rsa \
+                --ssh-public-key {{ salt['user.info']('cephadm').home }}/.ssh/id_rsa.pub \
                 --ssh-user cephadm \
 {%- for arg, value in pillar['ceph-salt'].get('bootstrap_arguments', {}).items() %}
                 --{{ arg }} {{ value if value is not none else '' }} \
