@@ -2,18 +2,6 @@
 
 {{ macros.begin_stage('Ensure SSH keys are configured') }}
 
-create ssh user group:
-  group.present:
-    - name: users
-
-create ssh user:
-  user.present:
-    - name: cephadm
-    - home: /home/cephadm
-    - groups:
-      - users
-    - failhard: True
-
 install sudo:
   pkg.installed:
     - pkgs:
@@ -34,9 +22,9 @@ configure sudoers:
 # make sure .ssh is present with the right permissions
 create ssh dir:
   file.directory:
-    - name: /home/cephadm/.ssh
+    - name: {{ salt['user.info']('cephadm').home }}/.ssh
     - user: cephadm
-    - group: users
+    - group: {{ salt['user.info']('cephadm').gid }}
     - mode: '0700'
     - makedirs: True
     - failhard: True
@@ -44,9 +32,9 @@ create ssh dir:
 # private key
 create ceph-salt-ssh-id_rsa:
   file.managed:
-    - name: /home/cephadm/.ssh/id_rsa
+    - name: {{ salt['user.info']('cephadm').home }}/.ssh/id_rsa
     - user: cephadm
-    - group: users
+    - group: {{ salt['user.info']('cephadm').gid }}
     - mode: '0600'
     - contents_pillar: ceph-salt:ssh:private_key
     - failhard: True
@@ -54,9 +42,9 @@ create ceph-salt-ssh-id_rsa:
 # public key
 create ceph-salt-ssh-id_rsa.pub:
   file.managed:
-    - name: /home/cephadm/.ssh/id_rsa.pub
+    - name: {{ salt['user.info']('cephadm').home }}/.ssh/id_rsa.pub
     - user: cephadm
-    - group: users
+    - group: {{ salt['user.info']('cephadm').gid }}
     - mode: '0644'
     - contents_pillar: ceph-salt:ssh:public_key
     - failhard: True
