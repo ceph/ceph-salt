@@ -9,8 +9,8 @@
 configure cephadm mgr module:
   cmd.run:
     - name: |
-        ceph cephadm set-priv-key -i /home/cephadm/.ssh/id_rsa
-        ceph cephadm set-pub-key -i /home/cephadm/.ssh/id_rsa.pub
+        ceph cephadm set-priv-key -i {{ salt['user.info']('cephadm').home }}/.ssh/id_rsa
+        ceph cephadm set-pub-key -i {{ salt['user.info']('cephadm').home }}/.ssh/id_rsa.pub
         ceph cephadm set-user cephadm
 {%- if auth %}
         ceph cephadm registry-login -i /tmp/ceph-salt-registry-json

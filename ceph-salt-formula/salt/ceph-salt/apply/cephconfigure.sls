@@ -28,8 +28,8 @@ copy ceph.conf and keyring from admin node:
 enable cephadm mgr module:
   cmd.run:
     - name: |
-        ceph config-key set mgr/cephadm/ssh_identity_key -i /home/cephadm/.ssh/id_rsa
-        ceph config-key set mgr/cephadm/ssh_identity_pub -i /home/cephadm/.ssh/id_rsa.pub
+        ceph config-key set mgr/cephadm/ssh_identity_key -i {{ salt['user.info']('cephadm').home }}/.ssh/id_rsa
+        ceph config-key set mgr/cephadm/ssh_identity_pub -i {{ salt['user.info']('cephadm').home }}/.ssh/id_rsa.pub
         ceph config-key set mgr/cephadm/ssh_user cephadm
         ceph mgr module enable cephadm && \
         ceph orch set backend cephadm
