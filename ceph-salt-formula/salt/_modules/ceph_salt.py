@@ -184,6 +184,10 @@ def hostname():
     return socket.gethostname()
 
 
+def ip_address():
+    return socket.gethostbyname(socket.gethostname())
+
+
 def probe_fqdn():
     """
     Returns 'YES' if FQDN environment detected, 'NO' if not detected, or 'FAIL'
