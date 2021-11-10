@@ -6,6 +6,7 @@ from collections import defaultdict
 import json
 import pytest
 
+import Cryptodome
 import yaml
 from mock import patch
 from pyfakefs.fake_filesystem_unittest import TestCase
@@ -269,6 +270,9 @@ class SaltMockTestCase(TestCase):
     def setUp(self):
         super(SaltMockTestCase, self).setUp()
         self.setUpPyfakefs()
+        # Make sure tests can access real files inside the source tree
+        # (needed specifically for Cryptodome's dynamic library loading)
+        self.fs.add_real_directory(os.path.dirname(Cryptodome.__file__))
         self.local_fs = self.fs
 
         logger.info("Initializing Salt mocks")
