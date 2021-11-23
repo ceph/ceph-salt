@@ -34,9 +34,7 @@ login into registry:
   cmd.run:
     - name: |
         cephadm registry-login \
-        --registry-url {{ auth.get('registry') }} \
-        --registry-username {{ auth.get('username') }} \
-        --registry-password {{ auth.get('password') }}
+        --registry-json /tmp/ceph-salt-registry-json
     - failhard: True
 
 {{ macros.end_step('Login into registry') }}
