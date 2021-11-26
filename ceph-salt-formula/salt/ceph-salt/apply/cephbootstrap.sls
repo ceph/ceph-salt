@@ -18,25 +18,11 @@
 
 {{ macros.begin_step('Login into registry') }}
 
-create ceph-salt-registry-json:
-  file.managed:
-    - name: /tmp/ceph-salt-registry-json
-    - source:
-        - salt://ceph-salt/files/registry-login-json.j2
-    - template: jinja
-    - user: root
-    - group: root
-    - mode: '0600'
-    - backup: minion
-    - failhard: True
-
 login into registry:
   cmd.run:
     - name: |
         cephadm registry-login \
-        --registry-url {{ auth.get('registry') }} \
-        --registry-username {{ auth.get('username') }} \
-        --registry-password {{ auth.get('password') }}
+        --registry-json /tmp/ceph-salt-registry-json
     - failhard: True
 
 {{ macros.end_step('Login into registry') }}
