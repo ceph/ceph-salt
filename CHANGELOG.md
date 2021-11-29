@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [15.2.16] - 2021-11-26
+### Added
+- _modules/ceph_salt: log SSH commands (#464)
+
+### Fixed
+- Move ceph-salt-registry-json creation to container.sls (#467)
+- Use `cephadm registry-login --registry-json` (#467)
+- Rely on cephadm package for cephadm user creation (#461)
+- README.md: Fix broken cephadm link (#455)
+- tests: add source dir as real directory to fake fs (#462)
+- .github/workflows/linting: use ceph_salt instead old name (#458)
+
 ## [15.2.15] - 2021-02-09
 ### Added
 - Add support for Salt 3002 (#449)
@@ -296,7 +308,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal README.
 - The CHANGELOG file.
 
-[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.14...HEAD
+[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.16...octopus
+[15.2.16]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.16
 [15.2.15]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.15
 [15.2.14]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.14
 [15.2.13]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.13

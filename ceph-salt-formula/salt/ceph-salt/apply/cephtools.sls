@@ -4,17 +4,16 @@
 
 {{ macros.begin_stage('Configure cephadm') }}
 
-{{ macros.begin_step('Install cephadm and other ceph packages') }}
+{{ macros.begin_step('Install ceph packages') }}
 
 install cephadm:
   pkg.installed:
     - pkgs:
-        - cephadm
         - ceph-base
         - ceph-common
     - failhard: True
 
-{{ macros.end_step('Install cephadm and other ceph packages') }}
+{{ macros.end_step('Install ceph packages') }}
 
 {{ macros.begin_step('Run "cephadm check-host"') }}
 

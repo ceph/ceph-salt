@@ -18,25 +18,11 @@
 
 {{ macros.begin_step('Login into registry') }}
 
-create ceph-salt-registry-json:
-  file.managed:
-    - name: /tmp/ceph-salt-registry-json
-    - source:
-        - salt://ceph-salt/files/registry-login-json.j2
-    - template: jinja
-    - user: root
-    - group: root
-    - mode: '0600'
-    - backup: minion
-    - failhard: True
-
 login into registry:
   cmd.run:
     - name: |
         cephadm registry-login \
-        --registry-url {{ auth.get('registry') }} \
-        --registry-username {{ auth.get('username') }} \
-        --registry-password {{ auth.get('password') }}
+        --registry-json /tmp/ceph-salt-registry-json
     - failhard: True
 
 {{ macros.end_step('Login into registry') }}
@@ -120,8 +106,8 @@ run cephadm bootstrap:
                 --skip-monitoring-stack \
                 --skip-prepare-host \
                 --skip-pull \
-                --ssh-private-key /home/cephadm/.ssh/id_rsa \
-                --ssh-public-key /home/cephadm/.ssh/id_rsa.pub \
+                --ssh-private-key {{ salt['user.info']('cephadm').home }}/.ssh/id_rsa \
+                --ssh-public-key {{ salt['user.info']('cephadm').home }}/.ssh/id_rsa.pub \
                 --ssh-user cephadm \
 {%- for arg, value in pillar['ceph-salt'].get('bootstrap_arguments', {}).items() %}
                 --{{ arg }} {{ value if value is not none else '' }} \

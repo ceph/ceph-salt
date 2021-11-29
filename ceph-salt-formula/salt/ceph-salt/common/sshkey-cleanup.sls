@@ -2,12 +2,12 @@
 
 remove ceph-salt-ssh-id_rsa:
   file.absent:
-    - name: /home/cephadm/.ssh/id_rsa
+    - name: {{ salt['user.info']('cephadm').home }}/.ssh/id_rsa
     - failhard: True
 
 remove ceph-salt-ssh-id_rsa.pub:
   file.absent:
-    - name: /home/cephadm/.ssh/id_rsa.pub
+    - name: {{ salt['user.info']('cephadm').home }}/.ssh/id_rsa.pub
     - failhard: True
 
 {% endif %}
