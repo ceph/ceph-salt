@@ -1,3 +1,5 @@
+import ipaddress
+
 from ..core import SshKeyManager
 from ..salt_utils import PillarManager
 
@@ -31,7 +33,7 @@ def validate_config(deployed, ceph_nodes):
         bootstrap_mon_ip = PillarManager.get('ceph-salt:bootstrap_mon_ip')
         if not bootstrap_mon_ip:
             return "No bootstrap Mon IP specified in config"
-        if bootstrap_mon_ip in ['127.0.0.1', '::1']:
+        if ipaddress.ip_address(bootstrap_mon_ip).is_loopback:
             return 'Mon IP cannot be the loopback interface IP'
         bootstrap_node = ceph_nodes.get(bootstrap_minion)
         if bootstrap_node is None:

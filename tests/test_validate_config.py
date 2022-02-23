@@ -54,6 +54,10 @@ PBVw2pLCZsH5ol3VJ1/DETsGRMzFubFeTUNOC3MzhhG+V"""
     def test_loopback_bootstrap_mon_ip(self):
         PillarManager.set('ceph-salt:bootstrap_mon_ip', '127.0.0.1')
         self.assertValidateConfig("Mon IP cannot be the loopback interface IP")
+        PillarManager.set('ceph-salt:bootstrap_mon_ip', '127.0.1.1')
+        self.assertValidateConfig("Mon IP cannot be the loopback interface IP")
+        PillarManager.set('ceph-salt:bootstrap_mon_ip', '::1')
+        self.assertValidateConfig("Mon IP cannot be the loopback interface IP")
 
     def test_not_found_bootstrap_mon_ip(self):
         PillarManager.set('ceph-salt:bootstrap_mon_ip', '10.20.188.101')
