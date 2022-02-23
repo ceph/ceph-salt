@@ -47,16 +47,16 @@ class CephNode:
         if self._public_ip is None:
             result = GrainsManager.get_grain(self.minion_id, 'fqdn_ip4')
             _public_ip = result[self.minion_id][0]
-            if _public_ip == '127.0.0.1':
+            if _public_ip in ['127.0.0.1', '127.0.1.1']:
                 logger.debug('fqdn_ipv4 grain is 127.0.0.1, falling back to ipv4 grain')
                 result = GrainsManager.get_grain(self.minion_id, 'ipv4')
                 for addr in result[self.minion_id]:
-                    if addr != '127.0.0.1':
+                    if addr not in ['127.0.0.1', '127.0.1.1']:
                         _public_ip = addr
                         break
-                if _public_ip == '127.0.0.1':
-                    logger.warning("'%s' public IP is the loopback interface IP ('127.0.0.1')",
-                                   self.minion_id)
+                if _public_ip in ['127.0.0.1', '127.0.1.1']:
+                    logger.warning("'%s' public IP is the loopback interface IP ('{%s}')",
+                                   self.minion_id, _public_ip)
             self._public_ip = _public_ip
         return self._public_ip
 
