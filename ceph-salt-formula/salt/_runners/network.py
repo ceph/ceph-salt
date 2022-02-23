@@ -115,13 +115,9 @@ def iperf(ipversion='ipv4', exclude=None, remove=None, output=None, **kwargs):
     addresses = _remove_minion_not_found(addresses)
     addresses = _flatten(list(addresses.values()))
     addresses = _remove_minion_exclude(addresses, remove)
-    # Lazy loopback removal - use ipaddress when adding IPv6
     try:
-        if ipversion == 'ipv4':
-            addresses.remove('127.0.0.1')
-        elif ipversion == 'ipv6':
-            addresses.remove('::1')
-            addresses = [addr for addr in addresses if not addr.startswith("fe80")]
+        addresses = [addr for addr in addresses if not ipaddress.ip_address(addr).is_loopback]
+        addresses = [addr for addr in addresses if not ipaddress.ip_address(addr).is_link_local]
         if exclude_iplist:
             for ex_ip in exclude_iplist:
                 log.debug("iperf: removing {} ip ".format(ex_ip))
@@ -319,17 +315,10 @@ def ping(ipversion='ipv4', exclude=None, remove=None, ping_type=None, **kwargs):
     addresses = _remove_minion_not_found(addresses)
     addresses = _flatten(list(addresses.values()))
     addresses = _remove_minion_exclude(addresses, remove)
-    # Lazy loopback removal - use ipaddress when adding IPv6
     try:
-        if addresses:
-            if ipversion == 'ipv4':
-                addresses.remove('127.0.0.1')
-            elif ipversion == 'ipv6':
-                addresses.remove('::1')
-                addresses = [addr for addr in addresses if not addr.startswith("fe80")]
-            else:
-                raise RuntimeError("Neither IPv4 nor IPv6")
-            log.info("addresses:\n{}".format(pprint.pformat(addresses)))
+        addresses = [addr for addr in addresses if not ipaddress.ip_address(addr).is_loopback]
+        addresses = [addr for addr in addresses if not ipaddress.ip_address(addr).is_link_local]
+        log.info("addresses:\n{}".format(pprint.pformat(addresses)))
         if exclude_iplist:
             for ex_ip in exclude_iplist:
                 log.debug("ping: removing {} ip ".format(ex_ip))
