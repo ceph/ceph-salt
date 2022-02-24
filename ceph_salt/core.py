@@ -1,8 +1,9 @@
+import base64
 import copy
+import hashlib
+import ipaddress
 import logging
 import os
-import base64
-import hashlib
 
 from Cryptodome.PublicKey import RSA
 import salt
@@ -44,19 +45,22 @@ class CephNode:
 
     @property
     def public_ip(self):
+        def _is_loopback(addr):
+            return ipaddress.ip_address(addr).is_loopback
+
         if self._public_ip is None:
             result = GrainsManager.get_grain(self.minion_id, 'fqdn_ip4')
             _public_ip = result[self.minion_id][0]
-            if _public_ip == '127.0.0.1':
-                logger.debug('fqdn_ipv4 grain is 127.0.0.1, falling back to ipv4 grain')
+            if _is_loopback(_public_ip):
+                logger.debug("fqdn_ipv4 grain is '%s', falling back to ipv4 grain", _public_ip)
                 result = GrainsManager.get_grain(self.minion_id, 'ipv4')
                 for addr in result[self.minion_id]:
-                    if addr != '127.0.0.1':
+                    if not _is_loopback(addr):
                         _public_ip = addr
                         break
-                if _public_ip == '127.0.0.1':
-                    logger.warning("'%s' public IP is the loopback interface IP ('127.0.0.1')",
-                                   self.minion_id)
+                if _is_loopback(_public_ip):
+                    logger.warning("'%s' public IP is the loopback interface IP ('%s')",
+                                   self.minion_id, _public_ip)
             self._public_ip = _public_ip
         return self._public_ip
 
