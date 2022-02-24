@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [16.2.1] - 2022-02-24
+### Fixed
+- use ipaddress module to determine loopback interfaces (#472)
+
 ## [16.2.0] - 2021-12-01
 ### Added
 - Support deploying Ceph Pacific
@@ -319,7 +323,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal README.
 - The CHANGELOG file.
 
-[Unreleased]: https://github.com/ceph/ceph-salt/compare/v16.2.0...HEAD
+[Unreleased]: https://github.com/ceph/ceph-salt/compare/v16.2.1...HEAD
+[16.2.1]: https://github.com/ceph/ceph-salt/releases/tag/v16.2.1
 [16.2.0]: https://github.com/ceph/ceph-salt/releases/tag/v16.2.0
 [15.2.16]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.16
 [15.2.15]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.15
