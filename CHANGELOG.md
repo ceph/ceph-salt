@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [15.2.17] - 2022-02-28
+### Fixed
+- use ipaddress module to determine loopback interfaces (#472)
+
 ## [15.2.16] - 2021-11-26
 ### Added
 - _modules/ceph_salt: log SSH commands (#464)
@@ -308,7 +312,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal README.
 - The CHANGELOG file.
 
-[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.16...octopus
+[Unreleased]: https://github.com/ceph/ceph-salt/compare/v15.2.17...octopus
+[15.2.17]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.17
 [15.2.16]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.16
 [15.2.15]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.15
 [15.2.14]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.14
