@@ -2,8 +2,8 @@
 
 include:
     - ..reset
-    - ..common.sshkey
     - .update
+    - ..common.sshkey
     - .update-end
 
 {% else %}
