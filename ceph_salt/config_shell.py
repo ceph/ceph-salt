@@ -1283,20 +1283,43 @@ def run_status():
     result = True
     host_ls = CephOrch.host_ls()
     all = PillarManager.get('ceph-salt:minions:all', [])
-    status['cluster'] = '{} minions, {} hosts managed by cephadm'.format(len(all), len(host_ls))
+    all.sort()
+    status['Cluster'] = '{} minions, {} hosts managed by cephadm'.format(len(all), len(host_ls))
     deployed = CephOrch.deployed()
     nodes = {}
+    os_codenames = {}
+    ceph_versions = {}
     for minion in all:
         nodes[minion] = CephNode(minion)
+        os_codenames[minion] = nodes[minion].os_codename
+        ceph_versions[minion] = nodes[minion].ceph_version.split(' (')[0]
+    if len(set(os_codenames.values())) == 1:
+        status['OS'] = next(iter(os_codenames.values()))
+    else:
+        status['OS'] = PP.orange('Multiple versions running:\n')
+        lines = []
+        for ver in set(os_codenames.values()):
+            lines.append('           - {}:'.format(ver))
+            lines.extend(['             - ' + m for m in os_codenames if os_codenames[m] == ver])
+        status['OS'] += '\n'.join(lines)
+    if len(set(ceph_versions.values())) == 1:
+        status['Ceph RPMs'] = next(iter(ceph_versions.values()))
+    else:
+        status['Ceph RPMs'] = PP.orange('Multiple versions installed:\n')
+        lines = []
+        for ver in set(ceph_versions.values()):
+            lines.append('           - {}:'.format(ver))
+            lines.extend(['             - ' + m for m in ceph_versions if ceph_versions[m] == ver])
+        status['Ceph RPMs'] += '\n'.join(lines)
     error_msg = validate_config(deployed, nodes)
     if error_msg:
         result = False
         logger.info(error_msg)
-        status['config'] = PP.red(error_msg)
+        status['Config'] = PP.red(error_msg)
     else:
-        status['config'] = PP.green("OK")
+        status['Config'] = PP.green("OK")
     for k, v in status.items():
-        PP.println('{}{}'.format('{}: '.format(k).ljust(9), v))
+        PP.println('{}{}'.format('{}: '.format(k).ljust(11), v))
     return result
 
 
