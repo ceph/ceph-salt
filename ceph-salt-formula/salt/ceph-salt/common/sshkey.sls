@@ -14,6 +14,7 @@ configure sudoers:
     - text:
       - "cephadm ALL=NOPASSWD: /usr/bin/ceph -s"
       - "cephadm ALL=NOPASSWD: /usr/bin/ceph orch host add *"
+      - "cephadm ALL=NOPASSWD: /usr/bin/ceph orch host label *"
       - "cephadm ALL=NOPASSWD: /usr/bin/ceph orch host ok-to-stop *"
       - "cephadm ALL=NOPASSWD: /usr/bin/ceph orch status --format=json"
       - "cephadm ALL=NOPASSWD: /usr/bin/python3"

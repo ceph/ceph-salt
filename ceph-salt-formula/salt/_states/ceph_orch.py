@@ -101,6 +101,25 @@ def add_host(name, host, ipaddr, is_admin=False):
         ret['comment'] = cmd_ret.get('stderr')
     return ret
 
+def add_host_label(name, host, label):
+    """
+    Requires the following grains to be set:
+      - ceph-salt:execution:admin_host
+    """
+    ret = {'name': name, 'changes': {}, 'comment': '', 'result': False}
+    admin_host = __salt__['grains.get']('ceph-salt:execution:admin_host')
+    cmd_ret = __salt__['ceph_salt.ssh'](
+                       admin_host,
+                       "sudo ceph orch host label add {} {}".format(
+                           host,
+                           label,
+                        ),
+                       attempts=10)
+    if cmd_ret['retcode'] == 0:
+        ret['result'] = True
+    else:
+        ret['comment'] = cmd_ret.get('stderr')
+    return ret
 
 def rm_clusters(name):
     """
