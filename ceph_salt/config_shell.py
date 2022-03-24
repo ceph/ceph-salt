@@ -1293,18 +1293,20 @@ def run_status():
         nodes[minion] = CephNode(minion)
         os_codenames[minion] = nodes[minion].os_codename
         ceph_versions[minion] = nodes[minion].ceph_version.split(' (')[0]
-    if len(set(os_codenames.values())) == 1:
+    num_os_codenames = len(set(os_codenames.values()))
+    if num_os_codenames == 1:
         status['OS'] = next(iter(os_codenames.values()))
-    else:
+    elif num_os_codenames > 1:
         status['OS'] = PP.orange('Multiple versions running:\n')
         lines = []
         for ver in set(os_codenames.values()):
             lines.append('           - {}:'.format(ver))
             lines.extend(['             - ' + m for m in os_codenames if os_codenames[m] == ver])
         status['OS'] += '\n'.join(lines)
-    if len(set(ceph_versions.values())) == 1:
+    num_ceph_versions = len(set(ceph_versions.values()))
+    if num_ceph_versions == 1:
         status['Ceph RPMs'] = next(iter(ceph_versions.values()))
-    else:
+    elif num_ceph_versions > 1:
         status['Ceph RPMs'] = PP.orange('Multiple versions installed:\n')
         lines = []
         for ver in set(ceph_versions.values()):
