@@ -28,6 +28,8 @@ class CephNode:
         self._public_ip = None
         self._subnets = None
         self._public_subnet = None
+        self._os_codename = None
+        self._ceph_version = None
 
     @property
     def ipsv4(self):
@@ -100,6 +102,22 @@ class CephNode:
             if 'execution' in result[self.minion_id]:
                 self._execution = result[self.minion_id]['execution']
         return self._execution
+
+    @property
+    def os_codename(self):
+        if self._os_codename is None:
+            result = GrainsManager.get_grain(self.minion_id, 'oscodename')
+            self._os_codename = result[self.minion_id]
+        return self._os_codename
+
+    @property
+    def ceph_version(self):
+        if self._ceph_version is None:
+            result = SaltClient.local_cmd(self.minion_id, 'cmd.shell', [
+                'test -e /usr/bin/ceph && ceph --version || echo "Not installed"'
+            ])
+            self._ceph_version = result[self.minion_id]
+        return self._ceph_version
 
     def add_role(self, role):
         self.roles.add(role)
