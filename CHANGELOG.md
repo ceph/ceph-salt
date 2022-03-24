@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [16.2.2] - 2022-03-24
+### Added
+- Add OS and Ceph version info to `ceph-salt status` output (#478)
+- add the orchestrator `_admin` host label during `ceph-salt update` (#476)
+
+### Fixed
+- config the ssh key after package install/upgrade (#474)
+
 ## [16.2.1] - 2022-02-24
 ### Fixed
 - use ipaddress module to determine loopback interfaces (#472)
@@ -323,7 +331,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal README.
 - The CHANGELOG file.
 
-[Unreleased]: https://github.com/ceph/ceph-salt/compare/v16.2.1...HEAD
+[Unreleased]: https://github.com/ceph/ceph-salt/compare/v16.2.2...HEAD
+[16.2.2]: https://github.com/ceph/ceph-salt/releases/tag/v16.2.2
 [16.2.1]: https://github.com/ceph/ceph-salt/releases/tag/v16.2.1
 [16.2.0]: https://github.com/ceph/ceph-salt/releases/tag/v16.2.0
 [15.2.16]: https://github.com/ceph/ceph-salt/releases/tag/v15.2.16
