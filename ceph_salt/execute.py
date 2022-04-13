@@ -1333,8 +1333,9 @@ class CephSaltExecutor:
         result = SaltClient.local_cmd('ceph-salt:member', 'state.sls_exists', [state],
                                       tgt_type='grain')
         if not all(result.values()):
-            PP.pl_red("Could not find {} formula. Please check if ceph-salt-formula package "
-                      "is installed".format(state))
+            PP.pl_red("Unable to use {state} formula. Please check if ceph-salt-formula "
+                      "package is installed. For more information try running "
+                      "`salt -G ceph-salt:member state.show_sls {state}`".format(state=state))
             return 7
 
         return 0
