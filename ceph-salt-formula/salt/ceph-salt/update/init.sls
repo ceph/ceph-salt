@@ -1,6 +1,7 @@
 {% if grains['id'] in pillar['ceph-salt']['minions']['all'] %}
 
 include:
+    - ..common.install-cephadm
     - ..reset
     - .update
     - ..common.sshkey
