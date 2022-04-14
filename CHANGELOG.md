@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [16.2.3] - 2022-04-14
+### Fixed
+- Fix ceph-salt update when run prior to cluster deployment (#482)
+
 ## [16.2.2] - 2022-03-24
 ### Added
 - Add OS and Ceph version info to `ceph-salt status` output (#478)
@@ -331,7 +335,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal README.
 - The CHANGELOG file.
 
-[Unreleased]: https://github.com/ceph/ceph-salt/compare/v16.2.2...HEAD
+[Unreleased]: https://github.com/ceph/ceph-salt/compare/v16.2.3...HEAD
+[16.2.3]: https://github.com/ceph/ceph-salt/releases/tag/v16.2.3
 [16.2.2]: https://github.com/ceph/ceph-salt/releases/tag/v16.2.2
 [16.2.1]: https://github.com/ceph/ceph-salt/releases/tag/v16.2.1
 [16.2.0]: https://github.com/ceph/ceph-salt/releases/tag/v16.2.0
