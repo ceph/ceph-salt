@@ -210,17 +210,21 @@ def wait_for_ceph_orch_host_ok_to_stop(name, if_grain, timeout=36000):
     ret['result'] = True
     return ret
 
+def stop_service_by_daemon_name(ceph_orch_ps_ret, ret):
+    json_obj = json.loads(ceph_orch_ps_ret)
+    for elem in json_obj:
+        cmd_ret = __salt__['cmd.run_all'](
+                        "ceph orch daemon stop {}".format(elem['daemon_name']))
+        if cmd_ret['retcode'] != 0:
+            ret['result'] = False
+            ret['comment'] = cmd_ret.get('stderr')            
 
 def stop_service(name, service):
-    ret = {'name': name, 'changes': {}, 'comment': '', 'result': False}
-    cmd_ret = __salt__['cmd.run_all'](
-                       "ceph orch stop {}".format(service))
-    if cmd_ret['retcode'] == 0:
-        ret['result'] = True
-    else:
-        ret['comment'] = cmd_ret.get('stderr')
+    ret = {'name': name, 'changes': {}, 'comment': '', 'result': True}
+    ceph_orch_ps_ret = __salt__['cmd.run_all'](
+                           "ceph orch ps --daemon_type {} --format json".format(service))
+    stop_service_by_daemon_name(ceph_orch_ps_ret['stdout'], ret)
     return ret
-
 
 def wait_until_service_stopped(name, service, timeout=1800):
     ret = {'name': name, 'changes': {}, 'comment': '', 'result': False}
