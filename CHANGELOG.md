@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [16.2.4] - 2022-12-19
 ### Fixed
+- Use daemon name rather than service type when stopping services
 - Run `saltutil.sync_runners` in ceph-salt-formula %post script (#486)
 - Don't explicitly install ceph-common (rely on ceph-base dependency)
+- Support monochrome terminals in `ceph-salt apply`
 
 ## [16.2.3] - 2022-04-14
 ### Fixed
@@ -339,7 +342,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal README.
 - The CHANGELOG file.
 
-[Unreleased]: https://github.com/ceph/ceph-salt/compare/v16.2.3...HEAD
+[Unreleased]: https://github.com/ceph/ceph-salt/compare/v16.2.4...HEAD
+[16.2.4]: https://github.com/ceph/ceph-salt/releases/tag/v16.2.4
 [16.2.3]: https://github.com/ceph/ceph-salt/releases/tag/v16.2.3
 [16.2.2]: https://github.com/ceph/ceph-salt/releases/tag/v16.2.2
 [16.2.1]: https://github.com/ceph/ceph-salt/releases/tag/v16.2.1
