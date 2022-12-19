@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Run `saltutil.sync_runners` in ceph-salt-formula %post script (#486)
+- Don't explicitly install ceph-common (rely on ceph-base dependency)
 
 ## [16.2.3] - 2022-04-14
 ### Fixed
