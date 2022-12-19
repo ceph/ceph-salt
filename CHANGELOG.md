@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Run `saltutil.sync_runners` in ceph-salt-formula %post script (#486)
+
 ## [16.2.3] - 2022-04-14
 ### Fixed
 - Fix ceph-salt update when run prior to cluster deployment (#482)

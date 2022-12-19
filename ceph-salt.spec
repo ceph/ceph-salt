@@ -124,6 +124,10 @@ Requires(pre):  salt-master
 Salt Formula to deploy Ceph clusters.
 
 
+%post -n ceph-salt-formula
+# This is needed in order for the network.iperf runner to work
+salt-run --log-level warning saltutil.sync_runners || :
+
 %files -n ceph-salt-formula
 %defattr(-,root,root,-)
 %license LICENSE
