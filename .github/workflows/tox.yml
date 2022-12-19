@@ -9,8 +9,6 @@ jobs:
     strategy:
       matrix:
         include:
-        - tox-env: py36
-          py-ver: 3.6
         - tox-env: py38
           py-ver: 3.8
 
