@@ -21,7 +21,7 @@
 %endif
 
 Name:           ceph-salt
-Version:        16.2.3
+Version:        16.2.4
 Release:        1%{?dist}
 Summary:        CLI tool to deploy Ceph clusters
 License:        MIT
@@ -123,6 +123,10 @@ Requires(pre):  salt-master
 %description -n ceph-salt-formula
 Salt Formula to deploy Ceph clusters.
 
+
+%post -n ceph-salt-formula
+# This is needed in order for the network.iperf runner to work
+salt-run --log-level warning saltutil.sync_runners || :
 
 %files -n ceph-salt-formula
 %defattr(-,root,root,-)

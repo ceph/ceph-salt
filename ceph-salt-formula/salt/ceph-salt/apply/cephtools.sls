@@ -10,7 +10,6 @@ install cephadm:
   pkg.installed:
     - pkgs:
         - ceph-base
-        - ceph-common
     - failhard: True
 
 {{ macros.end_step('Install ceph packages') }}
