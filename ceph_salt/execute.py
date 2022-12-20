@@ -109,21 +109,24 @@ class CursesScreen:
         self.body_height = self.height - self.HEADER_HEIGHT - self.FOOTER_HEIGHT
         self.body_width = self.width - 1
         logger.info("current terminal size: rows=%s cols=%s", self.height, self.width)
-        curses.start_color()
-        curses.use_default_colors()
-
-        curses.init_pair(self.COLOR_MARKER, -1, -1)
-        curses.init_pair(self.COLOR_MINION, curses.COLOR_CYAN, -1)
-        curses.init_pair(self.COLOR_STAGE, curses.COLOR_YELLOW, -1)
-        curses.init_pair(self.COLOR_STEP, curses.COLOR_BLUE, -1)
-        curses.init_pair(self.COLOR_MENU, curses.COLOR_BLACK, curses.COLOR_GREEN)
-        curses.init_pair(self.COLOR_SUCCESS, curses.COLOR_GREEN, -1)
-        curses.init_pair(self.COLOR_ERROR, curses.COLOR_RED, -1)
-        curses.init_pair(self.COLOR_WARNING, curses.COLOR_YELLOW, -1)
+        try:
+            curses.start_color()
+            curses.use_default_colors()
+            curses.init_pair(self.COLOR_MARKER, -1, -1)
+            curses.init_pair(self.COLOR_MINION, curses.COLOR_CYAN, -1)
+            curses.init_pair(self.COLOR_STAGE, curses.COLOR_YELLOW, -1)
+            curses.init_pair(self.COLOR_STEP, curses.COLOR_BLUE, -1)
+            curses.init_pair(self.COLOR_MENU, curses.COLOR_BLACK, curses.COLOR_GREEN)
+            curses.init_pair(self.COLOR_SUCCESS, curses.COLOR_GREEN, -1)
+            curses.init_pair(self.COLOR_ERROR, curses.COLOR_RED, -1)
+            curses.init_pair(self.COLOR_WARNING, curses.COLOR_YELLOW, -1)
+            curses.curs_set(0)
+        except Exception:  # pylint: disable=broad-except
+            logger.warning("Unable to initialize curses color support (TERM=%s)",
+                           os.environ.get('TERM', 'not set'))
 
         curses.noecho()
         curses.cbreak()
-        curses.curs_set(0)
         self.stdscr.keypad(True)
 
         if self.height > 2:
