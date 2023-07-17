@@ -147,8 +147,7 @@ class SaltEventProcessor(threading.Thread):
         self.event.set()
 
         opts = salt.config.client_config('/etc/salt/master')
-        stream = salt.utils.event.get_event('master', io_loop=self.io_loop,
-                                            transport=opts['transport'], opts=opts)
+        stream = salt.utils.event.get_event('master', io_loop=self.io_loop, opts=opts)
         stream.set_event_handler(self._handle_event_recv)
 
         self.io_loop.start()
