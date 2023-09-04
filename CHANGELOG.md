@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [16.2.5] - 2023-09-04
+### Fixed
+- Remove deprecated 'transport' kwarg
+
 ## [16.2.4] - 2022-12-19
 ### Fixed
 - Use daemon name rather than service type when stopping services
@@ -342,7 +346,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal README.
 - The CHANGELOG file.
 
-[Unreleased]: https://github.com/ceph/ceph-salt/compare/v16.2.4...HEAD
+[Unreleased]: https://github.com/ceph/ceph-salt/compare/v16.2.5...HEAD
+[16.2.5]: https://github.com/ceph/ceph-salt/releases/tag/v16.2.5
 [16.2.4]: https://github.com/ceph/ceph-salt/releases/tag/v16.2.4
 [16.2.3]: https://github.com/ceph/ceph-salt/releases/tag/v16.2.3
 [16.2.2]: https://github.com/ceph/ceph-salt/releases/tag/v16.2.2
